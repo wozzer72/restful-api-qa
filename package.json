@@ -1,0 +1,19 @@
+{
+  "name": "restful-api-qa",
+  "version": "1.0.0",
+  "description": "Automated assertion based integration testing of restful API (not unit testing) - including mock of data\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wozzer72/restful-api-qa.git"
+  },
+  "author": "Warren Ayling",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wozzer72/restful-api-qa/issues"
+  },
+  "homepage": "https://github.com/wozzer72/restful-api-qa#readme"
+}
