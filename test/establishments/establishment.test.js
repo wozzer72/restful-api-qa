@@ -323,6 +323,133 @@ describe ("establishment", async () => {
                                             reworkedReferenceServiceIDs.sort().every((value, index) => { return value === fetchedOtherServicesID.sort()[index]});
             expect(fetchedEqualsReturned).toEqual(true);
         });
+
+        it("should update the number of vacancies, starters and leavers", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            let jobsResponse = await apiEndpoint.get(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
+            expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
+            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        vacancies: [
+                            {
+                                "jobId" : 1,
+                                "total" : 999
+                            },
+                            {
+                                "jobId" : 2,
+                                "total" : 1000,
+                            },
+                            {
+                                "jobId" : 10,
+                                "total" : 333
+                            },
+                            {
+                                "jobId" : "18",
+                                "total" : 22
+                            }
+                        ]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(1332);
+            expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
+            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        starters: [
+                            {
+                                "jobId" : 17,
+                                "total" : 43
+                            },
+                            {
+                                "id" : 1,
+                                "total" : 4
+                            },
+                            {
+                                "jobId" : 2,
+                                "total" : 1000,
+                            },
+                            {
+                                "jobId" : 11,
+                                "total" : 756
+                            }
+                        ]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(1332);
+            expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
+            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+
+            
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        vacancies: [],
+                        leavers: [
+                            {
+                                "jobId" : 12,
+                                "total" : 1000,
+                            },
+                            {
+                                "jobId" : 9,
+                                "total" : 111
+                            },
+                            {
+                                "jobId" : 14,
+                                "total" : 11
+                            }
+                        ]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
+            expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
+            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(122);
+
+
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            .set('Authorization', authToken)
+            .send({
+                jobs: {
+                    leavers: []
+                }
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(jobsResponse.body.id).toEqual(establishmentId);
+        expect(jobsResponse.body.name).toEqual(site.locationName);
+        expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
+        expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
+        expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+        });
+
+
     });
 
     describe("CQC Establishment", async ( )=> {
