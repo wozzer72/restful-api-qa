@@ -265,6 +265,7 @@ describe ("establishment", async () => {
                 }
             ];
             for (let loopCount=0; loopCount < expectedNumberOfOtherServices; loopCount++) {
+                // TODO: random can return the same index more than once; which will cause irratic failures on test
                 newNonCQCServiceIDs.push({
                     id: nonCqcServiceIDs[Math.floor(Math.random() * nonCqcServiceIDs.length)]
                 });
@@ -433,19 +434,19 @@ describe ("establishment", async () => {
 
 
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
-            .set('Authorization', authToken)
-            .send({
-                jobs: {
-                    leavers: []
-                }
-            })
-            .expect('Content-Type', /json/)
-            .expect(200);
-        expect(jobsResponse.body.id).toEqual(establishmentId);
-        expect(jobsResponse.body.name).toEqual(site.locationName);
-        expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
-        expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
-        expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        leavers: []
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
+            expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
+            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
         });
 
         it("should update the sharing options", async () => {
@@ -568,6 +569,31 @@ describe ("establishment", async () => {
 
         });
 
+        it("should get the Establishment", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.postcode).toEqual(site.postalCode);
+            expect(firstResponse.body.numberOfStaff).not.toBeNull();
+            expect(firstResponse.body.numberOfStaff).toBeGreaterThan(0);
+            expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
+            expect(firstResponse.body.mainService.name).toEqual(site.mainService);
+            expect(firstResponse.body.share.enabled).toEqual(true);
+            expect(firstResponse.body.share.with[0]).toEqual('Local Authority');
+            expect(firstResponse.body.jobs.TotalVacencies).toEqual(0);
+            expect(firstResponse.body.jobs.TotalStarters).toEqual(799);
+            expect(firstResponse.body.jobs.TotalLeavers).toEqual(0);
+            expect(Array.isArray(firstResponse.body.otherServices)).toEqual(true);
+            expect(firstResponse.body.otherServices.length).toBeGreaterThan(0);
+
+            // TODO: add assertions for service capacities and local authority share
+        });
 
     });
 
