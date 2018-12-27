@@ -15,7 +15,7 @@ const apiEndpoint = supertest(baseEndpoint);
 
 // mocked real postcode/location data
 // http://localhost:3000/api/test/locations/random?limit=5
-const mockedLocations = require('../mockdata/locations').data;
+const locations = require('../mockdata/locations').data;
 const postcodes = require('../mockdata/postcodes').data;
 
 const randomInt = (min, max) => {
@@ -78,8 +78,6 @@ describe ("Expected registrations", async () => {
             }
         };
 
-        console.log("WA DEBUG: fake non-CQC registration: ", site);
-
         apiEndpoint.post('/registration')
             .send([site])
             .expect('Content-Type', /json/)
@@ -94,39 +92,40 @@ describe ("Expected registrations", async () => {
     });
     it("should create a CQC registation", async () => {
         // console.log("WA TEST -CQC services: ", cqcServices);
-
         const cqcSite = {
-            "locationId": "1-1001921065",
-            "locationName": "Warren Care CQC",
-            "addressLine1": "Line 1",
-            "addressLine2": "Line 2 Part 1, Line 2 Part 2",
-            "townCity": "My Town",
-            "county": "My County",
-            "postalCode": "DY10 3RP",
-            "mainService": "Nurses agency",
+            "locationId": locations[0].locationId,
+            "locationName": faker.lorem.words(4) + " CQC",
+            "addressLine1": locations[0].address1,
+            "addressLine2": locations[0].address2,
+            "townCity": locations[0].townAndCity,
+            "county": locations[0].county,
+            "postalCode": locations[0].postcode,
+            "mainService": lookupRandomService(nonCqcServices).name,    // locations[0].mainServiceName - the main service name as defined in locations does not match our services
             "isRegulated": true,
             "user": {
-                "fullname": "Warren Ayling",
-                "jobTitle": "Backend Nurse",
-                "emailAddress": "bob@bob.com",
-                "contactNumber": "01111 111111",
-                "username": "aylingwcqc",
+                "fullname": faker.name.findName(),
+                "jobTitle": "Integration Tester",
+                "emailAddress": faker.internet.email(),
+                "contactNumber": faker.phone.phoneNumber('01#########'),
+                "username": faker.internet.userName(),
                 "password": "password",
                 "securityQuestion": "What is for dinner?",
                 "securityAnswer": "Beef Stew"
             }
         };
 
-        // apiEndpoint.post('/registration')
-        //     .send([cqcSite])
-        //     .expect('Content-Type', /json/)
-        //     .expect(200)
-        //     .end((err, res) => {
-        //         if (err) {
-        //             console.error(err);
-        //         }
-        //         console.log(res.body);
-        // });
+        console.log("WA DEBUG: cqc site: ", cqcSite)
+
+        apiEndpoint.post('/registration')
+            .send([cqcSite])
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    console.error(err);
+                }
+                console.log(res.body);
+        });
     });
 
 });
