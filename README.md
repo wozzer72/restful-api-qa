@@ -7,6 +7,11 @@ on the restful API.
 
 It utilises mocking of data, allowing the generation of large volumes data with node.js Promises if required.
 
+# To run
+`npm test` of course. This runs in default mode whereby it is assumed not to clear down any data first.
+
+`npm run clean:test` clears down all transactional data before running.
+
 # Libraries
 * jest
 * supertest - abstract the calling and responding to restful endpoints
