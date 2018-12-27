@@ -1,11 +1,7 @@
-const randomInt = (min, max) => {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-};
+const Random = require('./random');
 
 exports.lookupRandomService = (services) => {
-    const randomCategoryIndex = randomInt(0, services.length-1);
-    const randomServiceIndex = randomInt(0, services[randomCategoryIndex].services.length-1);
+    const randomCategoryIndex = Random.randomInt(0, services.length-1);
+    const randomServiceIndex = Random.randomInt(0, services[randomCategoryIndex].services.length-1);
     return services[randomCategoryIndex].services[randomServiceIndex];
 };

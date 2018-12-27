@@ -13,9 +13,10 @@ const baseEndpoint = 'http://localhost:3000/api';
 const apiEndpoint = supertest(baseEndpoint);
 
 // mocked real postcode/location data
-// http://localhost:3000/api/test/locations/random?limit=5
 const locations = require('../mockdata/locations').data;
 const postcodes = require('../mockdata/postcodes').data;
+
+const Random = require('../utils/random');
 
 const registrationUtils = require('../utils/registration');
 
@@ -162,6 +163,52 @@ describe ("establishment", async () => {
                 .expect(400)
                 .end((err,res) => {
                     expect(res.text).toEqual('Unexpected employer type: Unknown');
+                    expect(res.error.status).toEqual(400);
+                });
+            
+        });
+
+        it("should update the number of staff", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/staff`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.numberOfStaff).toBeNull();
+
+
+            const newNumberOfStaff = Random.randomInt(10,999);
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/staff/${newNumberOfStaff}`)
+                .set('Authorization', authToken)
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.numberOfStaff).toEqual(newNumberOfStaff);
+
+            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/staff`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(secondResponse.body.id).toEqual(establishmentId);
+            expect(secondResponse.body.name).toEqual(site.locationName);
+            expect(secondResponse.body.numberOfStaff).toEqual(newNumberOfStaff);
+
+            // now test for an out of range number of staff
+            apiEndpoint.post(`/establishment/${establishmentId}/staff/1000`)
+                .set('Authorization', authToken)
+                .send({
+                    employerType : "Unknown"
+                })
+                .expect('Content-Type', /text/)
+                .expect(400)
+                .end((err,res) => {
+                    expect(res.text).toEqual('Unexpected  number of staff: 1000');
                     expect(res.error.status).toEqual(400);
                 });
             
