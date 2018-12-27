@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/wozzer72/restful-api-qa#readme",
   "devDependencies": {
+    "faker": "^4.1.0",
     "jest": "^23.6.0",
     "supertest": "^3.3.0"
   }

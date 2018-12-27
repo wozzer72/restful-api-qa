@@ -9,41 +9,76 @@
 // }
 
 const supertest = require('supertest');
+const faker = require('faker');
 const baseEndpoint = 'http://localhost:3000/api';
 const apiEndpoint = supertest(baseEndpoint);
 
+// mocked real postcode/location data
+// http://localhost:3000/api/test/locations/random?limit=5
+const mockedLocations = require('../mockdata/locations').data;
+const postcodes = require('../mockdata/postcodes').data;
+
+const randomInt = (min, max) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+const lookupRandomService = (services) => {
+    const randomCategoryIndex = randomInt(0, services.length-1);
+    const randomServiceIndex = randomInt(0, services[randomCategoryIndex].services.length-1);
+    return services[randomCategoryIndex].services[randomServiceIndex];
+};
+
 describe ("Expected registrations", async () => {
-    beforeAll(() => {
-        // ideally, drop and recreate the database here,
-        //  but introduce an endpoint, which is only
-        //  available on localhost, which deletes all data
+    let cqcServices = null;
+    let nonCqcServices = null;
+    beforeAll(async () => {
+        // clean the database
+        await apiEndpoint.post('/test/clean')
+            .send({})
+            .expect(200);
+
+        // fetch the current set of CQC and non CQC services (to set main service)
+        const cqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=true')
+            .expect('Content-Type', /json/)
+            .expect(200);
+        cqcServices = cqcServicesResults.body;
+            
+        const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
+            .expect('Content-Type', /json/)
+            .expect(200);
+        nonCqcServices = nonCqcServicesResults.body;
     });
 
-    beforeEach(() => {
+    beforeEach(async () => {
     });
 
     it("should create a non-CQC registation", async () => {
+        //console.log("WA TEST - non cqc services: ", nonCqcServices);
+        // no location id for non-CQC site
         const site = {
-            "locationId": "1-1001921065",
-            "locationName": "Warren Care non-CQC",
-            "addressLine1": "Line 1",
-            "addressLine2": "Line 2 Part 1, Line 2 Part 2",
-            "townCity": "My Town",
-            "county": "My County",
-            "postalCode": "DY10 3RP",
-            "mainService": "Nurses agency",
+            "locationName": faker.lorem.words(4),
+            "addressLine1": postcodes[0].address1,
+            "addressLine2": faker.lorem.words(2),
+            "townCity": postcodes[0].townAndCity,
+            "county": postcodes[0].county,
+            "postalCode": postcodes[0].postcode,
+            "mainService": lookupRandomService(nonCqcServices).name,
             "isRegulated": false,
             "user": {
-                "fullname": "Warren Ayling",
-                "jobTitle": "Backend Nurse",
-                "emailAddress": "bob@bob.com",
-                "contactNumber": "01111 111111",
-                "username": "aylingwnoncqc",
+                "fullname": faker.name.findName(),
+                "jobTitle": "Integration Tester",
+                "emailAddress": faker.internet.email(),
+                "contactNumber": faker.phone.phoneNumber('01#########'),
+                "username": faker.internet.userName(),
                 "password": "password",
-                "securityQuestion": "What is dinner?",
+                "securityQuestion": "When is dinner?",
                 "securityAnswer": "All Day"
             }
         };
+
+        console.log("WA DEBUG: fake non-CQC registration: ", site);
 
         apiEndpoint.post('/registration')
             .send([site])
@@ -58,6 +93,8 @@ describe ("Expected registrations", async () => {
 
     });
     it("should create a CQC registation", async () => {
+        // console.log("WA TEST -CQC services: ", cqcServices);
+
         const cqcSite = {
             "locationId": "1-1001921065",
             "locationName": "Warren Care CQC",
@@ -75,21 +112,21 @@ describe ("Expected registrations", async () => {
                 "contactNumber": "01111 111111",
                 "username": "aylingwcqc",
                 "password": "password",
-                "securityQuestion": "What is dinner?",
-                "securityAnswer": "All Day"
+                "securityQuestion": "What is for dinner?",
+                "securityAnswer": "Beef Stew"
             }
         };
 
-        apiEndpoint.post('/registration')
-            .send([cqcSite])
-            .expect('Content-Type', /json/)
-            .expect(200)
-            .end((err, res) => {
-                if (err) {
-                    console.error(err);
-                }
-                console.log(res.body);
-        });
+        // apiEndpoint.post('/registration')
+        //     .send([cqcSite])
+        //     .expect('Content-Type', /json/)
+        //     .expect(200)
+        //     .end((err, res) => {
+        //         if (err) {
+        //             console.error(err);
+        //         }
+        //         console.log(res.body);
+        // });
     });
 
 });
