@@ -9,7 +9,6 @@
 // }
 
 const supertest = require('supertest');
-const faker = require('faker');
 const baseEndpoint = 'http://localhost:3000/api';
 const apiEndpoint = supertest(baseEndpoint);
 
@@ -18,7 +17,6 @@ const apiEndpoint = supertest(baseEndpoint);
 const locations = require('../mockdata/locations').data;
 const postcodes = require('../mockdata/postcodes').data;
 
-const servicesUtils = require('../utils/services');
 const registrationUtils = require('../utils/registration');
 
 describe ("Expected registrations", async () => {
@@ -49,30 +47,21 @@ describe ("Expected registrations", async () => {
 
     it("should create a non-CQC registation", async () => {
         const site =  registrationUtils.newNonCqcSite(postcodes[0], nonCqcServices);
-        apiEndpoint.post('/registration')
+        const registeredEstablishment = await apiEndpoint.post('/registration')
             .send([site])
             .expect('Content-Type', /json/)
-            .expect(200)
-            .end((err, res) => {
-                if (err) {
-                    console.error(err);
-                }
-                console.log(res.body);
-        });
-
+            .expect(200);
+        expect(registeredEstablishment.body.success).toEqual(1);
+        expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);
     });
+
     it("should create a CQC registation", async () => {
         const cqcSite = registrationUtils.newCqcSite(locations[0], cqcServices);
-        apiEndpoint.post('/registration')
+        const registeredEstablishment = await apiEndpoint.post('/registration')
             .send([cqcSite])
             .expect('Content-Type', /json/)
-            .expect(200)
-            .end((err, res) => {
-                if (err) {
-                    console.error(err);
-                }
-                console.log(res.body);
-        });
+            .expect(200);
+        expect(registeredEstablishment.body.success).toEqual(1);
+        expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);    
     });
-
 });
