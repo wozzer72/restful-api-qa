@@ -213,7 +213,6 @@ describe ("establishment", async () => {
                 });
         });
 
-
         it("should update 'other' services", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
@@ -447,6 +446,126 @@ describe ("establishment", async () => {
         expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
         expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
         expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+        });
+
+        it("should update the sharing options", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.share.enabled).toEqual(false);        // disabled (default) on registration
+
+            // enable sharing (no options)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .send({
+                    "share" : {
+                        "enabled" : true
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.share.enabled).toEqual(true);
+            expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
+            expect(updateResponse.body.share.with.length).toEqual(0);
+
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.share.enabled).toEqual(true);
+            expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
+            expect(updateResponse.body.share.with.length).toEqual(0);
+    
+            // with sharing enabled, add options, some of which are happily ignored
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .send({
+                    "share" : {
+                        "enabled" : true,
+                        "with" : ["withAdmin", "Local Authority", "withPet"]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.share.enabled).toEqual(true);
+            expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
+            expect(updateResponse.body.share.with.length).toEqual(1);
+            expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
+
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.share.enabled).toEqual(true);
+            expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
+            expect(updateResponse.body.share.with.length).toEqual(1);
+            expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
+
+            // now disable sharing - provide with options, but they will be ignored
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .send({
+                    "share" : {
+                        "enabled" : false,
+                        "with" : ["CQC"]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.share.enabled).toEqual(false);
+
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.share.enabled).toEqual(false);
+
+            // now re-enable sharing (no options), they should be as they were before being disabled
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .send({
+                    "share" : {
+                        "enabled" : true
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.share.enabled).toEqual(true);
+            expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
+            expect(updateResponse.body.share.with.length).toEqual(1);
+            expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
+
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.share.enabled).toEqual(true);
+            expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
+            expect(updateResponse.body.share.with.length).toEqual(1);
+            expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
+
         });
 
 
