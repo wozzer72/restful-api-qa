@@ -63,7 +63,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            console.log("Registered establishment with id: ", nonCqcEstablishment.body.establishmentId);
             expect(nonCqcEstablishment.body.success).toEqual(1);
             expect(Number.isInteger(nonCqcEstablishment.body.establishmentId)).toEqual(true);
             establishmentId = nonCqcEstablishment.body.establishmentId;
@@ -81,7 +80,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            console.log("Registered establishment with id: ", loginResponse.body);
             expect(loginResponse.body.establishment.id).toEqual(establishmentId);
             expect(loginResponse.body.establishment.isRegulated).toEqual(false);
             expect(loginResponse.body.isFirstLogin).toEqual(true);
@@ -104,6 +102,69 @@ describe ("establishment", async () => {
             // assert and store the auth token
             authToken = parseInt(secondLoginResponse.header.authorization);
             expect(authToken).toEqual(establishmentId);
+        });
+
+        it("should update the employer type", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.employerType).toBeNull();
+
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .send({
+                    employerType : "Private Sector"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.employerType).toEqual('Private Sector');
+
+            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(secondResponse.body.id).toEqual(establishmentId);
+            expect(secondResponse.body.name).toEqual(site.locationName);
+            expect(secondResponse.body.employerType).toEqual('Private Sector');
+
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .send({
+                    employerType : "Voluntary / Charity"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.employerType).toEqual('Voluntary / Charity');
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .send({
+                    employerType : "Other"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.employerType).toEqual('Other');
+
+            // now test for an unexpected employer type
+            apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .send({
+                    employerType : "Unknown"
+                })
+                .expect('Content-Type', /text/)
+                .expect(400)
+                .end((err,res) => {
+                    expect(res.text).toEqual('Unexpected employer type: Unknown');
+                    expect(res.error.status).toEqual(400);
+                });
+            
         });
     });
 
