@@ -265,9 +265,15 @@ describe ("establishment", async () => {
                 }
             ];
             for (let loopCount=0; loopCount < expectedNumberOfOtherServices; loopCount++) {
-                // TODO: random can return the same index more than once; which will cause irratic failures on test
+                // random can return the same index more than once; which will cause irratic failures on test
+                let nextServiceId = null;
+                while (nextServiceId === null) {
+                    const testServiceId = nonCqcServiceIDs[Math.floor(Math.random() * nonCqcServiceIDs.length)];
+                    if (!newNonCQCServiceIDs.find(existingService => existingService.id === testServiceId)) nextServiceId = testServiceId;
+                } 
+
                 newNonCQCServiceIDs.push({
-                    id: nonCqcServiceIDs[Math.floor(Math.random() * nonCqcServiceIDs.length)]
+                    id: nextServiceId
                 });
             }
             expect(nonCqcServiceIDs.length).toBeGreaterThan(0);
@@ -612,7 +618,7 @@ describe ("establishment", async () => {
         //     });
         // });
 
-        // include only tests that differ to those of a non-CQC establishment; namely other services
+        // include only tests that differ to those of a non-CQC establishment; namely "other services" and "share" (because wanting to share with CQC)
     });
 
 });
