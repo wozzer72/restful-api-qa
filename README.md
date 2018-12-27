@@ -12,6 +12,8 @@ It utilises mocking of data, allowing the generation of large volumes data with 
 
 `npm run clean:test` clears down all transactional data before running.
 
+The "reference services" tests use snapshots. If needing to update the snapshots run: `npm -- -u test`
+
 # Libraries
 * jest
 * supertest - abstract the calling and responding to restful endpoints

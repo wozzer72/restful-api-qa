@@ -229,6 +229,8 @@ describe ("establishment", async () => {
         //             console.log(res.body);
         //     });
         // });
+
+        // include only tests that differ to those of a non-CQC establishment; namely other services
     });
 
 });
