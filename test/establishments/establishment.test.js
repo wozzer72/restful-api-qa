@@ -211,7 +211,117 @@ describe ("establishment", async () => {
                     expect(res.text).toEqual('Unexpected  number of staff: 1000');
                     expect(res.error.status).toEqual(400);
                 });
+        });
+
+
+        it("should update 'other' services", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/services?all=true`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
+            expect(firstResponse.body.mainService.name).toEqual(site.mainService);
+
+            // before adding any services
+            expect(Array.isArray(firstResponse.body.otherServices)).toEqual(true);
+            expect(firstResponse.body.otherServices.length).toEqual(0);
+
+            // we also called the get with all=true, so test 'allOtherServices'
+            expect(Array.isArray(firstResponse.body.allOtherServices)).toEqual(true);
             
+
+            // because the `other services` filters out the main service, the results are dependent on main service - so can't use a snapshot!
+            // TODO - spend more time on validating the other services response here. For now, just assume there are one or more
+            expect(firstResponse.body.allOtherServices.length).toBeGreaterThanOrEqual(1);
+
+            // add new other services (not equal to the main service)
+            const expectedNumberOfOtherServices = Random.randomInt(1,3);
+            const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
+                .expect('Content-Type', /json/)
+                .expect(200);
+            const nonCqcServiceIDs = [];
+            nonCqcServicesResults.body.forEach(thisServiceCategory => {
+                thisServiceCategory.services.forEach(thisService => {
+                    // ignore the main service ID and service ID of 9/10 (these have two capacity questions and will always be used for a non-CQC establishment)
+                    if ((thisService.id !== firstResponse.body.mainService.id) && (thisService.id !== 9) && (thisService.id !== 10)) {
+                        nonCqcServiceIDs.push(thisService.id);
+                    }
+                })
+            });
+            expect(nonCqcServiceIDs.length).toBeGreaterThan(0);
+
+            // always use service ID of 9 or 10 (whichever is not the main service id)
+            //   we also add a known CQC service to prove it is ignored (always the first!
+            const newNonCQCServiceIDs = [
+                {
+                    id: 29
+                },
+                {
+                    id: firstResponse.body.mainService.id === 9 ? 10 : 9
+                }
+            ];
+            for (let loopCount=0; loopCount < expectedNumberOfOtherServices; loopCount++) {
+                newNonCQCServiceIDs.push({
+                    id: nonCqcServiceIDs[Math.floor(Math.random() * nonCqcServiceIDs.length)]
+                });
+            }
+            expect(nonCqcServiceIDs.length).toBeGreaterThan(0);
+
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/services`)
+                .set('Authorization', authToken)
+                .send({
+                    services: newNonCQCServiceIDs
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(Number.isInteger(updateResponse.body.mainService.id)).toEqual(true);
+            expect(updateResponse.body.mainService.name).toEqual(site.mainService);
+            expect(Array.isArray(updateResponse.body.allOtherServices)).toEqual(true);
+            expect(updateResponse.body.allOtherServices.length).toEqual(0);
+
+            // confirm the services
+            expect(Array.isArray(updateResponse.body.otherServices)).toEqual(true);
+            expect(updateResponse.body.otherServices.length).toBeGreaterThan(0);
+
+            // remove the dodgy CQC service from the input set and return id as integer not object
+            const reworkedReferenceServiceIDs = newNonCQCServiceIDs.filter(x => x.id!=29).map(y => y.id);
+            // console.log("WA TEST: original and reworked service IDs: ", newNonCQCServiceIDs, reworkedReferenceServiceIDs);
+
+            // now compare the returned other services with those expected
+            const returnedOtherServicesID = [];
+            updateResponse.body.otherServices.forEach(thisServiceCategory => {
+                thisServiceCategory.services.forEach(thisService => {
+                    returnedOtherServicesID.push(thisService.id);
+                })
+            });
+            const referenceEqualsReturned = reworkedReferenceServiceIDs.length === returnedOtherServicesID.length &&
+                                            reworkedReferenceServiceIDs.sort().every((value, index) => { return value === returnedOtherServicesID.sort()[index]});
+            expect(referenceEqualsReturned).toEqual(true);
+
+            // now test the get having updated 'other service'
+            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/services`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(secondResponse.body.id).toEqual(establishmentId);
+            expect(secondResponse.body.name).toEqual(site.locationName);
+            const fetchedOtherServicesID = [];
+            secondResponse.body.otherServices.forEach(thisServiceCategory => {
+                thisServiceCategory.services.forEach(thisService => {
+                    fetchedOtherServicesID.push(thisService.id);
+                })
+            });
+            // console.log("WA TEST: original and fetched service IDs: ", fetchedOtherServicesID, reworkedReferenceServiceIDs);
+            const fetchedEqualsReturned = reworkedReferenceServiceIDs.length === fetchedOtherServicesID.length &&
+                                            reworkedReferenceServiceIDs.sort().every((value, index) => { return value === fetchedOtherServicesID.sort()[index]});
+            expect(fetchedEqualsReturned).toEqual(true);
         });
     });
 

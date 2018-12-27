@@ -25,16 +25,17 @@ describe ("Expected reference services", async () => {
         expect(services.body).toMatchSnapshot();
     });
 
-    it("should fetch Non-CQC services by category", async () => {
+    it("should fetch Non-CQC main services by category", async () => {
         const services = await apiEndpoint.get('/services/byCategory?cqc=false')
             .expect('Content-Type', /json/)
             .expect(200);
         expect(services.body).toMatchSnapshot();
     });
-    it("should fetch CQC services by category", async () => {
+    it("should fetch CQC main services by category", async () => {
         const services = await apiEndpoint.get('/services/byCategory?cqc=true')
             .expect('Content-Type', /json/)
             .expect(200);
+        // note - the snapshot here catches "Live-in care" (id=35) to NOT be present for CQC main services
         expect(services.body).toMatchSnapshot();
     });
 
