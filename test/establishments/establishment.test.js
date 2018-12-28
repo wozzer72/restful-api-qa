@@ -53,6 +53,7 @@ describe ("establishment", async () => {
         let primaryLocalAuthorityCustodianCode = null;
         let loginSuccess = null;
         let authToken = null;
+        const newCapacityIDs = [];
 
         beforeAll(async () => {
             site =  registrationUtils.newNonCqcSite(postcodes[1], nonCqcServices);
@@ -217,6 +218,11 @@ describe ("establishment", async () => {
                 });
         });
 
+        it.skip("should validate the list of all services returned on GET all=true", async () => {
+        });
+        it.skip("should validate the list of all services returned on GET all=true having updated services and confirming those which are my other service", async () => {
+        });
+
         it("should update 'other' services", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
@@ -332,6 +338,138 @@ describe ("establishment", async () => {
             const fetchedEqualsReturned = reworkedReferenceServiceIDs.length === fetchedOtherServicesID.length &&
                                             reworkedReferenceServiceIDs.sort().every((value, index) => { return value === fetchedOtherServicesID.sort()[index]});
             expect(fetchedEqualsReturned).toEqual(true);
+        });
+
+        it.skip("should validate the list of all service capacities returned on GET all=true", async () => {
+        });
+        it.skip("should validate the list of all service capacities returned on GET all=true having updated capacities and confirming the answer", async () => {
+        });
+        it("should update 'service capacities", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/capacity?all=true`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
+            expect(firstResponse.body.mainService.name).toEqual(site.mainService);
+
+            // before adding any service capacities
+            expect(Array.isArray(firstResponse.body.capacities)).toEqual(true);
+            expect(firstResponse.body.capacities.length).toEqual(0);
+
+            // we also called the get with all=true, so test 'allOtherServices'
+            expect(Array.isArray(firstResponse.body.allServiceCapacities)).toEqual(true);
+            
+
+            // because the `service capacities` are dependent on the set of main and other services, and consequently their type in regards to how many (if any)
+            //   service capacity questions there are, and if the main service has a set of capacities, validating the set of allServiceCapacities
+            // TODO - spend more time on validating the allServiceCapacities response here. For now, just assume there are one or more
+            //expect(firstResponse.body.allServiceCapacities.length).toBeGreaterThanOrEqual(1);
+
+            // for now, assume the set of allServiceCapacities is valid
+
+            // add new service capabilities, by randoming selecting a random number of capabilities from allServiceCapacities
+            const availableCapacitiesToUpdate = [];
+            firstResponse.body.allServiceCapacities.forEach(thisServiceCapacity => {
+                thisServiceCapacity.questions.forEach(thisQuestion => {
+                    availableCapacitiesToUpdate.push(thisQuestion.questionId);
+                })
+            });
+            // there could be no capacities
+            if (availableCapacitiesToUpdate.length > 0) {
+                const expectedNumberOfCapacities = Random.randomInt(1,availableCapacitiesToUpdate.length-1);    // at least one
+                let newCapacities = [
+                    {
+                        questionId: 12,
+                        answer: 100,
+                        notes: "Ignored because this is a CQC service capacity"
+                    },
+                    {
+                        id: 1,
+                        answer: 100,
+                        notes: "Ignored because no questionId field"
+
+                    },
+                    {
+                        questionId: 12,
+                        answer: 1000,
+                        notes: "Ignored because answer is greater than 1000"
+                    },
+                    {
+                        questionId: "1",
+                        answer: 100,
+                        notes: "Ignored because questionId value is not an integer"
+                    },
+                    {
+                        questionId: 12,
+                        answer: "100",
+                        notes: "Ignored because answer is not an integer"
+                    }
+                ];
+
+                for (let loopCount=0; loopCount < expectedNumberOfCapacities; loopCount++) {
+                    // random can return the same index more than once; which will cause irratic failures on test
+                    let nextCapacityId = null;
+                    while (nextCapacityId === null) {
+                        const testCapacityId = availableCapacitiesToUpdate[Math.floor(Math.random() * availableCapacitiesToUpdate.length)];
+                        if (!newCapacityIDs.find(existingService => existingService.questionId === testCapacityId)) nextCapacityId = testCapacityId;
+                    } 
+    
+                    newCapacityIDs.push({
+                        questionId: nextCapacityId,
+                        answer: Random.randomInt(1,999)
+                    });
+                }
+                expect(newCapacityIDs.length).toBeGreaterThan(0);
+
+                // now merge the expected and the original (unexpected) capacities
+                newCapacities = newCapacities.concat(newCapacityIDs);
+    
+                let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: newCapacities
+                    })
+                    .expect('Content-Type', /json/)
+                    .expect(200);
+                expect(updateResponse.body.id).toEqual(establishmentId);
+                expect(updateResponse.body.name).toEqual(site.locationName);
+                expect(Number.isInteger(updateResponse.body.mainService.id)).toEqual(true);
+                expect(updateResponse.body.mainService.name).toEqual(site.mainService);
+                expect(Array.isArray(updateResponse.body.allServiceCapacities)).toEqual(true);
+                expect(updateResponse.body.allServiceCapacities.length).toEqual(0);
+
+                // confirm the expected capacities in the response
+                expect(Array.isArray(updateResponse.body.capacities)).toEqual(true);
+                expect(updateResponse.body.capacities.length).toEqual(newCapacityIDs.length);
+                newCapacityIDs.forEach(thisExpectedCapacity => {
+                    const foundCapacity = updateResponse.body.capacities.find(thisCapacity => thisCapacity.questionId === thisExpectedCapacity.questionId);
+                    expect(foundCapacity !== null).toEqual(true);
+                });
+
+                // now confirm the get
+                const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .expect('Content-Type', /json/)
+                    .expect(200);
+                expect(secondResponse.body.id).toEqual(establishmentId);
+                expect(secondResponse.body.name).toEqual(site.locationName);
+                expect(Number.isInteger(secondResponse.body.mainService.id)).toEqual(true);
+                expect(secondResponse.body.mainService.name).toEqual(site.mainService);
+                expect(Array.isArray(secondResponse.body.allServiceCapacities)).toEqual(true);
+                expect(secondResponse.body.allServiceCapacities.length).toEqual(0);
+    
+                expect(Array.isArray(secondResponse.body.capacities)).toEqual(true);
+                expect(secondResponse.body.capacities.length).toEqual(newCapacityIDs.length);
+                newCapacityIDs.forEach(thisExpectedCapacity => {
+                    const foundCapacity = secondResponse.body.capacities.find(thisCapacity => thisCapacity.questionId === thisExpectedCapacity.questionId);
+                    expect(foundCapacity !== null).toEqual(true);
+                });        
+            }         
         });
 
         it("should update the number of vacancies, starters and leavers", async () => {
@@ -672,7 +810,12 @@ describe ("establishment", async () => {
             expect(Array.isArray(firstResponse.body.share.authorities)).toEqual(true);
             expect(firstResponse.body.share.authorities.length).toEqual(2);
 
-            // TODO: add assertions for service capacities
+            expect(Array.isArray(firstResponse.body.capacities)).toEqual(true);
+            expect(firstResponse.body.capacities.length).toEqual(newCapacityIDs.length);
+            newCapacityIDs.forEach(thisExpectedCapacity => {
+                const foundCapacity = firstResponse.body.capacities.find(thisCapacity => thisCapacity.questionId === thisExpectedCapacity.questionId);
+                expect(foundCapacity !== null).toEqual(true);
+            });
         });
     });
 
@@ -702,18 +845,25 @@ describe ("establishment", async () => {
     describe.skip("Establishment forced failures", async () => {
         describe("Employer Type", async () => {
             it("should fail (401) when attempting to update 'employer type' without passing Authorization header", async () => {});
-            it("should fail (403) when attempting to update 'employer type'passing Authorization header with mismatched establishment id", async () => {});
+            it("should fail (403) when attempting to update 'employer type' passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (503) when attempting to update 'employer type' with unexpected server error", async () => {});
             it("should fail (400) when attempting to update 'employer type' with unexpected employer type", async () => {});
             it("should fail (400) when attempting to update 'employer type' with unexpected request format (JSON Schema)", async () => {});
         });
         describe("Other Services", async () => {
             it("should fail (401) when attempting to update 'other services' without passing Authorization header", async () => {});
-            it("should fail (403) when attempting to update 'other services'passing Authorization header with mismatched establishment id", async () => {});
+            it("should fail (403) when attempting to update 'other services' passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (503) when attempting to update 'other services' with unexpected server error", async () => {});
             it("should fail (400) when trying to update 'other services' with duplicates", async () => {});
             it("should fail (400) when trying to update 'other services' using 'main service'", async () => {});
-            it("should fail (400) when attempting to update employer type with unexpected request format (JSON Schema)", async () => {})
+            it("should fail (400) when attempting to update 'other services' with unexpected request format (JSON Schema)", async () => {})
+        });
+        describe("Service Capacities", async () => {
+            it("should fail (401) when attempting to update 'services capacities' without passing Authorization header", async () => {});
+            it("should fail (403) when attempting to update 'services capacities' passing Authorization header with mismatched establishment id", async () => {});
+            it("should fail (503) when attempting to update 'services capacities' with unexpected server error", async () => {});
+            it("should fail (400) when trying to update 'services capacities' with duplicates", async () => {});
+            it("should fail (400) when attempting to update 'services capacities' with unexpected request format (JSON Schema)", async () => {})
         });
     });
 
