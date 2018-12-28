@@ -19,6 +19,7 @@ const postcodes = require('../mockdata/postcodes').data;
 const Random = require('../utils/random');
 
 const registrationUtils = require('../utils/registration');
+const laUtils = require('../utils/localAuthorities');
 
 describe ("establishment", async () => {
     let cqcServices = null;
@@ -49,15 +50,18 @@ describe ("establishment", async () => {
     describe("Non CQC Establishment", async ( )=> {
         let site = null;
         let establishmentId = null;
+        let primaryLocalAuthorityCustodianCode = null;
         let loginSuccess = null;
         let authToken = null;
 
         beforeAll(async () => {
             site =  registrationUtils.newNonCqcSite(postcodes[1], nonCqcServices);
+            primaryLocalAuthorityCustodianCode = parseInt(postcodes[1].localCustodianCode);
         });
 
         it("should create a non-CQC registation", async () => {
             expect(site).not.toBeNull();
+            expect(primaryLocalAuthorityCustodianCode).not.toBeNull();
 
             const nonCqcEstablishment = await apiEndpoint.post('/registration')
                 .send([site])
@@ -575,6 +579,74 @@ describe ("establishment", async () => {
 
         });
 
+        it("should update the Local Authorities Share Options", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.primaryAuthority.id).toEqual(primaryLocalAuthorityCustodianCode);
+            expect(firstResponse.body.primaryAuthority).toHaveProperty('name');     // we cannot validate the name of the Local Authority - this is not known in reference data
+
+            // before update expect the "localAuthorities" attribute as an array but it will be empty
+            expect(Array.isArray(firstResponse.body.localAuthorities)).toEqual(true);
+            expect(firstResponse.body.localAuthorities.length).toEqual(0);
+
+            // assume the main and just one other (random) authority to set, along with some dodgy data to ignore
+            const randomAuthorityCustodianCode = await laUtils.lookupRandomAuthority(apiEndpoint);
+            const updateAuthorities = [
+                {
+                    name: "WOZILAND",
+                    notes: "ignored because no id field"
+                },
+                {
+                    id: primaryLocalAuthorityCustodianCode
+                },
+                {
+                    id: "abc",
+                    notes: "Ignored because id is not an integer"
+                }
+            ];
+            updateAuthorities.push({
+                id: randomAuthorityCustodianCode
+            })
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .send({
+                    "localAuthorities" : updateAuthorities
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body).not.toHaveProperty('primaryAuthority');     // primary authority not return on POST response
+
+            // but localAuthority is and should include only the main and random authority only (everything else ignored)
+            expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
+            expect(updateResponse.body.localAuthorities.length).toEqual(2);
+            const foundMainAuthority = updateResponse.body.localAuthorities.find(thisLA => thisLA.custodianCode === primaryLocalAuthorityCustodianCode);
+            const foundRandomAuthority = updateResponse.body.localAuthorities.find(thisLA => thisLA.custodianCode === randomAuthorityCustodianCode);
+
+            expect(foundMainAuthority !== null && foundRandomAuthority !== null).toEqual(true);
+    
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+            expect(updateResponse.body.primaryAuthority.id).toEqual(primaryLocalAuthorityCustodianCode);
+            expect(updateResponse.body.primaryAuthority).toHaveProperty('name');     // we cannot validate the name of the Local Authority - this is not known in reference data
+
+            // before update expect the "localAuthorities" attribute as an array but it will be empty
+            expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
+            expect(updateResponse.body.localAuthorities.length).toEqual(2);
+            });
+
         it("should get the Establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
@@ -597,10 +669,11 @@ describe ("establishment", async () => {
             expect(firstResponse.body.jobs.TotalLeavers).toEqual(0);
             expect(Array.isArray(firstResponse.body.otherServices)).toEqual(true);
             expect(firstResponse.body.otherServices.length).toBeGreaterThan(0);
+            expect(Array.isArray(firstResponse.body.share.authorities)).toEqual(true);
+            expect(firstResponse.body.share.authorities.length).toEqual(2);
 
-            // TODO: add assertions for service capacities and local authority share
+            // TODO: add assertions for service capacities
         });
-
     });
 
     describe("CQC Establishment", async ( )=> {
@@ -619,6 +692,29 @@ describe ("establishment", async () => {
         // });
 
         // include only tests that differ to those of a non-CQC establishment; namely "other services" and "share" (because wanting to share with CQC)
+
+        // NOTE - location mock data does not include a "local custodian code" making it difficult to test 'service capacity' for a CQC site (but
+        //        the code does not differentiate implementation for a CQC site; it simply works from the associated 'other services'). Could test by
+        //        assuming the "primaryAuthority" returned in the GET is correct (as tested for a non-CQC site - that look up is the same regardless
+        //        of establishment.isRegulated)
+    });
+
+    describe.skip("Establishment forced failures", async () => {
+        describe("Employer Type", async () => {
+            it("should fail (401) when attempting to update 'employer type' without passing Authorization header", async () => {});
+            it("should fail (403) when attempting to update 'employer type'passing Authorization header with mismatched establishment id", async () => {});
+            it("should fail (503) when attempting to update 'employer type' with unexpected server error", async () => {});
+            it("should fail (400) when attempting to update 'employer type' with unexpected employer type", async () => {});
+            it("should fail (400) when attempting to update 'employer type' with unexpected request format (JSON Schema)", async () => {});
+        });
+        describe("Other Services", async () => {
+            it("should fail (401) when attempting to update 'other services' without passing Authorization header", async () => {});
+            it("should fail (403) when attempting to update 'other services'passing Authorization header with mismatched establishment id", async () => {});
+            it("should fail (503) when attempting to update 'other services' with unexpected server error", async () => {});
+            it("should fail (400) when trying to update 'other services' with duplicates", async () => {});
+            it("should fail (400) when trying to update 'other services' using 'main service'", async () => {});
+            it("should fail (400) when attempting to update employer type with unexpected request format (JSON Schema)", async () => {})
+        });
     });
 
 });
