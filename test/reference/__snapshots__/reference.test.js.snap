@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Expected reference services should fetch CQC services by category 1`] = `
+exports[`Expected reference services should fetch CQC main services by category 1`] = `
 Array [
   Object {
     "category": "Adult community care",
@@ -118,1529 +118,1529 @@ Array [
 exports[`Expected reference services should fetch Local Authorities 1`] = `
 Array [
   Object {
-    "id": 9052,
+    "custodianCode": 9052,
     "name": "ABERDEENSHIRE",
   },
   Object {
-    "id": 3805,
+    "custodianCode": 3805,
     "name": "ADUR",
   },
   Object {
-    "id": 905,
+    "custodianCode": 905,
     "name": "ALLERDALE",
   },
   Object {
-    "id": 1005,
+    "custodianCode": 1005,
     "name": "AMBER VALLEY",
   },
   Object {
-    "id": 9053,
+    "custodianCode": 9053,
     "name": "ANGUS",
   },
   Object {
-    "id": 9054,
+    "custodianCode": 9054,
     "name": "ARGYLL AND BUTE",
   },
   Object {
-    "id": 3810,
+    "custodianCode": 3810,
     "name": "ARUN",
   },
   Object {
-    "id": 3005,
+    "custodianCode": 3005,
     "name": "ASHFIELD",
   },
   Object {
-    "id": 2205,
+    "custodianCode": 2205,
     "name": "ASHFORD",
   },
   Object {
-    "id": 405,
+    "custodianCode": 405,
     "name": "AYLESBURY VALE",
   },
   Object {
-    "id": 3505,
+    "custodianCode": 3505,
     "name": "BABERGH",
   },
   Object {
-    "id": 5060,
+    "custodianCode": 5060,
     "name": "BARKING AND DAGENHAM",
   },
   Object {
-    "id": 5090,
+    "custodianCode": 5090,
     "name": "BARNET",
   },
   Object {
-    "id": 4405,
+    "custodianCode": 4405,
     "name": "BARNSLEY",
   },
   Object {
-    "id": 910,
+    "custodianCode": 910,
     "name": "BARROW-IN-FURNESS",
   },
   Object {
-    "id": 1505,
+    "custodianCode": 1505,
     "name": "BASILDON",
   },
   Object {
-    "id": 1705,
+    "custodianCode": 1705,
     "name": "BASINGSTOKE AND DEANE",
   },
   Object {
-    "id": 3010,
+    "custodianCode": 3010,
     "name": "BASSETLAW",
   },
   Object {
-    "id": 235,
+    "custodianCode": 235,
     "name": "BEDFORD",
   },
   Object {
-    "id": 5120,
+    "custodianCode": 5120,
     "name": "BEXLEY",
   },
   Object {
-    "id": 4605,
+    "custodianCode": 4605,
     "name": "BIRMINGHAM",
   },
   Object {
-    "id": 2405,
+    "custodianCode": 2405,
     "name": "BLABY",
   },
   Object {
-    "id": 2372,
+    "custodianCode": 2372,
     "name": "BLACKBURN WITH DARWEN",
   },
   Object {
-    "id": 2373,
+    "custodianCode": 2373,
     "name": "BLACKPOOL",
   },
   Object {
-    "id": 6910,
+    "custodianCode": 6910,
     "name": "BLAENAU GWENT",
   },
   Object {
-    "id": 1010,
+    "custodianCode": 1010,
     "name": "BOLSOVER",
   },
   Object {
-    "id": 4205,
+    "custodianCode": 4205,
     "name": "BOLTON",
   },
   Object {
-    "id": 2505,
+    "custodianCode": 2505,
     "name": "BOSTON",
   },
   Object {
-    "id": 1250,
+    "custodianCode": 1250,
     "name": "BOURNEMOUTH",
   },
   Object {
-    "id": 335,
+    "custodianCode": 335,
     "name": "BRACKNELL FOREST",
   },
   Object {
-    "id": 4705,
+    "custodianCode": 4705,
     "name": "BRADFORD MDC",
   },
   Object {
-    "id": 1510,
+    "custodianCode": 1510,
     "name": "BRAINTREE",
   },
   Object {
-    "id": 2605,
+    "custodianCode": 2605,
     "name": "BRECKLAND",
   },
   Object {
-    "id": 5150,
+    "custodianCode": 5150,
     "name": "BRENT",
   },
   Object {
-    "id": 1515,
+    "custodianCode": 1515,
     "name": "BRENTWOOD",
   },
   Object {
-    "id": 6915,
+    "custodianCode": 6915,
     "name": "BRIDGEND COUNTY BOROUGH",
   },
   Object {
-    "id": 1445,
+    "custodianCode": 1445,
     "name": "BRIGHTON & HOVE",
   },
   Object {
-    "id": 116,
+    "custodianCode": 116,
     "name": "BRISTOL",
   },
   Object {
-    "id": 2610,
+    "custodianCode": 2610,
     "name": "BROADLAND",
   },
   Object {
-    "id": 1805,
+    "custodianCode": 1805,
     "name": "BROMSGROVE",
   },
   Object {
-    "id": 1905,
+    "custodianCode": 1905,
     "name": "BROXBOURNE",
   },
   Object {
-    "id": 3015,
+    "custodianCode": 3015,
     "name": "BROXTOWE",
   },
   Object {
-    "id": 2315,
+    "custodianCode": 2315,
     "name": "BURNLEY",
   },
   Object {
-    "id": 4210,
+    "custodianCode": 4210,
     "name": "BURY",
   },
   Object {
-    "id": 6920,
+    "custodianCode": 6920,
     "name": "CAERPHILLY COUNTY BOROUGH",
   },
   Object {
-    "id": 4710,
+    "custodianCode": 4710,
     "name": "CALDERDALE",
   },
   Object {
-    "id": 505,
+    "custodianCode": 505,
     "name": "CAMBRIDGE",
   },
   Object {
-    "id": 5210,
+    "custodianCode": 5210,
     "name": "CAMDEN",
   },
   Object {
-    "id": 3405,
+    "custodianCode": 3405,
     "name": "CANNOCK CHASE",
   },
   Object {
-    "id": 2210,
+    "custodianCode": 2210,
     "name": "CANTERBURY",
   },
   Object {
-    "id": 6815,
+    "custodianCode": 6815,
     "name": "CARDIFF",
   },
   Object {
-    "id": 915,
+    "custodianCode": 915,
     "name": "CARLISLE",
   },
   Object {
-    "id": 6825,
+    "custodianCode": 6825,
     "name": "CARMARTHENSHIRE",
   },
   Object {
-    "id": 1520,
+    "custodianCode": 1520,
     "name": "CASTLE POINT",
   },
   Object {
-    "id": 240,
+    "custodianCode": 240,
     "name": "CENTRAL BEDFORDSHIRE",
   },
   Object {
-    "id": 6820,
+    "custodianCode": 6820,
     "name": "CEREDIGION",
   },
   Object {
-    "id": 2410,
+    "custodianCode": 2410,
     "name": "CHARNWOOD",
   },
   Object {
-    "id": 1525,
+    "custodianCode": 1525,
     "name": "CHELMSFORD",
   },
   Object {
-    "id": 1605,
+    "custodianCode": 1605,
     "name": "CHELTENHAM",
   },
   Object {
-    "id": 3105,
+    "custodianCode": 3105,
     "name": "CHERWELL",
   },
   Object {
-    "id": 660,
+    "custodianCode": 660,
     "name": "CHESHIRE EAST",
   },
   Object {
-    "id": 665,
+    "custodianCode": 665,
     "name": "CHESHIRE WEST AND CHESTER",
   },
   Object {
-    "id": 1015,
+    "custodianCode": 1015,
     "name": "CHESTERFIELD",
   },
   Object {
-    "id": 3815,
+    "custodianCode": 3815,
     "name": "CHICHESTER",
   },
   Object {
-    "id": 415,
+    "custodianCode": 415,
     "name": "CHILTERN",
   },
   Object {
-    "id": 2320,
+    "custodianCode": 2320,
     "name": "CHORLEY",
   },
   Object {
-    "id": 1210,
+    "custodianCode": 1210,
     "name": "CHRISTCHURCH",
   },
   Object {
-    "id": 9051,
+    "custodianCode": 9051,
     "name": "CITY OF ABERDEEN",
   },
   Object {
-    "id": 9059,
+    "custodianCode": 9059,
     "name": "CITY OF DUNDEE",
   },
   Object {
-    "id": 9064,
+    "custodianCode": 9064,
     "name": "CITY OF EDINBURGH",
   },
   Object {
-    "id": 9067,
+    "custodianCode": 9067,
     "name": "CITY OF GLASGOW",
   },
   Object {
-    "id": 5030,
+    "custodianCode": 5030,
     "name": "CITY OF LONDON",
   },
   Object {
-    "id": 3455,
+    "custodianCode": 3455,
     "name": "CITY OF STOKE-ON-TRENT",
   },
   Object {
-    "id": 5990,
+    "custodianCode": 5990,
     "name": "CITY OF WESTMINSTER",
   },
   Object {
-    "id": 9056,
+    "custodianCode": 9056,
     "name": "CLACKMANNAN",
   },
   Object {
-    "id": 1530,
+    "custodianCode": 1530,
     "name": "COLCHESTER",
   },
   Object {
-    "id": 6905,
+    "custodianCode": 6905,
     "name": "CONWY",
   },
   Object {
-    "id": 920,
+    "custodianCode": 920,
     "name": "COPELAND",
   },
   Object {
-    "id": 2805,
+    "custodianCode": 2805,
     "name": "CORBY",
   },
   Object {
-    "id": 840,
+    "custodianCode": 840,
     "name": "CORNWALL",
   },
   Object {
-    "id": 1610,
+    "custodianCode": 1610,
     "name": "COTSWOLD",
   },
   Object {
-    "id": 4610,
+    "custodianCode": 4610,
     "name": "COVENTRY",
   },
   Object {
-    "id": 2705,
+    "custodianCode": 2705,
     "name": "CRAVEN",
   },
   Object {
-    "id": 3820,
+    "custodianCode": 3820,
     "name": "CRAWLEY",
   },
   Object {
-    "id": 5240,
+    "custodianCode": 5240,
     "name": "CROYDON",
   },
   Object {
-    "id": 1910,
+    "custodianCode": 1910,
     "name": "DACORUM",
   },
   Object {
-    "id": 1350,
+    "custodianCode": 1350,
     "name": "DARLINGTON",
   },
   Object {
-    "id": 2215,
+    "custodianCode": 2215,
     "name": "DARTFORD",
   },
   Object {
-    "id": 2810,
+    "custodianCode": 2810,
     "name": "DAVENTRY",
   },
   Object {
-    "id": 6830,
+    "custodianCode": 6830,
     "name": "DENBIGHSHIRE",
   },
   Object {
-    "id": 1055,
+    "custodianCode": 1055,
     "name": "DERBY",
   },
   Object {
-    "id": 1045,
+    "custodianCode": 1045,
     "name": "DERBYSHIRE DALES",
   },
   Object {
-    "id": 4410,
+    "custodianCode": 4410,
     "name": "DONCASTER",
   },
   Object {
-    "id": 2220,
+    "custodianCode": 2220,
     "name": "DOVER",
   },
   Object {
-    "id": 4615,
+    "custodianCode": 4615,
     "name": "DUDLEY",
   },
   Object {
-    "id": 9058,
+    "custodianCode": 9058,
     "name": "DUMFRIES AND GALLOWAY",
   },
   Object {
-    "id": 1355,
+    "custodianCode": 1355,
     "name": "DURHAM",
   },
   Object {
-    "id": 5270,
+    "custodianCode": 5270,
     "name": "EALING",
   },
   Object {
-    "id": 9060,
+    "custodianCode": 9060,
     "name": "EAST AYRSHIRE",
   },
   Object {
-    "id": 1410,
+    "custodianCode": 1410,
     "name": "EASTBOURNE",
   },
   Object {
-    "id": 510,
+    "custodianCode": 510,
     "name": "EAST CAMBRIDGESHIRE",
   },
   Object {
-    "id": 1105,
+    "custodianCode": 1105,
     "name": "EAST DEVON",
   },
   Object {
-    "id": 1240,
+    "custodianCode": 1240,
     "name": "EAST DORSET",
   },
   Object {
-    "id": 9061,
+    "custodianCode": 9061,
     "name": "EAST DUNBARTONSHIRE",
   },
   Object {
-    "id": 1710,
+    "custodianCode": 1710,
     "name": "EAST HAMPSHIRE",
   },
   Object {
-    "id": 1915,
+    "custodianCode": 1915,
     "name": "EAST HERTFORDSHIRE",
   },
   Object {
-    "id": 1715,
+    "custodianCode": 1715,
     "name": "EASTLEIGH",
   },
   Object {
-    "id": 2510,
+    "custodianCode": 2510,
     "name": "EAST LINDSEY",
   },
   Object {
-    "id": 9062,
+    "custodianCode": 9062,
     "name": "EAST LOTHIAN",
   },
   Object {
-    "id": 2815,
+    "custodianCode": 2815,
     "name": "EAST NORTHAMPTONSHIRE",
   },
   Object {
-    "id": 9063,
+    "custodianCode": 9063,
     "name": "EAST RENFREWSHIRE",
   },
   Object {
-    "id": 2001,
+    "custodianCode": 2001,
     "name": "EAST RIDING OF YORKSHIRE",
   },
   Object {
-    "id": 3410,
+    "custodianCode": 3410,
     "name": "EAST STAFFORDSHIRE",
   },
   Object {
-    "id": 925,
+    "custodianCode": 925,
     "name": "EDEN",
   },
   Object {
-    "id": 3605,
+    "custodianCode": 3605,
     "name": "ELMBRIDGE",
   },
   Object {
-    "id": 5300,
+    "custodianCode": 5300,
     "name": "ENFIELD",
   },
   Object {
-    "id": 1535,
+    "custodianCode": 1535,
     "name": "EPPING FOREST",
   },
   Object {
-    "id": 3610,
+    "custodianCode": 3610,
     "name": "EPSOM AND EWELL",
   },
   Object {
-    "id": 1025,
+    "custodianCode": 1025,
     "name": "EREWASH",
   },
   Object {
-    "id": 1110,
+    "custodianCode": 1110,
     "name": "EXETER",
   },
   Object {
-    "id": 9065,
+    "custodianCode": 9065,
     "name": "FALKIRK",
   },
   Object {
-    "id": 1720,
+    "custodianCode": 1720,
     "name": "FAREHAM",
   },
   Object {
-    "id": 515,
+    "custodianCode": 515,
     "name": "FENLAND",
   },
   Object {
-    "id": 9066,
+    "custodianCode": 9066,
     "name": "FIFE",
   },
   Object {
-    "id": 6835,
+    "custodianCode": 6835,
     "name": "FLINTSHIRE",
   },
   Object {
-    "id": 2250,
+    "custodianCode": 2250,
     "name": "Folkestone and Hythe",
   },
   Object {
-    "id": 3510,
+    "custodianCode": 3510,
     "name": "FOREST HEATH",
   },
   Object {
-    "id": 1615,
+    "custodianCode": 1615,
     "name": "FOREST OF DEAN",
   },
   Object {
-    "id": 2325,
+    "custodianCode": 2325,
     "name": "FYLDE",
   },
   Object {
-    "id": 4505,
+    "custodianCode": 4505,
     "name": "GATESHEAD",
   },
   Object {
-    "id": 3020,
+    "custodianCode": 3020,
     "name": "GEDLING",
   },
   Object {
-    "id": 1620,
+    "custodianCode": 1620,
     "name": "GLOUCESTER",
   },
   Object {
-    "id": 1725,
+    "custodianCode": 1725,
     "name": "GOSPORT",
   },
   Object {
-    "id": 2230,
+    "custodianCode": 2230,
     "name": "GRAVESHAM",
   },
   Object {
-    "id": 2615,
+    "custodianCode": 2615,
     "name": "GREAT YARMOUTH",
   },
   Object {
-    "id": 5330,
+    "custodianCode": 5330,
     "name": "GREENWICH",
   },
   Object {
-    "id": 3615,
+    "custodianCode": 3615,
     "name": "GUILDFORD",
   },
   Object {
-    "id": 6810,
+    "custodianCode": 6810,
     "name": "GWYNEDD",
   },
   Object {
-    "id": 5360,
+    "custodianCode": 5360,
     "name": "HACKNEY",
   },
   Object {
-    "id": 650,
+    "custodianCode": 650,
     "name": "HALTON",
   },
   Object {
-    "id": 2710,
+    "custodianCode": 2710,
     "name": "HAMBLETON",
   },
   Object {
-    "id": 5390,
+    "custodianCode": 5390,
     "name": "HAMMERSMITH AND FULHAM",
   },
   Object {
-    "id": 2415,
+    "custodianCode": 2415,
     "name": "HARBOROUGH",
   },
   Object {
-    "id": 1540,
+    "custodianCode": 1540,
     "name": "HARLOW",
   },
   Object {
-    "id": 2715,
+    "custodianCode": 2715,
     "name": "HARROGATE",
   },
   Object {
-    "id": 5450,
+    "custodianCode": 5450,
     "name": "HARROW",
   },
   Object {
-    "id": 1730,
+    "custodianCode": 1730,
     "name": "HART",
   },
   Object {
-    "id": 724,
+    "custodianCode": 724,
     "name": "HARTLEPOOL",
   },
   Object {
-    "id": 1415,
+    "custodianCode": 1415,
     "name": "HASTINGS",
   },
   Object {
-    "id": 1735,
+    "custodianCode": 1735,
     "name": "HAVANT",
   },
   Object {
-    "id": 5480,
+    "custodianCode": 5480,
     "name": "HAVERING",
   },
   Object {
-    "id": 1850,
+    "custodianCode": 1850,
     "name": "HEREFORDSHIRE",
   },
   Object {
-    "id": 1920,
+    "custodianCode": 1920,
     "name": "HERTSMERE",
   },
   Object {
-    "id": 9068,
+    "custodianCode": 9068,
     "name": "HIGHLAND",
   },
   Object {
-    "id": 1030,
+    "custodianCode": 1030,
     "name": "HIGH PEAK",
   },
   Object {
-    "id": 5510,
+    "custodianCode": 5510,
     "name": "HILLINGDON",
   },
   Object {
-    "id": 2420,
+    "custodianCode": 2420,
     "name": "HINCKLEY AND BOSWORTH",
   },
   Object {
-    "id": 3825,
+    "custodianCode": 3825,
     "name": "HORSHAM",
   },
   Object {
-    "id": 520,
+    "custodianCode": 520,
     "name": "HUNTINGDONSHIRE",
   },
   Object {
-    "id": 2330,
+    "custodianCode": 2330,
     "name": "HYNDBURN",
   },
   Object {
-    "id": 9069,
+    "custodianCode": 9069,
     "name": "INVERCLYDE",
   },
   Object {
-    "id": 3515,
+    "custodianCode": 3515,
     "name": "IPSWICH",
   },
   Object {
-    "id": 6805,
+    "custodianCode": 6805,
     "name": "ISLE OF ANGLESEY",
   },
   Object {
-    "id": 2114,
+    "custodianCode": 2114,
     "name": "ISLE OF WIGHT",
   },
   Object {
-    "id": 835,
+    "custodianCode": 835,
     "name": "ISLES OF SCILLY",
   },
   Object {
-    "id": 5570,
+    "custodianCode": 5570,
     "name": "ISLINGTON",
   },
   Object {
-    "id": 5600,
+    "custodianCode": 5600,
     "name": "KENSINGTON AND CHELSEA",
   },
   Object {
-    "id": 2820,
+    "custodianCode": 2820,
     "name": "KETTERING",
   },
   Object {
-    "id": 2635,
+    "custodianCode": 2635,
     "name": "KINGS LYNN AND WEST NORFOLK",
   },
   Object {
-    "id": 2004,
+    "custodianCode": 2004,
     "name": "KINGSTON UPON HULL",
   },
   Object {
-    "id": 5630,
+    "custodianCode": 5630,
     "name": "KINGSTON UPON THAMES",
   },
   Object {
-    "id": 4715,
+    "custodianCode": 4715,
     "name": "KIRKLEES",
   },
   Object {
-    "id": 4305,
+    "custodianCode": 4305,
     "name": "KNOWSLEY",
   },
   Object {
-    "id": 5660,
+    "custodianCode": 5660,
     "name": "LAMBETH",
   },
   Object {
-    "id": 2335,
+    "custodianCode": 2335,
     "name": "LANCASTER CITY",
   },
   Object {
-    "id": 4720,
+    "custodianCode": 4720,
     "name": "LEEDS",
   },
   Object {
-    "id": 2465,
+    "custodianCode": 2465,
     "name": "LEICESTER CITY",
   },
   Object {
-    "id": 1425,
+    "custodianCode": 1425,
     "name": "LEWES",
   },
   Object {
-    "id": 5690,
+    "custodianCode": 5690,
     "name": "LEWISHAM",
   },
   Object {
-    "id": 3415,
+    "custodianCode": 3415,
     "name": "LICHFIELD",
   },
   Object {
-    "id": 2515,
+    "custodianCode": 2515,
     "name": "LINCOLN",
   },
   Object {
-    "id": 4310,
+    "custodianCode": 4310,
     "name": "LIVERPOOL",
   },
   Object {
-    "id": 5180,
+    "custodianCode": 5180,
     "name": "LONDON BOROUGH OF BROMLEY",
   },
   Object {
-    "id": 5420,
+    "custodianCode": 5420,
     "name": "LONDON BOROUGH OF HARINGEY",
   },
   Object {
-    "id": 5540,
+    "custodianCode": 5540,
     "name": "LONDON BOROUGH OF HOUNSLOW",
   },
   Object {
-    "id": 230,
+    "custodianCode": 230,
     "name": "LUTON",
   },
   Object {
-    "id": 2235,
+    "custodianCode": 2235,
     "name": "MAIDSTONE",
   },
   Object {
-    "id": 1545,
+    "custodianCode": 1545,
     "name": "MALDON",
   },
   Object {
-    "id": 1820,
+    "custodianCode": 1820,
     "name": "MALVERN HILLS",
   },
   Object {
-    "id": 4215,
+    "custodianCode": 4215,
     "name": "MANCHESTER",
   },
   Object {
-    "id": 3025,
+    "custodianCode": 3025,
     "name": "MANSFIELD",
   },
   Object {
-    "id": 2280,
+    "custodianCode": 2280,
     "name": "MEDWAY",
   },
   Object {
-    "id": 2430,
+    "custodianCode": 2430,
     "name": "MELTON",
   },
   Object {
-    "id": 3305,
+    "custodianCode": 3305,
     "name": "MENDIP",
   },
   Object {
-    "id": 6925,
+    "custodianCode": 6925,
     "name": "MERTHYR TYDFIL UA",
   },
   Object {
-    "id": 5720,
+    "custodianCode": 5720,
     "name": "MERTON",
   },
   Object {
-    "id": 1135,
+    "custodianCode": 1135,
     "name": "MID DEVON",
   },
   Object {
-    "id": 734,
+    "custodianCode": 734,
     "name": "MIDDLESBROUGH",
   },
   Object {
-    "id": 9070,
+    "custodianCode": 9070,
     "name": "MIDLOTHIAN",
   },
   Object {
-    "id": 3520,
+    "custodianCode": 3520,
     "name": "MID SUFFOLK",
   },
   Object {
-    "id": 3830,
+    "custodianCode": 3830,
     "name": "MID SUSSEX",
   },
   Object {
-    "id": 435,
+    "custodianCode": 435,
     "name": "MILTON KEYNES",
   },
   Object {
-    "id": 3620,
+    "custodianCode": 3620,
     "name": "MOLE VALLEY",
   },
   Object {
-    "id": 6840,
+    "custodianCode": 6840,
     "name": "MONMOUTHSHIRE",
   },
   Object {
-    "id": 9071,
+    "custodianCode": 9071,
     "name": "MORAY",
   },
   Object {
-    "id": 6930,
+    "custodianCode": 6930,
     "name": "NEATH PORT TALBOT",
   },
   Object {
-    "id": 3030,
+    "custodianCode": 3030,
     "name": "NEWARK AND SHERWOOD",
   },
   Object {
-    "id": 3420,
+    "custodianCode": 3420,
     "name": "NEWCASTLE-UNDER-LYME",
   },
   Object {
-    "id": 4510,
+    "custodianCode": 4510,
     "name": "NEWCASTLE UPON TYNE",
   },
   Object {
-    "id": 1740,
+    "custodianCode": 1740,
     "name": "NEW FOREST",
   },
   Object {
-    "id": 5750,
+    "custodianCode": 5750,
     "name": "NEWHAM",
   },
   Object {
-    "id": 6935,
+    "custodianCode": 6935,
     "name": "NEWPORT",
   },
   Object {
-    "id": 2825,
+    "custodianCode": 2825,
     "name": "NORTHAMPTON",
   },
   Object {
-    "id": 9072,
+    "custodianCode": 9072,
     "name": "NORTH AYRSHIRE",
   },
   Object {
-    "id": 1115,
+    "custodianCode": 1115,
     "name": "NORTH DEVON",
   },
   Object {
-    "id": 1215,
+    "custodianCode": 1215,
     "name": "NORTH DORSET",
   },
   Object {
-    "id": 1035,
+    "custodianCode": 1035,
     "name": "NORTH EAST DERBYSHIRE",
   },
   Object {
-    "id": 2002,
+    "custodianCode": 2002,
     "name": "NORTH EAST LINCOLNSHIRE",
   },
   Object {
-    "id": 1925,
+    "custodianCode": 1925,
     "name": "NORTH HERTFORDSHIRE",
   },
   Object {
-    "id": 2520,
+    "custodianCode": 2520,
     "name": "NORTH KESTEVEN",
   },
   Object {
-    "id": 9073,
+    "custodianCode": 9073,
     "name": "NORTH LANARKSHIRE",
   },
   Object {
-    "id": 2003,
+    "custodianCode": 2003,
     "name": "NORTH LINCOLNSHIRE",
   },
   Object {
-    "id": 2620,
+    "custodianCode": 2620,
     "name": "NORTH NORFOLK",
   },
   Object {
-    "id": 121,
+    "custodianCode": 121,
     "name": "NORTH SOMERSET",
   },
   Object {
-    "id": 4515,
+    "custodianCode": 4515,
     "name": "NORTH TYNESIDE",
   },
   Object {
-    "id": 2935,
+    "custodianCode": 2935,
     "name": "NORTHUMBERLAND",
   },
   Object {
-    "id": 3705,
+    "custodianCode": 3705,
     "name": "NORTH WARWICKSHIRE",
   },
   Object {
-    "id": 2435,
+    "custodianCode": 2435,
     "name": "NORTH WEST LEICESTERSHIRE",
   },
   Object {
-    "id": 2625,
+    "custodianCode": 2625,
     "name": "NORWICH",
   },
   Object {
-    "id": 3060,
+    "custodianCode": 3060,
     "name": "NOTTINGHAM CITY",
   },
   Object {
-    "id": 3710,
+    "custodianCode": 3710,
     "name": "NUNEATON AND BEDWORTH",
   },
   Object {
-    "id": 2440,
+    "custodianCode": 2440,
     "name": "OADBY AND WIGSTON",
   },
   Object {
-    "id": 4220,
+    "custodianCode": 4220,
     "name": "OLDHAM",
   },
   Object {
-    "id": 7655,
+    "custodianCode": 7655,
     "name": "ORDNANCE SURVEY",
   },
   Object {
-    "id": 9000,
+    "custodianCode": 9000,
     "name": "ORKNEY ISLANDS",
   },
   Object {
-    "id": 3110,
+    "custodianCode": 3110,
     "name": "OXFORD",
   },
   Object {
-    "id": 6845,
+    "custodianCode": 6845,
     "name": "PEMBROKESHIRE",
   },
   Object {
-    "id": 2340,
+    "custodianCode": 2340,
     "name": "PENDLE",
   },
   Object {
-    "id": 9074,
+    "custodianCode": 9074,
     "name": "PERTH AND KINROSS",
   },
   Object {
-    "id": 540,
+    "custodianCode": 540,
     "name": "PETERBOROUGH",
   },
   Object {
-    "id": 1160,
+    "custodianCode": 1160,
     "name": "PLYMOUTH",
   },
   Object {
-    "id": 1255,
+    "custodianCode": 1255,
     "name": "POOLE",
   },
   Object {
-    "id": 1775,
+    "custodianCode": 1775,
     "name": "PORTSMOUTH CITY COUNCIL",
   },
   Object {
-    "id": 6850,
+    "custodianCode": 6850,
     "name": "POWYS",
   },
   Object {
-    "id": 2345,
+    "custodianCode": 2345,
     "name": "PRESTON",
   },
   Object {
-    "id": 1225,
+    "custodianCode": 1225,
     "name": "PURBECK",
   },
   Object {
-    "id": 345,
+    "custodianCode": 345,
     "name": "READING",
   },
   Object {
-    "id": 5780,
+    "custodianCode": 5780,
     "name": "REDBRIDGE",
   },
   Object {
-    "id": 728,
+    "custodianCode": 728,
     "name": "REDCAR AND CLEVELAND",
   },
   Object {
-    "id": 1825,
+    "custodianCode": 1825,
     "name": "REDDITCH",
   },
   Object {
-    "id": 3625,
+    "custodianCode": 3625,
     "name": "REIGATE AND BANSTEAD",
   },
   Object {
-    "id": 9075,
+    "custodianCode": 9075,
     "name": "RENFREWSHIRE",
   },
   Object {
-    "id": 6940,
+    "custodianCode": 6940,
     "name": "RHONDDA CYNON TAFF",
   },
   Object {
-    "id": 2350,
+    "custodianCode": 2350,
     "name": "RIBBLE VALLEY",
   },
   Object {
-    "id": 2720,
+    "custodianCode": 2720,
     "name": "RICHMONDSHIRE",
   },
   Object {
-    "id": 5810,
+    "custodianCode": 5810,
     "name": "RICHMOND UPON THAMES",
   },
   Object {
-    "id": 4225,
+    "custodianCode": 4225,
     "name": "ROCHDALE",
   },
   Object {
-    "id": 1550,
+    "custodianCode": 1550,
     "name": "ROCHFORD",
   },
   Object {
-    "id": 2355,
+    "custodianCode": 2355,
     "name": "ROSSENDALE",
   },
   Object {
-    "id": 1430,
+    "custodianCode": 1430,
     "name": "ROTHER",
   },
   Object {
-    "id": 4415,
+    "custodianCode": 4415,
     "name": "ROTHERHAM",
   },
   Object {
-    "id": 3715,
+    "custodianCode": 3715,
     "name": "RUGBY",
   },
   Object {
-    "id": 3630,
+    "custodianCode": 3630,
     "name": "RUNNYMEDE",
   },
   Object {
-    "id": 3040,
+    "custodianCode": 3040,
     "name": "RUSHCLIFFE",
   },
   Object {
-    "id": 1750,
+    "custodianCode": 1750,
     "name": "RUSHMOOR",
   },
   Object {
-    "id": 2470,
+    "custodianCode": 2470,
     "name": "RUTLAND",
   },
   Object {
-    "id": 2725,
+    "custodianCode": 2725,
     "name": "RYEDALE",
   },
   Object {
-    "id": 4230,
+    "custodianCode": 4230,
     "name": "SALFORD",
   },
   Object {
-    "id": 4620,
+    "custodianCode": 4620,
     "name": "SANDWELL",
   },
   Object {
-    "id": 2730,
+    "custodianCode": 2730,
     "name": "SCARBOROUGH",
   },
   Object {
-    "id": 9055,
+    "custodianCode": 9055,
     "name": "SCOTTISH BORDERS",
   },
   Object {
-    "id": 3310,
+    "custodianCode": 3310,
     "name": "SEDGEMOOR",
   },
   Object {
-    "id": 4320,
+    "custodianCode": 4320,
     "name": "SEFTON COUNCIL",
   },
   Object {
-    "id": 2735,
+    "custodianCode": 2735,
     "name": "SELBY",
   },
   Object {
-    "id": 2245,
+    "custodianCode": 2245,
     "name": "SEVENOAKS",
   },
   Object {
-    "id": 4420,
+    "custodianCode": 4420,
     "name": "SHEFFIELD",
   },
   Object {
-    "id": 9010,
+    "custodianCode": 9010,
     "name": "SHETLAND ISLANDS",
   },
   Object {
-    "id": 3245,
+    "custodianCode": 3245,
     "name": "SHROPSHIRE",
   },
   Object {
-    "id": 350,
+    "custodianCode": 350,
     "name": "SLOUGH",
   },
   Object {
-    "id": 4625,
+    "custodianCode": 4625,
     "name": "SOLIHULL",
   },
   Object {
-    "id": 1780,
+    "custodianCode": 1780,
     "name": "SOUTHAMPTON",
   },
   Object {
-    "id": 9076,
+    "custodianCode": 9076,
     "name": "SOUTH AYRSHIRE",
   },
   Object {
-    "id": 410,
+    "custodianCode": 410,
     "name": "SOUTH BUCKS",
   },
   Object {
-    "id": 530,
+    "custodianCode": 530,
     "name": "SOUTH CAMBRIDGESHIRE",
   },
   Object {
-    "id": 1040,
+    "custodianCode": 1040,
     "name": "SOUTH DERBYSHIRE",
   },
   Object {
-    "id": 1590,
+    "custodianCode": 1590,
     "name": "SOUTHEND-ON-SEA",
   },
   Object {
-    "id": 119,
+    "custodianCode": 119,
     "name": "SOUTH GLOUCESTERSHIRE",
   },
   Object {
-    "id": 1125,
+    "custodianCode": 1125,
     "name": "SOUTH HAMS",
   },
   Object {
-    "id": 2525,
+    "custodianCode": 2525,
     "name": "SOUTH HOLLAND",
   },
   Object {
-    "id": 2530,
+    "custodianCode": 2530,
     "name": "SOUTH KESTEVEN",
   },
   Object {
-    "id": 930,
+    "custodianCode": 930,
     "name": "SOUTH LAKELAND",
   },
   Object {
-    "id": 9077,
+    "custodianCode": 9077,
     "name": "SOUTH LANARKSHIRE",
   },
   Object {
-    "id": 2630,
+    "custodianCode": 2630,
     "name": "SOUTH NORFOLK",
   },
   Object {
-    "id": 2830,
+    "custodianCode": 2830,
     "name": "SOUTH NORTHAMPTONSHIRE",
   },
   Object {
-    "id": 3115,
+    "custodianCode": 3115,
     "name": "SOUTH OXFORDSHIRE",
   },
   Object {
-    "id": 2360,
+    "custodianCode": 2360,
     "name": "SOUTH RIBBLE",
   },
   Object {
-    "id": 3325,
+    "custodianCode": 3325,
     "name": "SOUTH SOMERSET",
   },
   Object {
-    "id": 3430,
+    "custodianCode": 3430,
     "name": "SOUTH STAFFORDSHIRE",
   },
   Object {
-    "id": 4520,
+    "custodianCode": 4520,
     "name": "SOUTH TYNESIDE",
   },
   Object {
-    "id": 5840,
+    "custodianCode": 5840,
     "name": "SOUTHWARK",
   },
   Object {
-    "id": 3635,
+    "custodianCode": 3635,
     "name": "SPELTHORNE",
   },
   Object {
-    "id": 3425,
+    "custodianCode": 3425,
     "name": "STAFFORD",
   },
   Object {
-    "id": 3435,
+    "custodianCode": 3435,
     "name": "STAFFORDSHIRE MOORLANDS",
   },
   Object {
-    "id": 1930,
+    "custodianCode": 1930,
     "name": "ST ALBANS",
   },
   Object {
-    "id": 3525,
+    "custodianCode": 3525,
     "name": "ST EDMUNDSBURY",
   },
   Object {
-    "id": 1935,
+    "custodianCode": 1935,
     "name": "STEVENAGE",
   },
   Object {
-    "id": 4315,
+    "custodianCode": 4315,
     "name": "ST HELENS COUNCIL",
   },
   Object {
-    "id": 9078,
+    "custodianCode": 9078,
     "name": "STIRLING",
   },
   Object {
-    "id": 4235,
+    "custodianCode": 4235,
     "name": "STOCKPORT",
   },
   Object {
-    "id": 738,
+    "custodianCode": 738,
     "name": "STOCKTON-ON-TEES",
   },
   Object {
-    "id": 3720,
+    "custodianCode": 3720,
     "name": "STRATFORD-ON-AVON",
   },
   Object {
-    "id": 1625,
+    "custodianCode": 1625,
     "name": "STROUD",
   },
   Object {
-    "id": 3530,
+    "custodianCode": 3530,
     "name": "SUFFOLK COASTAL",
   },
   Object {
-    "id": 4525,
+    "custodianCode": 4525,
     "name": "SUNDERLAND",
   },
   Object {
-    "id": 3640,
+    "custodianCode": 3640,
     "name": "SURREY HEATH",
   },
   Object {
-    "id": 5870,
+    "custodianCode": 5870,
     "name": "SUTTON",
   },
   Object {
-    "id": 2255,
+    "custodianCode": 2255,
     "name": "SWALE",
   },
   Object {
-    "id": 6855,
+    "custodianCode": 6855,
     "name": "SWANSEA",
   },
   Object {
-    "id": 3935,
+    "custodianCode": 3935,
     "name": "SWINDON",
   },
   Object {
-    "id": 4240,
+    "custodianCode": 4240,
     "name": "TAMESIDE",
   },
   Object {
-    "id": 3445,
+    "custodianCode": 3445,
     "name": "TAMWORTH",
   },
   Object {
-    "id": 3645,
+    "custodianCode": 3645,
     "name": "TANDRIDGE",
   },
   Object {
-    "id": 3315,
+    "custodianCode": 3315,
     "name": "TAUNTON DEANE",
   },
   Object {
-    "id": 1130,
+    "custodianCode": 1130,
     "name": "TEIGNBRIDGE",
   },
   Object {
-    "id": 3240,
+    "custodianCode": 3240,
     "name": "TELFORD AND WREKIN",
   },
   Object {
-    "id": 1560,
+    "custodianCode": 1560,
     "name": "TENDRING",
   },
   Object {
-    "id": 1760,
+    "custodianCode": 1760,
     "name": "TEST VALLEY",
   },
   Object {
-    "id": 1630,
+    "custodianCode": 1630,
     "name": "TEWKESBURY",
   },
   Object {
-    "id": 2260,
+    "custodianCode": 2260,
     "name": "THANET DISTRICT",
   },
   Object {
-    "id": 1940,
+    "custodianCode": 1940,
     "name": "THREE RIVERS",
   },
   Object {
-    "id": 1595,
+    "custodianCode": 1595,
     "name": "THURROCK",
   },
   Object {
-    "id": 2265,
+    "custodianCode": 2265,
     "name": "TONBRIDGE AND MALLING",
   },
   Object {
-    "id": 1165,
+    "custodianCode": 1165,
     "name": "TORBAY",
   },
   Object {
-    "id": 6945,
+    "custodianCode": 6945,
     "name": "TORFAEN",
   },
   Object {
-    "id": 1145,
+    "custodianCode": 1145,
     "name": "TORRIDGE",
   },
   Object {
-    "id": 5900,
+    "custodianCode": 5900,
     "name": "TOWER HAMLETS",
   },
   Object {
-    "id": 4245,
+    "custodianCode": 4245,
     "name": "TRAFFORD",
   },
   Object {
-    "id": 2270,
+    "custodianCode": 2270,
     "name": "TUNBRIDGE WELLS",
   },
   Object {
-    "id": 1570,
+    "custodianCode": 1570,
     "name": "UTTLESFORD",
   },
   Object {
-    "id": 6950,
+    "custodianCode": 6950,
     "name": "VALE OF GLAMORGAN",
   },
   Object {
-    "id": 3120,
+    "custodianCode": 3120,
     "name": "VALE OF WHITE HORSE",
   },
   Object {
-    "id": 4725,
+    "custodianCode": 4725,
     "name": "WAKEFIELD",
   },
   Object {
-    "id": 4630,
+    "custodianCode": 4630,
     "name": "WALSALL",
   },
   Object {
-    "id": 5930,
+    "custodianCode": 5930,
     "name": "WALTHAM FOREST",
   },
   Object {
-    "id": 5960,
+    "custodianCode": 5960,
     "name": "WANDSWORTH",
   },
   Object {
-    "id": 655,
+    "custodianCode": 655,
     "name": "WARRINGTON",
   },
   Object {
-    "id": 3725,
+    "custodianCode": 3725,
     "name": "WARWICK",
   },
   Object {
-    "id": 1945,
+    "custodianCode": 1945,
     "name": "WATFORD",
   },
   Object {
-    "id": 3535,
+    "custodianCode": 3535,
     "name": "WAVENEY",
   },
   Object {
-    "id": 3650,
+    "custodianCode": 3650,
     "name": "WAVERLEY",
   },
   Object {
-    "id": 1435,
+    "custodianCode": 1435,
     "name": "WEALDEN",
   },
   Object {
-    "id": 2835,
+    "custodianCode": 2835,
     "name": "WELLINGBOROUGH",
   },
   Object {
-    "id": 1950,
+    "custodianCode": 1950,
     "name": "WELWYN HATFIELD",
   },
   Object {
-    "id": 340,
+    "custodianCode": 340,
     "name": "WEST BERKSHIRE",
   },
   Object {
-    "id": 1150,
+    "custodianCode": 1150,
     "name": "WEST DEVON",
   },
   Object {
-    "id": 1230,
+    "custodianCode": 1230,
     "name": "WEST DORSET",
   },
   Object {
-    "id": 9057,
+    "custodianCode": 9057,
     "name": "WEST DUNBARTONSHIRE",
   },
   Object {
-    "id": 9020,
+    "custodianCode": 9020,
     "name": "WESTERN ISLES",
   },
   Object {
-    "id": 2365,
+    "custodianCode": 2365,
     "name": "WEST LANCASHIRE",
   },
   Object {
-    "id": 2535,
+    "custodianCode": 2535,
     "name": "WEST LINDSEY",
   },
   Object {
-    "id": 9079,
+    "custodianCode": 9079,
     "name": "WEST LOTHIAN",
   },
   Object {
-    "id": 3125,
+    "custodianCode": 3125,
     "name": "WEST OXFORDSHIRE",
   },
   Object {
-    "id": 3320,
+    "custodianCode": 3320,
     "name": "WEST SOMERSET",
   },
   Object {
-    "id": 1235,
+    "custodianCode": 1235,
     "name": "WEYMOUTH AND PORTLAND",
   },
   Object {
-    "id": 4250,
+    "custodianCode": 4250,
     "name": "WIGAN",
   },
   Object {
-    "id": 3940,
+    "custodianCode": 3940,
     "name": "WILTSHIRE",
   },
   Object {
-    "id": 1765,
+    "custodianCode": 1765,
     "name": "WINCHESTER",
   },
   Object {
-    "id": 355,
+    "custodianCode": 355,
     "name": "WINDSOR AND MAIDENHEAD",
   },
   Object {
-    "id": 4325,
+    "custodianCode": 4325,
     "name": "WIRRAL",
   },
   Object {
-    "id": 3655,
+    "custodianCode": 3655,
     "name": "WOKING",
   },
   Object {
-    "id": 360,
+    "custodianCode": 360,
     "name": "WOKINGHAM",
   },
   Object {
-    "id": 4635,
+    "custodianCode": 4635,
     "name": "WOLVERHAMPTON",
   },
   Object {
-    "id": 1835,
+    "custodianCode": 1835,
     "name": "WORCESTER",
   },
   Object {
-    "id": 3835,
+    "custodianCode": 3835,
     "name": "WORTHING",
   },
   Object {
-    "id": 6955,
+    "custodianCode": 6955,
     "name": "WREXHAM",
   },
   Object {
-    "id": 1840,
+    "custodianCode": 1840,
     "name": "WYCHAVON",
   },
   Object {
-    "id": 425,
+    "custodianCode": 425,
     "name": "WYCOMBE",
   },
   Object {
-    "id": 2370,
+    "custodianCode": 2370,
     "name": "WYRE",
   },
   Object {
-    "id": 1845,
+    "custodianCode": 1845,
     "name": "WYRE FOREST",
   },
   Object {
-    "id": 2741,
+    "custodianCode": 2741,
     "name": "YORK",
   },
 ]
 `;
 
-exports[`Expected reference services should fetch Non-CQC services by category 1`] = `
+exports[`Expected reference services should fetch Non-CQC main services by category 1`] = `
 Array [
   Object {
     "category": "Adult community care",

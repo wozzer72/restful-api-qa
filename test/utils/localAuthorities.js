@@ -16,5 +16,5 @@ const getReferenceAuthorities = async (apiEndpoint) => {
 exports.lookupRandomAuthority = async (apiEndpoint) => {
     await getReferenceAuthorities(apiEndpoint);
     const randomIndex = Random.randomInt(0, allLocalAuthorities.length-1);
-    return allLocalAuthorities[randomIndex].id;
+    return allLocalAuthorities[randomIndex].custodianCode;
 };

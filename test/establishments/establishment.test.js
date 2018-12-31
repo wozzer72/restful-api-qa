@@ -1,3 +1,4 @@
+
 // this test script runs through a few various different actions on a specific establishment (registers its own establishment)
 
 // mock the general console loggers - removes unnecessary output while running
@@ -727,7 +728,7 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.name).toEqual(site.locationName);
-            expect(firstResponse.body.primaryAuthority.id).toEqual(primaryLocalAuthorityCustodianCode);
+            expect(firstResponse.body.primaryAuthority.custodianCode).toEqual(primaryLocalAuthorityCustodianCode);
             expect(firstResponse.body.primaryAuthority).toHaveProperty('name');     // we cannot validate the name of the Local Authority - this is not known in reference data
 
             // before update expect the "localAuthorities" attribute as an array but it will be empty
@@ -739,18 +740,18 @@ describe ("establishment", async () => {
             const updateAuthorities = [
                 {
                     name: "WOZILAND",
-                    notes: "ignored because no id field"
+                    notes: "ignored because no custodianCode field"
                 },
                 {
-                    id: primaryLocalAuthorityCustodianCode
+                    custodianCode: primaryLocalAuthorityCustodianCode
                 },
                 {
-                    id: "abc",
-                    notes: "Ignored because id is not an integer"
+                    custodianCode: "abc",
+                    notes: "Ignored because custodianCode is not an integer"
                 }
             ];
             updateAuthorities.push({
-                id: randomAuthorityCustodianCode
+                custodianCode: randomAuthorityCustodianCode
             })
             let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
                 .set('Authorization', authToken)
@@ -759,6 +760,10 @@ describe ("establishment", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+
+console.log("TEST DEBUG: update request: ", updateAuthorities)
+console.log("TEST DEBUG: update response: ", updateAuthorities.body)
+
             expect(updateResponse.body.id).toEqual(establishmentId);
             expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body).not.toHaveProperty('primaryAuthority');     // primary authority not return on POST response
@@ -777,7 +782,7 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
             expect(updateResponse.body.name).toEqual(site.locationName);
-            expect(updateResponse.body.primaryAuthority.id).toEqual(primaryLocalAuthorityCustodianCode);
+            expect(updateResponse.body.primaryAuthority.custodianCode).toEqual(primaryLocalAuthorityCustodianCode);
             expect(updateResponse.body.primaryAuthority).toHaveProperty('name');     // we cannot validate the name of the Local Authority - this is not known in reference data
 
             // before update expect the "localAuthorities" attribute as an array but it will be empty
