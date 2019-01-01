@@ -761,9 +761,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-console.log("TEST DEBUG: update request: ", updateAuthorities)
-console.log("TEST DEBUG: update response: ", updateAuthorities.body)
-
             expect(updateResponse.body.id).toEqual(establishmentId);
             expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body).not.toHaveProperty('primaryAuthority');     // primary authority not return on POST response
