@@ -85,7 +85,6 @@ describe ("worker", async () => {
             expect(Number.isInteger(establishmentId)).toEqual(true);
 
             const newWorker = workerUtils.newWorker(jobs);
-
             const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(newWorker)
@@ -182,7 +181,34 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
+        });
 
+
+        it("should return a list of Workers", async () => {
+            expect(establishment1).not.toBeNull();
+            expect(Number.isInteger(establishmentId)).toEqual(true);
+
+            // create another two worker
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(workerUtils.newWorker(jobs))
+                .expect('Content-Type', /json/)
+                .expect(201);
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(workerUtils.newWorker(jobs))
+                .expect('Content-Type', /json/)
+                .expect(201);
+
+            // should now have three (one from previous test)
+            const allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            expect(allWorkersResponse.body.workers).not.toBeNull();
+            expect(Array.isArray(allWorkersResponse.body.workers)).toEqual(true);
+            expect(allWorkersResponse.body.workers.length).toEqual(3);
         });
 
     });
