@@ -1,43 +1,43 @@
 // http://localhost:3000/api/test/postcodes/random?limit=5
 exports.data = [
     {
-        "uprn": "100080233000",
-        "address1": "7 RECTORY CLOSE ",
-        "townAndCity": "NEWBURY",
-        "county": "WEST BERKSHIRE",
-        "postcode": "RG14 6DF",
-        "localCustodianCode": "340"
+        "uprn": "100021291431",
+        "address1": "50 TREGENNA AVENUE ",
+        "townAndCity": "HARROW",
+        "county": "HARROW",
+        "postcode": "HA2 8QS",
+        "localCustodianCode": "5450"
     },
     {
-        "uprn": "100120473160",
-        "address1": "56 GRANGE ROAD ",
+        "uprn": "10033829962",
+        "address1": "DANS BARN COTTAGE PECKLETON LANE ",
+        "townAndCity": "LEICESTER",
+        "county": "LEICESTERSHIRE",
+        "postcode": "LE9 9QU",
+        "localCustodianCode": "2420"
+    },
+    {
+        "uprn": "10007310714",
+        "address1": "UNIT 34 SPACE BUSINESS CENTRE OLYMPUS PARK ",
         "townAndCity": "GLOUCESTER",
         "county": "GLOUCESTERSHIRE",
-        "postcode": "GL4 0PG",
+        "postcode": "GL2 4AL",
         "localCustodianCode": "1620"
     },
     {
-        "uprn": "100070636333",
-        "address1": "36 COTTAGE FARM ROAD ",
-        "townAndCity": "COVENTRY",
-        "county": "COVENTRY",
-        "postcode": "CV6 2FA",
-        "localCustodianCode": "4610"
+        "uprn": "14054587",
+        "address1": "7 PALMER CLOSE ",
+        "townAndCity": "WOKINGHAM",
+        "county": "WOKINGHAM",
+        "postcode": "RG40 3EB",
+        "localCustodianCode": "360"
     },
     {
-        "uprn": "10070835057",
-        "address1": "TOFT HILL HOUSE ACCESS ",
-        "townAndCity": "",
-        "county": "GATESHEAD",
-        "postcode": "",
-        "localCustodianCode": "4505"
-    },
-    {
-        "uprn": "100121343087",
-        "address1": "MANCHESTER ROAD ",
-        "townAndCity": "",
-        "county": "SWINDON",
-        "postcode": "",
-        "localCustodianCode": "3935"
+        "uprn": "100080864816",
+        "address1": "26 SHEPPARDS CLOSE ",
+        "townAndCity": "ST. ALBANS",
+        "county": "HERTFORDSHIRE",
+        "postcode": "AL3 5AL",
+        "localCustodianCode": "1930"
     }
 ];
