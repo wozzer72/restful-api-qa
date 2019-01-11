@@ -107,8 +107,7 @@ describe ("establishment", async () => {
             loginSuccess = secondLoginResponse.body;
             
             // assert and store the auth token
-            authToken = parseInt(secondLoginResponse.header.authorization);
-            expect(authToken).toEqual(establishmentId);
+            authToken = secondLoginResponse.header.authorization;
         });
 
         it("should update the employer type", async () => {
@@ -763,7 +762,7 @@ describe ("establishment", async () => {
 
             expect(updateResponse.body.id).toEqual(establishmentId);
             expect(updateResponse.body.name).toEqual(site.locationName);
-            expect(updateResponse.body).not.toHaveProperty('primaryAuthority');     // primary authority not return on POST response
+            expect(updateResponse.body).toHaveProperty('primaryAuthority');
 
             // but localAuthority is and should include only the main and random authority only (everything else ignored)
             expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
