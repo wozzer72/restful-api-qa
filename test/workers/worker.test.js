@@ -211,6 +211,7 @@ describe ("worker", async () => {
             it("should fail (403) when attempting to delete worker passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (403) when attempting to delete worker not belong to given establishment with id", async () => {});
             it("should fail (503) when attempting to delete worker with unexpected server error", async () => {});
+            it("should fail (404) when attempting to fetch worker with establishment id no longer exists (but JWT token still valid)", async () => {});
         });
     });
 
