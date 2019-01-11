@@ -98,6 +98,91 @@ describe ("worker", async () => {
             const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
             expect(uuidRegex.test(workerUid.toUpperCase())).toEqual(true);
             
+            // proven validation errors
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameId" : "Misspelt attribute name - effectively missing",
+                    "contract" : "Temporary",
+                    "mainJob" : {
+                        "jobId" : 12,
+                        "title" : "Care Worker"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Warren Ayling",
+                    "contractt" : "Mispelt",
+                    "mainJob" : {
+                        "jobId" : 12,
+                        "title" : "Care Worker"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Warren Ayling",
+                    "contract" : "Temporary",
+                    "maimnJob" : {
+                        "jobId" : 12,
+                        "title" : "Misspelt"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Warren Ayling",
+                    "contract" : "Temporary",
+                    "mainJob" : {
+                        "jobIId" : 20,
+                        "titlee" : "misspelt"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Warren Ayling",
+                    "contract" : "Temporary",
+                    "mainJob" : {
+                        "jobId" : 200,
+                        "title" : "Out of range"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Warren Ayling",
+                    "contract" : "Temporary",
+                    "mainJob" : {
+                        "title" : "Unknown Job Title innit"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Warren Ayling",
+                    "contract" : "unknown",
+                    "mainJob" : {
+                        "jobId" : 12,
+                        "title" : "Care Worker"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+
         });
 
     });
@@ -113,6 +198,7 @@ describe ("worker", async () => {
             it("should fail (401) when attempting to create worker without passing Authorization header", async () => {});
             it("should fail (403) when attempting to create workter passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (503) when attempting to create worker with unexpected server error", async () => {});
+            it("should fail (409) when attempting to create worker with duplicate name/id for the same establishment", async () => {});
         });
         describe("PUT", async () => {
             it("should fail (401) when attempting to update worker without passing Authorization header", async () => {});
