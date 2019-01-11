@@ -55,7 +55,6 @@ describe ("worker", async () => {
     });
 
     describe("Establishment 1", async ( )=> {
-        console.log("Establishment: ", establishment1);
         let establishmentId = null;
         let workerUid = null;
 
@@ -183,17 +182,21 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-
+        let allWorkers = null;
+        let secondWorkerInput = null;
+        let secondWorker = null;
         it("should return a list of Workers", async () => {
             expect(establishment1).not.toBeNull();
             expect(Number.isInteger(establishmentId)).toEqual(true);
 
             // create another two worker
-            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            secondWorkerInput = workerUtils.newWorker(jobs);
+            const secondWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
-                .send(workerUtils.newWorker(jobs))
+                .send(secondWorkerInput)
                 .expect('Content-Type', /json/)
                 .expect(201);
+            secondWorker = { ...secondWorkerInput, ...secondWorkerResponse.body };
             await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
@@ -209,6 +212,48 @@ describe ("worker", async () => {
             expect(allWorkersResponse.body.workers).not.toBeNull();
             expect(Array.isArray(allWorkersResponse.body.workers)).toEqual(true);
             expect(allWorkersResponse.body.workers.length).toEqual(3);
+
+            allWorkers = allWorkersResponse.body.workers;
+        });
+
+        it("should fetch a single worker", async () => {
+            console.log("TEST DEBUG: second worker: ", secondWorker)
+
+            expect(secondWorker).not.toBeNull();
+            const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
+            expect(uuidRegex.test(secondWorker.uid.toUpperCase())).toEqual(true);
+
+            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${secondWorker.uid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            console.log("TEST DEBUG: fetched worker body: ", fetchedWorkerResponse.body)
+            expect(fetchedWorkerResponse.body.uid).toEqual(secondWorker.uid);
+            expect(fetchedWorkerResponse.body.contract).toEqual(secondWorker.contract);
+            expect(fetchedWorkerResponse.body.mainJob.jobId).toEqual(secondWorker.mainJob.jobId);
+            expect(fetchedWorkerResponse.body.mainJob.title).toEqual(secondWorker.mainJob.title);
+            expect(fetchedWorkerResponse.body.created).not.toBeNull();
+
+            const currentEpoch = new Date().getTime();
+            const createdEpoch = new Date(fetchedWorkerResponse.body.created).getTime();
+            expect(currentEpoch-createdEpoch).toBeLessThan(1000);   // within the last 1 second
+            expect(fetchedWorkerResponse.body.updated).not.toBeNull();
+            const updatedEpoch = new Date(fetchedWorkerResponse.body.updated).getTime();
+            expect(currentEpoch-updatedEpoch).toBeLessThan(1000);   // within the last 1 second
+
+            // check for validation errors
+            // unknown
+            await apiEndpoint.get(`/establishment/${establishmentId}/worker/2f8bd309-2a3e-47f0-aa41-2eb955c555a6`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /html/)
+                .expect(404);
+            // dodgy UUID input
+            await apiEndpoint.get(`/establishment/${establishmentId}/worker/2f8bd309-2a3e`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /html/)
+                .expect(400);
+
         });
 
     });
