@@ -215,7 +215,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.uid).not.toBeNull();
             expect(updatedWorkerResponse.body.uid).toEqual(workerUid);
 
-            // successful updates of each property at a times
+            // successful updates of each property at a time
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -236,6 +236,14 @@ describe ("worker", async () => {
                     "mainJob" : {
                         "jobId" : 19
                     }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "approvedMentalHeathWorker" : "Don't know"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -267,6 +275,13 @@ describe ("worker", async () => {
                         "jobId" : 32,
                         "title" : "Out of range"
                     }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "approvedMentalHeathWorker" : "Undefined"
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
