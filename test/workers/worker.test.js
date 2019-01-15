@@ -9,7 +9,7 @@
 // }
 
 const supertest = require('supertest');
-const faker = require('faker');
+const uuid = require('uuid');
 const baseEndpoint = 'http://localhost:3000/api';
 const apiEndpoint = supertest(baseEndpoint);
 
@@ -180,6 +180,121 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
+
+
+            // incorrect establishment id and worker facts
+            const unknownEstablishmentId = 1723785475876865;
+            await apiEndpoint.post(`/establishment/${unknownEstablishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({})
+                .expect('Content-Type', /html/)
+                .expect(403);
+            await apiEndpoint.post(`/establishment/${unknownEstablishmentId}/worker`)
+                //.set('Authorization', establishment1Token)
+                .send({})
+                .expect('Content-Type', /html/)
+                .expect(401);            
+        });
+
+        it("should update a Worker", async () => {
+            expect(establishment1).not.toBeNull();
+            expect(workerUid).not.toBeNull();
+
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Updated Worker Name",
+                    "contract" : "Pool/Bank",
+                    "mainJob" : {
+                        "jobId" : 19
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            expect(updatedWorkerResponse.body.uid).not.toBeNull();
+            expect(updatedWorkerResponse.body.uid).toEqual(workerUid);
+
+            // successful updates of each property at a times
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Updated Worker Name"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "contract" : "Pool/Bank"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "mainJob" : {
+                        "jobId" : 19
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // proven validation errors
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "ten nine \"eight\" seven 6543210 (!'£$%^&*) \\ special"
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "contract" : "Undefined"
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "mainJob" : {
+                        "jobId" : 32,
+                        "title" : "Out of range"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+
+            // incorrect establishment id and worker facts
+            const unknownUuid = uuid.v4();
+            const unknownEstablishmentId = 1723785475876865;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${unknownUuid}`)
+                .set('Authorization', establishment1Token)
+                .send({})
+                .expect('Content-Type', /html/)
+                .expect(404);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/2f8bd309-2a3e`)
+                .set('Authorization', establishment1Token)
+                .send({})
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${unknownEstablishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({})
+                .expect('Content-Type', /html/)
+                .expect(403);
+            await apiEndpoint.put(`/establishment/${unknownEstablishmentId}/worker/${workerUid}`)
+                //.set('Authorization', establishment1Token)
+                .send({})
+                .expect('Content-Type', /html/)
+                .expect(401);            
+
         });
 
         let allWorkers = null;
@@ -228,7 +343,6 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            console.log("TEST DEBUG: fetched worker body: ", fetchedWorkerResponse.body)
             expect(fetchedWorkerResponse.body.uid).toEqual(secondWorker.uid);
             expect(fetchedWorkerResponse.body.contract).toEqual(secondWorker.contract);
             expect(fetchedWorkerResponse.body.mainJob.jobId).toEqual(secondWorker.mainJob.jobId);
@@ -243,8 +357,10 @@ describe ("worker", async () => {
             expect(currentEpoch-updatedEpoch).toBeLessThan(1000);   // within the last 1 second
 
             // check for validation errors
+            const unknownUuid = uuid.v4();
+            const unknownEstablishmentId = 1723785475876865;
             // unknown
-            await apiEndpoint.get(`/establishment/${establishmentId}/worker/2f8bd309-2a3e-47f0-aa41-2eb955c555a6`)
+            await apiEndpoint.get(`/establishment/${establishmentId}/worker/${unknownUuid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /html/)
                 .expect(404);
@@ -253,36 +369,39 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /html/)
                 .expect(400);
-
+            // mismatched establishment id
+            await apiEndpoint.get(`/establishment/${unknownEstablishmentId}/worker/${secondWorker.uid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /html/)
+                .expect(403);
+            // missing authentication header
+            await apiEndpoint.get(`/establishment/${unknownEstablishmentId}/worker/${secondWorker.uid}`)
+                .expect('Content-Type', /html/)
+                .expect(401);
         });
 
     });
 
     describe.skip("Worker forced failures", async () => {
         describe("GET", async () => {
-            it("should fail (401) when attempting to fetch worker without passing Authorization header", async () => {});
-            it("should fail (403) when attempting to fetch worker passing Authorization header with mismatched establishment id", async () => {});
-            it("should fail (403) when attempting to fetch worker not belong to given establishment with id", async () => {});
             it("should fail (503) when attempting to fetch worker with unexpected server error", async () => {});
+            it("should fail (404) when attempting to fetch worker with establishment id no longer exists (but JWT token still valid)", async () => {});
         });
         describe("POST", async () => {
-            it("should fail (401) when attempting to create worker without passing Authorization header", async () => {});
-            it("should fail (403) when attempting to create workter passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (503) when attempting to create worker with unexpected server error", async () => {});
             it("should fail (409) when attempting to create worker with duplicate name/id for the same establishment", async () => {});
+            it("should fail (404) when attempting to create worker with establishment id no longer exists (but JWT token still valid)", async () => {});
         });
         describe("PUT", async () => {
-            it("should fail (401) when attempting to update worker without passing Authorization header", async () => {});
-            it("should fail (403) when attempting to update worker passing Authorization header with mismatched establishment id", async () => {});
-            it("should fail (403) when attempting to update worker not belong to given establishment with id", async () => {});
             it("should fail (503) when attempting to update worker with unexpected server error", async () => {});
+            it("should fail (404) when attempting to update worker with establishment id no longer exists (but JWT token still valid)", async () => {});
         });
         describe("DELETE", async () => {
             it("should fail (401) when attempting to delete worker without passing Authorization header", async () => {});
             it("should fail (403) when attempting to delete worker passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (403) when attempting to delete worker not belong to given establishment with id", async () => {});
             it("should fail (503) when attempting to delete worker with unexpected server error", async () => {});
-            it("should fail (404) when attempting to fetch worker with establishment id no longer exists (but JWT token still valid)", async () => {});
+            it("should fail (404) when attempting to delete worker with establishment id no longer exists (but JWT token still valid)", async () => {});
         });
     });
 
