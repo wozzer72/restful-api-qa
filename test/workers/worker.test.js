@@ -196,7 +196,7 @@ describe ("worker", async () => {
                 .expect(401);            
         });
 
-        it("should update a Worker", async () => {
+        it("should update a Worker's mandatory properties", async () => {
             expect(establishment1).not.toBeNull();
             expect(workerUid).not.toBeNull();
 
@@ -239,14 +239,6 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .send({
-                    "approvedMentalHeathWorker" : "Don't know"
-                })
-                .expect('Content-Type', /json/)
-                .expect(200);
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({})
@@ -278,13 +270,6 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .send({
-                    "approvedMentalHeathWorker" : "Undefined"
-                })
-                .expect('Content-Type', /html/)
-                .expect(400);
 
             // incorrect establishment id and worker facts
             const unknownUuid = uuid.v4();
@@ -309,8 +294,67 @@ describe ("worker", async () => {
                 .send({})
                 .expect('Content-Type', /html/)
                 .expect(401);            
-
         });
+
+        it("should update a Worker's Approved Mental Health Worker property", async () => {
+            // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "approvedMentalHealthWorker" : "Don't know"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            console.log("TEST DEBUG: fetched worker approved mental: ", fetchedWorkerResponse.body.approvedMentalHealthWorker)
+            expect(fetchedWorkerResponse.body.approvedMentalHealthWorker).toEqual("Don't know");
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "approvedMentalHealthWorker" : "Undefined"
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
+        it("should update a Worker's Main Job Start Date property", async () => {
+            // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "mainJobStartDate" : "2019-01-15"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.mainJobStartDate).toEqual("2019-01-15");
+
+
+            const tomorrow = new Date();
+            tomorrow.setDate(new Date().getDate()+1);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "mainJobStartDate" : tomorrow.toISOString().slice(0,10)
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "mainJobStartDate" : "2018-02-29"
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
 
         let allWorkers = null;
         let secondWorkerInput = null;
@@ -347,8 +391,6 @@ describe ("worker", async () => {
         });
 
         it("should fetch a single worker", async () => {
-            console.log("TEST DEBUG: second worker: ", secondWorker)
-
             expect(secondWorker).not.toBeNull();
             const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
             expect(uuidRegex.test(secondWorker.uid.toUpperCase())).toEqual(true);
