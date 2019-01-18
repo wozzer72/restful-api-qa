@@ -28,6 +28,8 @@ describe ("worker", async () => {
     let establishment2 = null;
     let establishment1Token = null;
     let establishment2Token = null;
+    let establishment1Username = null;
+    let establishment2Username = null;
 
     beforeAll(async () => {
         // clean the database
@@ -77,6 +79,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             establishment1Token = site1LoginResponse.header.authorization;
+            establishment1Username = site1.user.username;
         });
 
         it("should create a Worker", async () => {
@@ -625,6 +628,8 @@ describe ("worker", async () => {
             const updatedEpoch = new Date(fetchedWorkerResponse.body.updated).getTime();
             expect(currentEpoch-updatedEpoch).toBeLessThan(1000);   // within the last 1 second
 
+            expect(fetchedWorkerResponse.body.updatedBy).toEqual(establishment1Username);
+
             // check for validation errors
             const unknownUuid = uuid.v4();
             const unknownEstablishmentId = 1723785475876865;
@@ -649,6 +654,67 @@ describe ("worker", async () => {
                 .expect(401);
         });
 
+        it("should have creation and update change history", async () => {
+            expect(establishment1).not.toBeNull();
+            expect(Number.isInteger(establishmentId)).toEqual(true);
+
+            const newWorker = workerUtils.newWorker(jobs);
+            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(newWorker)
+                .expect('Content-Type', /json/)
+                .expect(201);
+
+            expect(newWorkerResponse.body.uid).not.toBeNull();
+            const thisWorkerUid = newWorkerResponse.body.uid;
+
+
+            // fetch with change history
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${thisWorkerUid}?history=true`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            expect(fetchedWorkerResponse.body.uid).toEqual(thisWorkerUid);
+            expect(fetchedWorkerResponse.body.created).not.toBeNull();
+
+            const currentEpoch = new Date().getTime();
+            const createdEpoch = new Date(fetchedWorkerResponse.body.created).getTime();
+            expect(currentEpoch-createdEpoch).toBeLessThan(1000);   // within the last 1 second
+            expect(fetchedWorkerResponse.body.updated).not.toBeNull();
+            const updatedEpoch = new Date(fetchedWorkerResponse.body.updated).getTime();
+            expect(currentEpoch-updatedEpoch).toBeLessThan(1000);   // within the last 1 second
+
+            expect(fetchedWorkerResponse.body.updatedBy).toEqual(establishment1Username);
+
+            console.log("TEST DEBUG: change history: ", fetchedWorkerResponse.body.history);
+            expect(Array.isArray(fetchedWorkerResponse.body.history)).toEqual(true);
+            expect(fetchedWorkerResponse.body.history.length).toEqual(1);
+            expect(fetchedWorkerResponse.body.history[0].event).toEqual('created');
+
+            // now update the Worker
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${thisWorkerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : "Updated Worker Name",
+                    "contract" : "Pool/Bank",
+                    "mainJob" : {
+                        "jobId" : 19
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${thisWorkerUid}?history=true`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            console.log("TEST DEBUG: change history: ", fetchedWorkerResponse.body.history);
+            expect(Array.isArray(fetchedWorkerResponse.body.history)).toEqual(true);
+            expect(fetchedWorkerResponse.body.history.length).toEqual(2);
+            expect(fetchedWorkerResponse.body.history[0].event).toEqual('updated');
+            expect(fetchedWorkerResponse.body.history[1].event).toEqual('created');
+        });
     });
 
     describe.skip("Worker forced failures", async () => {
