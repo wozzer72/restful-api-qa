@@ -236,6 +236,34 @@ describe ("worker", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
+                    "contract" : "Temporary"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "contract" : "Agency"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "contract" : "Other"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "contract" : "Permanent"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
                     "mainJob" : {
                         "jobId" : 19
                     }
@@ -313,6 +341,21 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.approvedMentalHealthWorker).toEqual("Don't know");
+
+            apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "approvedMentalHealthWorker" : "Yes"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "approvedMentalHealthWorker" : "No"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -709,7 +752,6 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            console.log("TEST DEBUG: change history: ", fetchedWorkerResponse.body.history);
             expect(Array.isArray(fetchedWorkerResponse.body.history)).toEqual(true);
             expect(fetchedWorkerResponse.body.history.length).toEqual(2);
             expect(fetchedWorkerResponse.body.history[0].event).toEqual('updated');
