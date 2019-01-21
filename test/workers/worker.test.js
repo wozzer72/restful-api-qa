@@ -196,7 +196,7 @@ describe ("worker", async () => {
                 //.set('Authorization', establishment1Token)
                 .send({})
                 .expect('Content-Type', /html/)
-                .expect(401);            
+                .expect(401);
         });
 
         it("should update a Worker's mandatory properties", async () => {
@@ -713,7 +713,7 @@ describe ("worker", async () => {
 
 
             // fetch with change history
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${thisWorkerUid}?history=true`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${thisWorkerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -747,7 +747,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${thisWorkerUid}?history=true`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${thisWorkerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
