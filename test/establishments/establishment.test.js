@@ -595,6 +595,58 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
             expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
             expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+
+            // in addition to providing a set of jobs for each of vacancies, starters and leavers
+            //  can provide a declarative statement of "None" or "Don't know"
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        leavers: "None",
+                        starters : "Don't know"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(jobsResponse.body.jobs.Leavers).toEqual('None');
+            expect(jobsResponse.body.jobs.Starters).toEqual("Don't know");
+            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
+            expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
+            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+
+            // forcing validation errors
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        leavers: "Nne"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        starters: "Don't Know"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        vacancies: {
+                            jobId: 1,
+                            total: 1
+                        }
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
         });
 
         it("should update the sharing options", async () => {
@@ -714,7 +766,6 @@ describe ("establishment", async () => {
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
             expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
-
         });
 
         it("should update the Local Authorities Share Options", async () => {
@@ -804,7 +855,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.share.enabled).toEqual(true);
             expect(firstResponse.body.share.with[0]).toEqual('Local Authority');
             expect(firstResponse.body.jobs.TotalVacencies).toEqual(0);
-            expect(firstResponse.body.jobs.TotalStarters).toEqual(799);
+            expect(firstResponse.body.jobs.TotalStarters).toEqual(0);
             expect(firstResponse.body.jobs.TotalLeavers).toEqual(0);
             expect(Array.isArray(firstResponse.body.otherServices)).toEqual(true);
             expect(firstResponse.body.otherServices.length).toBeGreaterThan(0);
