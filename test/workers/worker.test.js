@@ -817,14 +817,12 @@ describe ("worker", async () => {
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
 
-            console.log("TEST DEBUG: Disability (uid): ", workerUid, workerChangeHistory.body.disability)
             validatePropertyChangeHistory(workerChangeHistory.body.disability,
                                             "No",
                                             "Yes",
                                             establishment1Username,
                                             requestEpoch,
                                             (ref, given) => {
-                                                console.log("TEST DEBUG - Disability - ref/given: ", ref, given)
                                                 return ref == given
                                             });
             
