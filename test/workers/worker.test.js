@@ -964,14 +964,15 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's qualifications", async () => {
-            const randomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
+        it("should update a Worker's qualifications", async () => {
+            const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    ethnicity : {
-                        ethnicityId: randomEthnicity.id
+                    "qualification" : {
+                        "qualificationId" : randomQualification.id
+                        //"title" : "Level 8 or above"                   
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -980,15 +981,15 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
-            expect(fetchedWorkerResponse.body.ethnicity.ethnicityId).toEqual(randomEthnicity.id);
-            expect(fetchedWorkerResponse.body.ethnicity.ethnicity).toEqual(randomEthnicity.ethnicity);
+            expect(fetchedWorkerResponse.body.qualification.qualificationId).toEqual(randomQualification.id);
+            expect(fetchedWorkerResponse.body.qualification.title).toEqual(randomQualification.level);
 
-            const secondEthnicity = randomEthnicity.id == 11 ? 12 : 11;
+            const secondQualification = randomQualification.id == 2 ? 12 : 2;
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    ethnicity : {
-                        ethnicityId: secondEthnicity
+                    qualification : {
+                        qualificationId: secondQualification
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -1003,22 +1004,22 @@ describe ("worker", async () => {
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.ethnicity,
-                                            secondEthnicity,
-                                            randomEthnicity.id,
+            validatePropertyChangeHistory(workerChangeHistory.body.qualification,
+                                            secondQualification,
+                                            randomQualification.id,
                                             establishment1Username,
                                             requestEpoch,
                                             (ref, given) => {
-                                                return ref.ethnicityId == given
+                                                return ref.qualificationId == given
                                             });
 
-            // update ethnicity by name
-            const secondRandomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
+            // update qualification by name
+            const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);;
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    ethnicity : {
-                        ethnicity: secondRandomEthnicity.ethnicity
+                    qualification : {
+                        title: secondRandomQualification.level
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -1027,25 +1028,25 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
-            expect(fetchedWorkerResponse.body.ethnicity.ethnicityId).toEqual(secondRandomEthnicity.id);
-            expect(fetchedWorkerResponse.body.ethnicity.ethnicity).toEqual(secondRandomEthnicity.ethnicity);
+            expect(fetchedWorkerResponse.body.qualification.qualificationId).toEqual(secondRandomQualification.id);
+            expect(fetchedWorkerResponse.body.qualification.title).toEqual(secondRandomQualification.level);
 
-            // out of range ethnicity id
+            // out of range qualification id
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    ethnicity : {
-                        ethnicityId: 100
+                    qualification : {
+                        qualificationId: 100
                     }
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            // unknown ethnicity (by name)
+            // unknown qualification (by name)
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    ethnicity : {
-                        ethnicity: "UnKnown"
+                    qualification : {
+                        title: "UnKnown"
                     }
                 })
                 .expect('Content-Type', /html/)
