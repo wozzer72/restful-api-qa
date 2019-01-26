@@ -17,12 +17,20 @@ const apiEndpoint = supertest(baseEndpoint);
 const postcodes = require('../mockdata/postcodes').data;
 const jobs = require('../mockdata/jobs').data;
 const ethnicities = require('../mockdata/ethnicity').data;
+const nationalities = require('../mockdata/nationalities').data;
+const countries = require('../mockdata/countries').data;
+const recruitedOrigins = require('../mockdata/recruitedFrom').data;
+const qualifications = require('../mockdata/qualifications').data;
 
 const Random = require('../utils/random');
 
 const registrationUtils = require('../utils/registration');
 const workerUtils = require('../utils/worker');
 const ethnicityUtils = require('../utils/ethnicity');
+const nationalityUtils = require('../utils/nationalities');
+const countryUtils = require('../utils/countries');
+const qualificationUtils = require('../utils/qualifications');
+const recruitedFromUtils = require('../utils/recruitedFrom');
 
 const validatePropertyChangeHistory = (property, currentValue, previousValue, username, requestEpoch, compareFunction) => {
     /* eg.
@@ -955,6 +963,95 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
         });
+
+        it.skip("should update a Worker's qualifications", async () => {
+            const randomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    ethnicity : {
+                        ethnicityId: randomEthnicity.id
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.ethnicity.ethnicityId).toEqual(randomEthnicity.id);
+            expect(fetchedWorkerResponse.body.ethnicity.ethnicity).toEqual(randomEthnicity.ethnicity);
+
+            const secondEthnicity = randomEthnicity.id == 11 ? 12 : 11;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    ethnicity : {
+                        ethnicityId: secondEthnicity
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.ethnicity,
+                                            secondEthnicity,
+                                            randomEthnicity.id,
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref.ethnicityId == given
+                                            });
+
+            // update ethnicity by name
+            const secondRandomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    ethnicity : {
+                        ethnicity: secondRandomEthnicity.ethnicity
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.ethnicity.ethnicityId).toEqual(secondRandomEthnicity.id);
+            expect(fetchedWorkerResponse.body.ethnicity.ethnicity).toEqual(secondRandomEthnicity.ethnicity);
+
+            // out of range ethnicity id
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    ethnicity : {
+                        ethnicityId: 100
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            // unknown ethnicity (by name)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    ethnicity : {
+                        ethnicity: "UnKnown"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
 
         let allWorkers = null;
         let secondWorkerInput = null;
