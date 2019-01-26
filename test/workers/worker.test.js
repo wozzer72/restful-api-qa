@@ -1512,6 +1512,110 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
+        it("should update a Worker's Year of Arrival", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    yearArrived: {
+                        value: "Yes",
+                        year: 2019              // upper boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.yearArrived.value).toEqual('Yes');
+            expect(fetchedWorkerResponse.body.yearArrived.year).toEqual(2019);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    yearArrived: {
+                        value: "Yes",
+                        year: 1920              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+                expect(fetchedWorkerResponse.body.yearArrived.value).toEqual('Yes');
+                expect(fetchedWorkerResponse.body.yearArrived.year).toEqual(1920);
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.yearArrived,
+                                            1920,
+                                            2019,
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref.value = 'Yes' && ref.year == given
+                                            });
+
+            // last update with expected value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    yearArrived: {
+                        value: "No"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.yearArrived.value).toEqual('No');
+            
+            // unknown given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    yearArrived: {
+                        value: "no"         // case sensitive
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+
+            // upper and lower year boundaries
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    yearArrived: {
+                        value: "Yes",
+                        year: 1919              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    yearArrived: {
+                        value: "Yes",
+                        year: 2020              // upper boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
+
         let allWorkers = null;
         let secondWorkerInput = null;
         let secondWorker = null;
