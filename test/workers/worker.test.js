@@ -1319,16 +1319,16 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's recruited from", async () => {
-            const randomNationality = nationalityUtils.lookupRandomNationality(nationalities);
+        it("should update a Worker's recruited from", async () => {
+            const randomOrigin = recruitedFromUtils.lookupRandomRecruitedFrom(recruitedOrigins);
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    nationality : {
-                        value : "Other",
-                        other : {
-                            nationalityId : randomNationality.id
+                    recruitedFrom : {
+                        value : "Yes",
+                        from : {
+                            recruitedFromId : randomOrigin.id
                         }
                     }
                 })
@@ -1338,17 +1338,17 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
-            expect(fetchedWorkerResponse.body.nationality.other.nationalityId).toEqual(randomNationality.id);
-            expect(fetchedWorkerResponse.body.nationality.other.nationality).toEqual(randomNationality.nationality);
+            expect(fetchedWorkerResponse.body.recruitedFrom.from.recruitedFromId).toEqual(randomOrigin.id);
+            expect(fetchedWorkerResponse.body.recruitedFrom.from.from).toEqual(randomOrigin.from);
 
-            const secondNationality = randomNationality.id == 222 ? 111 : 222;
+            const secondOrigin = randomOrigin.id == 3 ? 7 : 3;
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    nationality : {
-                        value : "Other",
-                        other : {
-                            nationalityId : secondNationality
+                    recruitedFrom : {
+                        value : "Yes",
+                        from : {
+                            recruitedFromId : secondOrigin
                         }
                     }
                 })
@@ -1364,44 +1364,35 @@ describe ("worker", async () => {
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.nationality,
-                                            secondNationality,
-                                            randomNationality.id,
+            validatePropertyChangeHistory(workerChangeHistory.body.recruitedFrom,
+                                            secondOrigin,
+                                            randomOrigin.id,
                                             establishment1Username,
                                             requestEpoch,
                                             (ref, given) => {
-                                                return ref.value === 'Other' && ref.other.nationalityId == given
+                                                return ref.value === 'Yes' && ref.from.recruitedFromId == given
                                             });
 
-            // update nationaltity by given value
+            // update recruited from by given value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    nationality : {
-                        value : "British"
+                    recruitedFrom : {
+                        value : "No"
                     }
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            
+             // update recruited from by name
+            const secondRandomOrigin = recruitedFromUtils.lookupRandomRecruitedFrom(recruitedOrigins);
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    nationality : {
-                        value : "Don't know"
-                    }
-                })
-                .expect('Content-Type', /json/)
-                .expect(200);
-
-            // update nationaltity by name
-            const secondRandomNationality = nationalityUtils.lookupRandomNationality(nationalities);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .send({
-                    nationality : {
-                        value : "Other",
-                        other : {
-                            nationality : secondRandomNationality.nationality
+                    recruitedFrom : {
+                        value : "Yes",
+                        from : {
+                            from : secondRandomOrigin.from
                         }
                     }
                 })
@@ -1411,40 +1402,40 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
-            expect(fetchedWorkerResponse.body.nationality.other.nationalityId).toEqual(secondRandomNationality.id);
-            expect(fetchedWorkerResponse.body.nationality.other.nationality).toEqual(secondRandomNationality.nationality);
+            expect(fetchedWorkerResponse.body.recruitedFrom.from.recruitedFromId).toEqual(secondRandomOrigin.id);
+            expect(fetchedWorkerResponse.body.recruitedFrom.from.from).toEqual(secondRandomOrigin.from);
 
-            // unknown given nationality
+            // unknown given recruited from
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    nationality : {
-                        value : "Don't Know"          // case sensitive
+                    recruitedFrom : {
+                        value : "yes"          // case sensitive
                     }
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            // out of range nationality id
+            // out of range recruited from id
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    nationality : {
-                        value : "Other",
-                        other : {
-                            nationalityId : 10000
+                    recruitedFrom : {
+                        value : "Yes",
+                        from : {
+                            recruitedFromId : 100
                         }
                     }
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            // unknown nationality (by name)
+            // unknown recruited from (by name)
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
-                    nationality : {
-                        value : "Other",
-                        other : {
-                            nationality : "wozietian"
+                    recruitedFrom : {
+                        value : "Yes",
+                        from : {
+                            from : 'wozitech'
                         }
                     }
                 })
