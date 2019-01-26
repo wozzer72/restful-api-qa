@@ -1186,6 +1186,271 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
+        it("should update a Worker's country of birth", async () => {
+            const randomCountry = countryUtils.lookupRandomCountry(countries);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Other",
+                        other : {
+                            countryId : randomCountry.id
+                        }
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.countryOfBirth.other.countryId).toEqual(randomCountry.id);
+            expect(fetchedWorkerResponse.body.countryOfBirth.other.country).toEqual(randomCountry.country);
+
+            const secondCountry = randomCountry.id == 99 ? 100 : 99;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Other",
+                        other : {
+                            countryId : secondCountry
+                        }
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.countryOfBirth,
+                                            secondCountry,
+                                            randomCountry.id,
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref.value === 'Other' && ref.other.countryId == given
+                                            });
+
+            // update country by given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "United Kingdom"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Don't know"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // update country of birth by name
+            const secondRandomCountry = countryUtils.lookupRandomCountry(countries);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Other",
+                        other : {
+                            country : secondRandomCountry.country
+                        }
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.countryOfBirth.other.countryId).toEqual(secondRandomCountry.id);
+            expect(fetchedWorkerResponse.body.countryOfBirth.other.country).toEqual(secondRandomCountry.country);
+
+            // unknown given country
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Don't Know"          // case sensitive
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            // out of range country id
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Other",
+                        other : {
+                            countryId : 10000
+                        }
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            // unknown country (by name)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Other",
+                        other : {
+                            country : "woziland"
+                        }
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
+        it.skip("should update a Worker's recruited from", async () => {
+            const randomNationality = nationalityUtils.lookupRandomNationality(nationalities);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Other",
+                        other : {
+                            nationalityId : randomNationality.id
+                        }
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.nationality.other.nationalityId).toEqual(randomNationality.id);
+            expect(fetchedWorkerResponse.body.nationality.other.nationality).toEqual(randomNationality.nationality);
+
+            const secondNationality = randomNationality.id == 222 ? 111 : 222;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Other",
+                        other : {
+                            nationalityId : secondNationality
+                        }
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.nationality,
+                                            secondNationality,
+                                            randomNationality.id,
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref.value === 'Other' && ref.other.nationalityId == given
+                                            });
+
+            // update nationaltity by given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "British"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Don't know"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // update nationaltity by name
+            const secondRandomNationality = nationalityUtils.lookupRandomNationality(nationalities);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Other",
+                        other : {
+                            nationality : secondRandomNationality.nationality
+                        }
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.nationality.other.nationalityId).toEqual(secondRandomNationality.id);
+            expect(fetchedWorkerResponse.body.nationality.other.nationality).toEqual(secondRandomNationality.nationality);
+
+            // unknown given nationality
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Don't Know"          // case sensitive
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            // out of range nationality id
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Other",
+                        other : {
+                            nationalityId : 10000
+                        }
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            // unknown nationality (by name)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Other",
+                        other : {
+                            nationality : "wozietian"
+                        }
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
 
         let allWorkers = null;
         let secondWorkerInput = null;
