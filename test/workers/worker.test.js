@@ -263,7 +263,7 @@ describe ("worker", async () => {
                 .expect(401);
         });
 
-        it.skip("should update a Worker's mandatory properties", async () => {
+        it("should update a Worker's mandatory properties", async () => {
             expect(establishment1).not.toBeNull();
             expect(workerUid).not.toBeNull();
 
@@ -316,7 +316,6 @@ describe ("worker", async () => {
                     establishment1Username,
                     requestEpoch,
                     (ref, given) => {
-                      //console.log("TEST DEBUG: main job: ref/given: ", ref, given)
                       return ref.jobId == given
                     });
 
@@ -429,7 +428,7 @@ describe ("worker", async () => {
                 .expect(401);            
         });
 
-        it.skip("should update a Worker's Approved Mental Health Worker property", async () => {
+        it("should update a Worker's Approved Mental Health Worker property", async () => {
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -494,7 +493,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's Main Job Start Date property", async () => {
+        it("should update a Worker's Main Job Start Date property", async () => {
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -553,7 +552,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's NI Number property", async () => {
+        it("should update a Worker's NI Number property", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -611,7 +610,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's DOB property", async () => {
+        it("should update a Worker's DOB property", async () => {
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -672,7 +671,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's postcode property", async () => {
+        it("should update a Worker's postcode property", async () => {
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -723,7 +722,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's gender", async () => {
+        it("should update a Worker's gender", async () => {
             // NOTE - the gender options are case sensitive (know!); test all expected options
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -803,7 +802,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's disability", async () => {
+        it("should update a Worker's disability", async () => {
             // NOTE - the gender options are case sensitive (know!); test all expected options
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -883,7 +882,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's ethnicity", async () => {
+        it("should update a Worker's ethnicity", async () => {
             const randomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -971,7 +970,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's qualifications", async () => {
+        it("should update a Worker's qualifications", async () => {
             const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1060,7 +1059,7 @@ describe ("worker", async () => {
         });
 
 
-        it.skip("should update a Worker's nationality", async () => {
+        it("should update a Worker's nationality", async () => {
             const randomNationality = nationalityUtils.lookupRandomNationality(nationalities);
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1193,7 +1192,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's country of birth", async () => {
+        it("should update a Worker's country of birth", async () => {
             const randomCountry = countryUtils.lookupRandomCountry(countries);
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1326,7 +1325,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's recruited from", async () => {
+        it("should update a Worker's recruited from", async () => {
             const randomOrigin = recruitedFromUtils.lookupRandomRecruitedFrom(recruitedOrigins);
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1450,7 +1449,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's British Citizenship", async () => {
+        it("should update a Worker's British Citizenship", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -1519,7 +1518,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's Year of Arrival", async () => {
+        it("should update a Worker's Year of Arrival", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -1622,7 +1621,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's Social Care Start Date", async () => {
+        it("should update a Worker's Social Care Start Date", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -1725,7 +1724,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's Other Jobs", async () => {
+        it("should update a Worker's Other Jobs", async () => {
             const firstRandomJob = jobUtils.lookupRandomJob(jobs);
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -1936,7 +1935,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's Sick Days", async () => {
+        it("should update a Worker's Sick Days", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -2081,7 +2080,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's zero hours contract", async () => {
+        it("should update a Worker's zero hours contract", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -2151,7 +2150,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's Weekly Average Hours", async () => {
+        it("should update a Worker's Weekly Average Hours", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -2200,8 +2199,6 @@ describe ("worker", async () => {
                                             establishment1Username,
                                             requestEpoch,
                                             (ref, given) => {
-                                                console.log("TEST DEBUG: ref: ", ref);
-                                                console.log("TEST DEBUG: given: ", given)
                                                 return ref.value == given
                                             });
 
@@ -2297,7 +2294,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it.skip("should update a Worker's Weekly Contracted Hours", async () => {
+        it("should update a Worker's Weekly Contracted Hours", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -2346,8 +2343,6 @@ describe ("worker", async () => {
                                             establishment1Username,
                                             requestEpoch,
                                             (ref, given) => {
-                                                console.log("TEST DEBUG: ref: ", ref);
-                                                console.log("TEST DEBUG: given: ", given)
                                                 return ref.value == given
                                             });
 
@@ -2443,10 +2438,241 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
+        it("should update a Worker's Annual/Hourly Rate", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Hourly",
+                        rate : 50.00
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.annualHourlyPay.value).toEqual('Hourly');
+            expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(50.00);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Annually",
+                        rate : 25677
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+                expect(fetchedWorkerResponse.body.annualHourlyPay.value).toEqual('Annually');
+                expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(25677);
+    
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(workerChangeHistory.body.annualHourlyPay,
+                                            25677,
+                                            50.00,
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref.rate == given
+                                            });
+            validatePropertyChangeHistory(workerChangeHistory.body.annualHourlyPay,
+                                            'Annually',
+                                            'Hourly',
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref.value == given
+                                            });
+    
+            // round the the nearest 0.01 (for hourly)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Hourly",
+                        rate : 11.147
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(11.15);
+
+            // round the the nearest whole number (for annual)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Annually",
+                        rate : 28576.57
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(28577);
+        
+            // expected and unexpected values
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Don't know"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            console.log("TEST DEBUG - pay: ", fetchedWorkerResponse.body.annualHourlyPay)
+            expect(fetchedWorkerResponse.body.annualHourlyPay.value).toEqual("Don't know");
+            expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(undefined);
+            
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                            value : "Don't Know"      // case sensitive
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            
+            // upper and lower boundary values for hourly rate
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Hourly",
+                        rate : 100                  // upper boundary
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Hourly",
+                        rate : 100.01                // upper boundary
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Hourly",
+                        rate : 2.50                  // lower boundary
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Hourly",
+                        rate : 2.49                  // lower boundary
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            
+            // upper and lower boundary values for annual rate
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Annually",
+                        rate : 200000                  // upper boundary
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Annually",
+                        rate : 200001                  // upper boundary
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Annually",
+                        rate : 500                  // lower boundary
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Annually",
+                        rate : 499                  // lower boundary
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            
+            // unexpected value and structure
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        Value : "Annually",         // case sensitive attributes
+                        rate : 10000
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    annualHourlyPay : {
+                        value : "Annually",
+                        Rate : 10000                // case sensitive attributes
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
         let allWorkers = null;
         let secondWorkerInput = null;
         let secondWorker = null;
-        it.skip("should return a list of Workers", async () => {
+        it("should return a list of Workers", async () => {
             expect(establishment1).not.toBeNull();
             expect(Number.isInteger(establishmentId)).toEqual(true);
 
@@ -2477,7 +2703,7 @@ describe ("worker", async () => {
             allWorkers = allWorkersResponse.body.workers;
         });
 
-        it.skip("should fetch a single worker", async () => {
+        it("should fetch a single worker", async () => {
             expect(secondWorker).not.toBeNull();
             const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
             expect(uuidRegex.test(secondWorker.uid.toUpperCase())).toEqual(true);
@@ -2526,7 +2752,7 @@ describe ("worker", async () => {
                 .expect(401);
         });
 
-        it.skip("should have creation and update change history", async () => {
+        it("should have creation and update change history", async () => {
             expect(establishment1).not.toBeNull();
             expect(Number.isInteger(establishmentId)).toEqual(true);
 
