@@ -1725,7 +1725,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it("should update a Worker's Other Jobs", async () => {
+        it.skip("should update a Worker's Other Jobs", async () => {
             const firstRandomJob = jobUtils.lookupRandomJob(jobs);
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -1936,6 +1936,222 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
+        it.skip("should update a Worker's Sick Days", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick : {
+                        value : "Yes",
+                        days : 1.7
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
+            expect(fetchedWorkerResponse.body.daysSick.value).toEqual('Yes');
+            expect(fetchedWorkerResponse.body.daysSick.days).toEqual(1.5);  // rounds to nearest 0.5
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick : {
+                        value : "Yes",
+                        days : 12.2
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.daysSick.value).toEqual('Yes');
+            expect(fetchedWorkerResponse.body.daysSick.days).toEqual(12.0);  // rounds to nearest 0.5
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.daysSick,
+                                            12.0,
+                                            1.5,
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref.value = 'Yes' && ref.days == given
+                                            });
+
+            // days sick with expected value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick: {
+                        value: "No"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.daysSick.value).toEqual('No');
+            
+            // unknown given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick: {
+                        value: "no"         // case sensitive
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+
+            // upper and lower day boundaries
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick : {
+                        value : "Yes",
+                        days : 0
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick : {
+                        value : "Yes",
+                        days : -0.5
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick : {
+                        value : "Yes",
+                        days : 366
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick : {
+                        value : "Yes",
+                        days : 366.1        // rounds to nearest 0.5, but test is for any greater than 366.0
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+
+            // invalid input structure
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick : {
+                        sick : "Yes"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    daysSick : {
+                        value : "Yes",
+                        rate: 3
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
+        it("should update a Worker's zero hours contract", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    zeroHoursContract : "No"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
+            expect(fetchedWorkerResponse.body.zeroHoursContract).toEqual('No');
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    zeroHoursContract : "Yes"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.zeroHoursContract).toEqual('Yes');
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.zeroHoursContract,
+                                            'Yes',
+                                            'No',
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref == given
+                                            });
+
+            // zero contract with expected value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    zeroHoursContract : "Don't know"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+                expect(fetchedWorkerResponse.body.zeroHoursContract).toEqual("Don't know");
+            
+            // unexpected given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    zeroHoursContract : "Don't Know"        // case sensitive
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
+        
         let allWorkers = null;
         let secondWorkerInput = null;
         let secondWorker = null;
