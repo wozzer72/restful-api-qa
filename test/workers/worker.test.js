@@ -2081,7 +2081,7 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it("should update a Worker's zero hours contract", async () => {
+        it.skip("should update a Worker's zero hours contract", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -2151,7 +2151,298 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        
+        it.skip("should update a Worker's Weekly Average Hours", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value : "Yes",
+                        hours : 37.5
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.weeklyHoursAverage.value).toEqual('Yes');
+            expect(fetchedWorkerResponse.body.weeklyHoursAverage.hours).toEqual(37.5);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value : "No"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.weeklyHoursAverage.value).toEqual('No');
+            expect(fetchedWorkerResponse.body.weeklyHoursAverage.hours).toEqual(undefined);
+    
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.weeklyHoursAverage,
+                                            'No',
+                                            'Yes',
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                console.log("TEST DEBUG: ref: ", ref);
+                                                console.log("TEST DEBUG: given: ", given)
+                                                return ref.value == given
+                                            });
+
+            // round the the nearest 0.5
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value : "Yes",
+                        hours: 37.3
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.weeklyHoursAverage.value).toEqual('Yes');
+            expect(fetchedWorkerResponse.body.weeklyHoursAverage.hours).toEqual(37.5);
+
+            // upper and lower boundary values
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value : "Yes",
+                        hours: 65                   // upper boundary
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value : "Yes",
+                        hours: 65.1
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value : "Yes",
+                        hours: 0                    // lower boundary
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value : "Yes",
+                        hours: -0.1
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            
+            // unexpected value and structure
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value: "yes",           // case sensitive
+                        hours: 37.5
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        test: "No"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursAverage : {
+                        value: "Yes",
+                        given: 37.5
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
+        it.skip("should update a Worker's Weekly Contracted Hours", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value : "Yes",
+                        hours : 37.5
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.weeklyHoursContracted.value).toEqual('Yes');
+            expect(fetchedWorkerResponse.body.weeklyHoursContracted.hours).toEqual(37.5);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value : "No"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.weeklyHoursContracted.value).toEqual('No');
+            expect(fetchedWorkerResponse.body.weeklyHoursContracted.hours).toEqual(undefined);
+    
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.weeklyHoursContracted,
+                                            'No',
+                                            'Yes',
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                console.log("TEST DEBUG: ref: ", ref);
+                                                console.log("TEST DEBUG: given: ", given)
+                                                return ref.value == given
+                                            });
+
+            // round the the nearest 0.5
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value : "Yes",
+                        hours: 37.3
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.weeklyHoursContracted.value).toEqual('Yes');
+            expect(fetchedWorkerResponse.body.weeklyHoursContracted.hours).toEqual(37.5);
+
+            // upper and lower boundary values
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value : "Yes",
+                        hours: 65                   // upper boundary
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value : "Yes",
+                        hours: 65.1
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value : "Yes",
+                        hours: 0                    // lower boundary
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value : "Yes",
+                        hours: -0.1
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            
+            // unexpected value and structure
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value: "yes",           // case sensitive
+                        hours: 37.5
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        test: "No"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    weeklyHoursContracted : {
+                        value: "Yes",
+                        given: 37.5
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
         let allWorkers = null;
         let secondWorkerInput = null;
         let secondWorker = null;
