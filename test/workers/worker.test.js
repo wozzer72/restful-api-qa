@@ -2459,7 +2459,6 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
-            console.log("TEST DEBUG - pay: ", fetchedWorkerResponse.body.annualHourlyPay)
             expect(fetchedWorkerResponse.body.annualHourlyPay.value).toEqual("Don't know");
             expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(undefined);
             
@@ -2732,7 +2731,6 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
-            console.log("TEST DEBUG - apprenticeship training: ", fetchedWorkerResponse.body)
             expect(fetchedWorkerResponse.body.qualificationInSocialCare).toEqual('Don\'t know');
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2890,7 +2888,6 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
-            console.log("TEST DEBUG - apprenticeship training: ", fetchedWorkerResponse.body)
             expect(fetchedWorkerResponse.body.otherQualification).toEqual('Don\'t know');
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
