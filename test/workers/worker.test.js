@@ -2578,7 +2578,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-        }); */
+        });
 
         it("should update a Worker's Social Care qualifications", async () => {
             const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
@@ -2663,6 +2663,76 @@ describe ("worker", async () => {
                     socialCareQualification : {
                         title: "UnKnown"
                     }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });*/
+
+        it("should update a Worker's Care Certificate", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    careCertificate : "Yes, in progress or partially completed"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
+            expect(fetchedWorkerResponse.body.careCertificate).toEqual('Yes, in progress or partially completed');
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    careCertificate : "Yes, completed"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.careCertificate).toEqual('Yes, completed');
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.careCertificate,
+                                            'Yes, completed',
+                                            'Yes, in progress or partially completed',
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref == given
+                                            });
+
+            // zero contract with expected value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    careCertificate : "No"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+                expect(fetchedWorkerResponse.body.careCertificate).toEqual("No");
+            
+            // unexpected given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    zeroHoursContract : "no"        // case sensitive
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
