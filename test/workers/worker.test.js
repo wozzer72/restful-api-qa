@@ -2736,7 +2736,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-        });*/
+        });
 
         it("should update a Worker's Apprenticeship Training", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2750,7 +2750,6 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
-            console.log("TEST DEBUG - apprenticeship training: ", fetchedWorkerResponse.body)
             expect(fetchedWorkerResponse.body.apprenticeshipTraining).toEqual('Don\'t know');
 
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2806,7 +2805,80 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
+        });*/
+
+
+        it("should update a Worker's Qualification In Social Care", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    qualificationInSocialCare : "Don't know"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            console.log("TEST DEBUG - apprenticeship training: ", fetchedWorkerResponse.body)
+            expect(fetchedWorkerResponse.body.qualificationInSocialCare).toEqual('Don\'t know');
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    qualificationInSocialCare : "Yes"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.qualificationInSocialCare).toEqual('Yes');
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.qualificationInSocialCare,
+                                            'Yes',
+                                            'Don\'t know',
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref == given
+                                            });
+
+            // zero contract with expected value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    qualificationInSocialCare : "No"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+                expect(fetchedWorkerResponse.body.qualificationInSocialCare).toEqual("No");
+            
+            // unexpected given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    qualificationInSocialCare : "Don't Know"        // case sensitive
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
         });
+
+
 
 
         let allWorkers = null;
