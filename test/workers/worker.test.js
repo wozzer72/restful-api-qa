@@ -428,7 +428,7 @@ describe ("worker", async () => {
                 .expect(401);            
         });
 
-      /*   it("should update a Worker's Approved Mental Health Worker property", async () => {
+        it("should update a Worker's Approved Mental Health Worker property", async () => {
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -2947,7 +2947,6 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
         });
-        */
 
         it("should update a Worker's Highest (other) qualifications", async () => {
             const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
