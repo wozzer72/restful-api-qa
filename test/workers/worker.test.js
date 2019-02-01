@@ -2580,94 +2580,6 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
-        it("should update a Worker's Social Care qualifications", async () => {
-            const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
-
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .send({
-                    socialCareQualification : {
-                        qualificationId : randomQualification.id
-                    }
-                })
-                .expect('Content-Type', /json/)
-                .expect(200);
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .expect('Content-Type', /json/)
-                .expect(200);
-            expect(fetchedWorkerResponse.body.socialCareQualification.qualificationId).toEqual(randomQualification.id);
-            expect(fetchedWorkerResponse.body.socialCareQualification.title).toEqual(randomQualification.level);
-
-            const secondQualification = randomQualification.id == 2 ? 12 : 2;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .send({
-                    socialCareQualification : {
-                        qualificationId: secondQualification
-                    }
-                })
-                .expect('Content-Type', /json/)
-                .expect(200);
-
-            // now test change history
-            let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
-                .set('Authorization', establishment1Token)
-                .expect('Content-Type', /json/)
-                .expect(200);
-            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
-
-            validatePropertyChangeHistory(workerChangeHistory.body.socialCareQualification,
-                                            secondQualification,
-                                            randomQualification.id,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.qualificationId == given
-                                            });
-
-            // update qualification by name
-            const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .send({
-                    socialCareQualification : {
-                        title: secondRandomQualification.level
-                    }
-                })
-                .expect('Content-Type', /json/)
-                .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .expect('Content-Type', /json/)
-                .expect(200);
-            expect(fetchedWorkerResponse.body.socialCareQualification.qualificationId).toEqual(secondRandomQualification.id);
-            expect(fetchedWorkerResponse.body.socialCareQualification.title).toEqual(secondRandomQualification.level);
-
-            // out of range qualification id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .send({
-                    socialCareQualification : {
-                        qualificationId: 100
-                    }
-                })
-                .expect('Content-Type', /html/)
-                .expect(400);
-            // unknown qualification (by name)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
-                .set('Authorization', establishment1Token)
-                .send({
-                    socialCareQualification : {
-                        title: "UnKnown"
-                    }
-                })
-                .expect('Content-Type', /html/)
-                .expect(400);
-        });
-
         it("should update a Worker's Care Certificate", async () => {
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -2805,7 +2717,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-        });*/
+        });
 
 
         it("should update a Worker's Qualification In Social Care", async () => {
@@ -2877,6 +2789,165 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
         });
+
+        it("should update a Worker's Social Care qualifications", async () => {
+            const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    socialCareQualification : {
+                        qualificationId : randomQualification.id
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.socialCareQualification.qualificationId).toEqual(randomQualification.id);
+            expect(fetchedWorkerResponse.body.socialCareQualification.title).toEqual(randomQualification.level);
+
+            const secondQualification = randomQualification.id == 2 ? 12 : 2;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    socialCareQualification : {
+                        qualificationId: secondQualification
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.socialCareQualification,
+                                            secondQualification,
+                                            randomQualification.id,
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref.qualificationId == given
+                                            });
+
+            // update qualification by name
+            const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    socialCareQualification : {
+                        title: secondRandomQualification.level
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.socialCareQualification.qualificationId).toEqual(secondRandomQualification.id);
+            expect(fetchedWorkerResponse.body.socialCareQualification.title).toEqual(secondRandomQualification.level);
+
+            // out of range qualification id
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    socialCareQualification : {
+                        qualificationId: 100
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+            // unknown qualification (by name)
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    socialCareQualification : {
+                        title: "UnKnown"
+                    }
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });*/
+
+        it("should update a Worker's Other Qualification", async () => {
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    otherQualification : "Don't know"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            console.log("TEST DEBUG - apprenticeship training: ", fetchedWorkerResponse.body)
+            expect(fetchedWorkerResponse.body.otherQualification).toEqual('Don\'t know');
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    otherQualification : "Yes"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.otherQualification).toEqual('Yes');
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(workerChangeHistory.body.otherQualification,
+                                            'Yes',
+                                            'Don\'t know',
+                                            establishment1Username,
+                                            requestEpoch,
+                                            (ref, given) => {
+                                                return ref == given
+                                            });
+
+            // zero contract with expected value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    otherQualification : "No"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+                expect(fetchedWorkerResponse.body.otherQualification).toEqual("No");
+            
+            // unexpected given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    otherQualification : "Don't Know"        // case sensitive
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
+
 
 
 
