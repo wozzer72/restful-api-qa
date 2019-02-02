@@ -179,7 +179,7 @@ Object {
           "id": 8,
         },
         Object {
-          "ethnicity": "Any other Mixed/Multiple ethnic background",
+          "ethnicity": "Any other Mixed/ multiple ethnic background",
           "id": 9,
         },
       ],
@@ -250,7 +250,7 @@ Object {
         "id": 8,
       },
       Object {
-        "ethnicity": "Any other Mixed/Multiple ethnic background",
+        "ethnicity": "Any other Mixed/ multiple ethnic background",
         "group": "Mixed / multiple ethnic groups",
         "id": 9,
       },
@@ -3068,7 +3068,7 @@ Object {
     },
     Object {
       "id": 10,
-      "level": "Don' know",
+      "level": "Don't know",
     },
   ],
 }
@@ -3090,7 +3090,7 @@ Object {
       "id": 3,
     },
     Object {
-      "from": "Childrens/young people's Social Care",
+      "from": "Childrens/young people's social care",
       "id": 4,
     },
     Object {
