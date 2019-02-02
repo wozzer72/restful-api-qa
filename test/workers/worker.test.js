@@ -10,7 +10,7 @@
 
 const supertest = require('supertest');
 const uuid = require('uuid');
-const baseEndpoint = process.env.TEST_DEV === 'true' ? 'https://sfcdev.cloudapps.digital/api' : 'http://localhost:3000/api';
+const baseEndpoint = require('../utils/baseUrl').baseurl;
 
 let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 300 : 100;
 let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 500;
