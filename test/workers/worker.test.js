@@ -10,7 +10,11 @@
 
 const supertest = require('supertest');
 const uuid = require('uuid');
-const baseEndpoint = 'http://localhost:3000/api';
+const baseEndpoint = process.env.TEST_DEV === 'true' ? 'https://sfcdev.cloudapps.digital/api' : 'http://localhost:3000/api';
+
+let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 300 : 100;
+let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 500;
+
 const apiEndpoint = supertest(baseEndpoint);
 
 // mocked real postcode/location data
@@ -33,7 +37,9 @@ const qualificationUtils = require('../utils/qualifications');
 const recruitedFromUtils = require('../utils/recruitedFrom');
 const jobUtils = require('../utils/jobs');
 
-const validatePropertyChangeHistory = (property, currentValue, previousValue, username, requestEpoch, compareFunction) => {
+const PropertiesResponses = {};
+
+const validatePropertyChangeHistory = (name, property, currentValue, previousValue, username, requestEpoch, compareFunction) => {
     /* eg.
     { currentValue: [ { jobId: 7, title: 'Assessment Officer' } ],
       lastSavedBy: 'Federico.Lebsack',
@@ -59,8 +65,13 @@ const validatePropertyChangeHistory = (property, currentValue, previousValue, us
     }
     */
     expect(compareFunction(property.currentValue, currentValue)).toEqual(true);
-    expect(Math.abs(new Date(property.lastSaved).getTime() - requestEpoch)).toBeLessThan(500);
-    expect(Math.abs(new Date(property.lastChanged).getTime() - requestEpoch)).toBeLessThan(500);
+
+    // console.log("TEST DEBUG: Last Save time difference: ", Math.abs(new Date(property.lastSaved).getTime() - requestEpoch));
+    const lastChangedResponseTime = Math.abs(new Date(property.lastChanged).getTime() - requestEpoch);
+    PropertiesResponses[name] = lastChangedResponseTime;
+
+    expect(Math.abs(new Date(property.lastSaved).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
+    expect(Math.abs(new Date(property.lastChanged).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
     expect(property.lastSavedBy).toEqual(username);
     expect(property.lastChangedBy).toEqual(username);
 
@@ -71,10 +82,10 @@ const validatePropertyChangeHistory = (property, currentValue, previousValue, us
     expect(changeHistory[1].username).toEqual(username);
     expect(changeHistory[2].username).toEqual(username);
     expect(changeHistory[3].username).toEqual(username);
-    expect(Math.abs(new Date(changeHistory[0].when).getTime() - requestEpoch)).toBeLessThan(500);
-    expect(Math.abs(new Date(changeHistory[1].when).getTime() - requestEpoch)).toBeLessThan(500);
-    expect(Math.abs(new Date(changeHistory[2].when).getTime() - requestEpoch)).toBeLessThan(1000);
-    expect(Math.abs(new Date(changeHistory[3].when).getTime() - requestEpoch)).toBeLessThan(1000);
+    expect(Math.abs(new Date(changeHistory[0].when).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
+    expect(Math.abs(new Date(changeHistory[1].when).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
+    expect(Math.abs(new Date(changeHistory[2].when).getTime() - requestEpoch)).toBeLessThan(MAX_TIME_TOLERANCE);
+    expect(Math.abs(new Date(changeHistory[3].when).getTime() - requestEpoch)).toBeLessThan(MAX_TIME_TOLERANCE);
     expect(changeHistory[0].event).toEqual('changed');
     expect(changeHistory[1].event).toEqual('saved');
     expect(changeHistory[2].event).toEqual('changed');
@@ -93,37 +104,40 @@ describe ("worker", async () => {
     let establishment2Token = null;
     let establishment1Username = null;
     let establishment2Username = null;
+    let timeDifference = null;
 
-    beforeAll(async () => {
-        // clean the database
-        if (process.env.CLEAN_DB) {
-            await apiEndpoint.post('/test/clean')
-            .send({})
-            .expect(200);
-        }
-
-        // setup reference test data - two establishments
-        const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
-            .expect('Content-Type', /json/)
-            .expect(200);
-        nonCqcServices = nonCqcServicesResults.body;
-
-
-        // const site2 =  registrationUtils.newNonCqcSite(postcodes[3], nonCqcServices);
-        // establishment1 = await apiEndpoint.post('/registration')
-        //     .send([site2])
-        //     .expect('Content-Type', /json/)
-        //     .expect(200);
-    });
-
-    beforeEach(async () => {
-    });
-
-    describe("Establishment 1", async ( )=> {
+    describe("Establishment 1 against " + baseEndpoint, async () => {
         let establishmentId = null;
         let workerUid = null;
 
         beforeAll(async () => {
+            // clean the database
+            if (process.env.CLEAN_DB) {
+                await apiEndpoint.post('/test/clean')
+                    .send({})
+                    .expect(200);
+            }
+
+            console.log("Testing against: ", baseEndpoint);
+
+            // offset local time and server time
+            const serverTimeResponse = await apiEndpoint.get('/test/timestamp');
+            if (serverTimeResponse.headers['x-timestamp']) {
+                const serverTime = parseInt(serverTimeResponse.headers['x-timestamp']);
+                const localTime = new Date().getTime();
+                timeDifference = localTime - serverTime;
+                // console.log("TEST DEBUG: local time: ", localTime);
+                // console.log("TEST DEBUG: remote time: ", serverTime);
+                // console.log("TEST DEBUG: time difference: ", timeDifference);
+            }                
+
+
+            // setup reference test data - two establishments
+            const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
+            nonCqcServices = nonCqcServicesResults.body;
             const site1 =  registrationUtils.newNonCqcSite(postcodes[2], nonCqcServices);
             const site1Response = await apiEndpoint.post('/registration')
                 .send([site1])
@@ -150,19 +164,6 @@ describe ("worker", async () => {
             expect(establishment1).not.toBeNull();
             expect(Number.isInteger(establishmentId)).toEqual(true);
 
-            newWorker = workerUtils.newWorker(jobs);
-            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
-                .set('Authorization', establishment1Token)
-                .send(newWorker)
-                .expect('Content-Type', /json/)
-                .expect(201);
-
-            expect(newWorkerResponse.body.uid).not.toBeNull();
-            workerUid = newWorkerResponse.body.uid;
-
-            const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
-            expect(uuidRegex.test(workerUid.toUpperCase())).toEqual(true);
-            
             // proven validation errors
             await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
@@ -261,6 +262,20 @@ describe ("worker", async () => {
                 .send({})
                 .expect('Content-Type', /html/)
                 .expect(401);
+        
+            // create the Worker having tested all failures first; minimises the response time being create and update (next)
+            newWorker = workerUtils.newWorker(jobs);
+            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(newWorker)
+                .expect('Content-Type', /json/)
+                .expect(201);
+
+            expect(newWorkerResponse.body.uid).not.toBeNull();
+            workerUid = newWorkerResponse.body.uid;
+
+            const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
+            expect(uuidRegex.test(workerUid.toUpperCase())).toEqual(true);            
         });
 
         it("should update a Worker's mandatory properties", async () => {
@@ -292,9 +307,10 @@ describe ("worker", async () => {
                 .expect(200);
 
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.nameOrId,
+            validatePropertyChangeHistory('NameOrId',
+                                          workerChangeHistory.body.nameOrId,
                                           updatedNameId,
                                           newWorker.nameOrId,
                                           establishment1Username,
@@ -302,7 +318,8 @@ describe ("worker", async () => {
                                           (ref, given) => {
                                             return ref == given
                                           });
-            validatePropertyChangeHistory(workerChangeHistory.body.contract,
+            validatePropertyChangeHistory('contract',
+                workerChangeHistory.body.contract,
                 updatedContract,
                 newWorker.contract,
                 establishment1Username,
@@ -310,14 +327,15 @@ describe ("worker", async () => {
                 (ref, given) => {
                   return ref == given
                 });
-            validatePropertyChangeHistory(workerChangeHistory.body.mainJob,
-                    updatedJobId,
-                    newWorker.mainJob.jobId,
-                    establishment1Username,
-                    requestEpoch,
-                    (ref, given) => {
-                      return ref.jobId == given
-                    });
+            validatePropertyChangeHistory('mainJob',
+                workerChangeHistory.body.mainJob,
+                updatedJobId,
+                newWorker.mainJob.jobId,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.jobId == given
+                });
 
             // successful updates of each property at a time
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -465,16 +483,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.approvedMentalHealthWorker,
-                                            "Yes",
-                                            "Don't know",
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'approvedMentalHealthWorker',
+                workerChangeHistory.body.approvedMentalHealthWorker,
+                "Yes",
+                "Don't know",
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -523,16 +543,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.mainJobStartDate,
-                                            "2019-01-14",
-                                            "2019-01-15",
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'mainJobStartDate',
+                workerChangeHistory.body.mainJobStartDate,
+                "2019-01-14",
+                "2019-01-15",
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             const tomorrow = new Date();
             tomorrow.setDate(new Date().getDate()+1);
@@ -581,16 +603,17 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.nationalInsuranceNumber,
-                                            "NY 21 26 12 B",
-                                            "NY 21 26 12 A",
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });            
+            validatePropertyChangeHistory('nationalInsuranceNumber',
+                workerChangeHistory.body.nationalInsuranceNumber,
+                "NY 21 26 12 B",
+                "NY 21 26 12 A",
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });            
 
             // "NI" is not a valid prefix for a NI Number.
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -640,16 +663,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.dateOfBirth,
-                                            "1994-01-16",
-                                            "1994-01-15",
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'dateOfBirth',
+                workerChangeHistory.body.dateOfBirth,
+                "1994-01-16",
+                "1994-01-15",
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             // 1994 is not a leap year, so there are only 28 days in Feb
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -701,16 +726,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.postcode,
-                                            "SE13 7SS",
-                                            "SE13 7SN",
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'postcode',
+                workerChangeHistory.body.postcode,
+                "SE13 7SS",
+                "SE13 7SN",
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             // 1994 is not a leap year, so there are only 28 days in Feb
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -751,16 +778,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.gender,
-                                            "Female",
-                                            "Male",
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'gender',
+                workerChangeHistory.body.gender,
+                "Female",
+                "Male",
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -831,16 +860,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.disability,
-                                            "No",
-                                            "Yes",
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'disability',
+                workerChangeHistory.body.disability,
+                "No",
+                "Yes",
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
             
             fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -919,16 +950,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.ethnicity,
-                                            secondEthnicity,
-                                            randomEthnicity.id,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.ethnicityId == given
-                                            });
+            validatePropertyChangeHistory(
+                'ethnicity',
+                workerChangeHistory.body.ethnicity,
+                secondEthnicity,
+                randomEthnicity.id,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.ethnicityId == given
+                });
 
             // update ethnicity by name
             const secondRandomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
@@ -1013,16 +1046,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.nationality,
-                                            secondNationality,
-                                            randomNationality.id,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value === 'Other' && ref.other.nationalityId == given
-                                            });
+            validatePropertyChangeHistory(
+                'nationality',
+                workerChangeHistory.body.nationality,
+                secondNationality,
+                randomNationality.id,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value === 'Other' && ref.other.nationalityId == given
+                });
 
             // update nationaltity by given value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1146,16 +1181,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.countryOfBirth,
-                                            secondCountry,
-                                            randomCountry.id,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value === 'Other' && ref.other.countryId == given
-                                            });
+            validatePropertyChangeHistory(
+                'countryOfBirth',
+                workerChangeHistory.body.countryOfBirth,
+                secondCountry,
+                randomCountry.id,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value === 'Other' && ref.other.countryId == given
+                });
 
             // update country by given value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1279,16 +1316,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.recruitedFrom,
-                                            secondOrigin,
-                                            randomOrigin.id,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value === 'Yes' && ref.from.recruitedFromId == given
-                                            });
+            validatePropertyChangeHistory(
+                'recruitedFrom',
+                workerChangeHistory.body.recruitedFrom,
+                secondOrigin,
+                randomOrigin.id,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value === 'Yes' && ref.from.recruitedFromId == given
+                });
 
             // update recruited from by given value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1394,16 +1433,17 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.britishCitizenship,
-                                            'No',
-                                            'Yes',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory('britishCitizenship',
+                workerChangeHistory.body.britishCitizenship,
+                'No',
+                'Yes',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             // last update with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1471,16 +1511,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.yearArrived,
-                                            1920,
-                                            2019,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value = 'Yes' && ref.year == given
-                                            });
+            validatePropertyChangeHistory(
+                'yearArrived',
+                workerChangeHistory.body.yearArrived,
+                1920,
+                2019,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value = 'Yes' && ref.year == given
+                });
 
             // last update with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1574,16 +1616,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.socialCareStartDate,
-                                            1920,
-                                            2019,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value = 'Yes' && ref.year == given
-                                            });
+            validatePropertyChangeHistory(
+                'socialCareStartDate',
+                workerChangeHistory.body.socialCareStartDate,
+                1920,
+                2019,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value = 'Yes' && ref.year == given
+                });
 
             // last update with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1686,20 +1730,22 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.otherJobs,
-                                            secondRandomJobId,
-                                            firstRandomJob.id,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                if (ref.hasOwnProperty('value')) {
-                                                    return ref.otherJobs[0].jobId == given
-                                                } else {
-                                                    return ref[0].jobId == given
-                                                }
-                                            });
+            validatePropertyChangeHistory(
+                'otherJobs',
+                workerChangeHistory.body.otherJobs,
+                secondRandomJobId,
+                firstRandomJob.id,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    if (ref.hasOwnProperty('value')) {
+                        return ref.otherJobs[0].jobId == given
+                    } else {
+                        return ref[0].jobId == given
+                    }
+                });
 
             // with two additional jobs
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1889,16 +1935,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.daysSick,
-                                            12.0,
-                                            1.5,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value = 'Yes' && ref.days == given
-                                            });
+            validatePropertyChangeHistory(
+                'daysSick',
+                workerChangeHistory.body.daysSick,
+                12.0,
+                1.5,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value = 'Yes' && ref.days == given
+                });
 
             // days sick with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2026,16 +2074,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.zeroHoursContract,
-                                            'Yes',
-                                            'No',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'zeroHoursContract',
+                workerChangeHistory.body.zeroHoursContract,
+                'Yes',
+                'No',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             // zero contract with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2102,16 +2152,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.weeklyHoursAverage,
-                                            'No',
-                                            'Yes',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value == given
-                                            });
+            validatePropertyChangeHistory(
+                'weeklyHoursAverage',
+                workerChangeHistory.body.weeklyHoursAverage,
+                'No',
+                'Yes',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value == given
+                });
 
             // round the the nearest 0.5
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2246,16 +2298,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.weeklyHoursContracted,
-                                            'No',
-                                            'Yes',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value == given
-                                            });
+            validatePropertyChangeHistory(
+                'weeklyHoursContracted',
+                workerChangeHistory.body.weeklyHoursContracted,
+                'No',
+                'Yes',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value == given
+                });
 
             // round the the nearest 0.5
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2391,25 +2445,29 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
             // test change history for both the rate and the value
-            validatePropertyChangeHistory(workerChangeHistory.body.annualHourlyPay,
-                                            25677,
-                                            50.00,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.rate == given
-                                            });
-            validatePropertyChangeHistory(workerChangeHistory.body.annualHourlyPay,
-                                            'Annually',
-                                            'Hourly',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.value == given
-                                            });
+            validatePropertyChangeHistory(
+                'annualHourlyPay',
+                workerChangeHistory.body.annualHourlyPay,
+                25677,
+                50.00,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.rate == given
+                });
+            validatePropertyChangeHistory(
+                'annualHourlyPay',
+                workerChangeHistory.body.annualHourlyPay,
+                'Annually',
+                'Hourly',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.value == given
+                });
     
             // round the the nearest 0.01 (for hourly)
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2614,16 +2672,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.careCertificate,
-                                            'Yes, completed',
-                                            'Yes, in progress or partially completed',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'careCertificate',
+                workerChangeHistory.body.careCertificate,
+                'Yes, completed',
+                'Yes, in progress or partially completed',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             // zero contract with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2683,16 +2743,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.apprenticeshipTraining,
-                                            'Yes',
-                                            'Don\'t know',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'apprenticeshipTraining',
+                workerChangeHistory.body.apprenticeshipTraining,
+                'Yes',
+                'Don\'t know',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             // zero contract with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2753,16 +2815,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.qualificationInSocialCare,
-                                            'Yes',
-                                            'Don\'t know',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'qualificationInSocialCare',
+                workerChangeHistory.body.qualificationInSocialCare,
+                'Yes',
+                'Don\'t know',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             // zero contract with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2825,16 +2889,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.socialCareQualification,
-                                            secondQualification,
-                                            randomQualification.id,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.qualificationId == given
-                                            });
+            validatePropertyChangeHistory(
+                'socialCareQualification',
+                workerChangeHistory.body.socialCareQualification,
+                secondQualification,
+                randomQualification.id,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.qualificationId == given
+                });
 
             // update qualification by name
             const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);
@@ -2910,16 +2976,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.otherQualification,
-                                            'Yes',
-                                            'Don\'t know',
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref == given
-                                            });
+            validatePropertyChangeHistory(
+                'otherQualification',
+                workerChangeHistory.body.otherQualification,
+                'Yes',
+                'Don\'t know',
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
 
             // zero contract with expected value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -2982,16 +3050,18 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
-            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(500);   // allows for slight clock slew
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
-            validatePropertyChangeHistory(workerChangeHistory.body.highestQualification,
-                                            secondQualification,
-                                            randomQualification.id,
-                                            establishment1Username,
-                                            requestEpoch,
-                                            (ref, given) => {
-                                                return ref.qualificationId == given
-                                            });
+            validatePropertyChangeHistory(
+                'highestQualification',
+                workerChangeHistory.body.highestQualification,
+                secondQualification,
+                randomQualification.id,
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.qualificationId == given
+                });
 
             // update qualification by name
             const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);
@@ -3037,7 +3107,7 @@ describe ("worker", async () => {
         let allWorkers = null;
         let secondWorkerInput = null;
         let secondWorker = null;
-        it.skip("should return a list of Workers", async () => {
+        it("should return a list of Workers", async () => {
             expect(establishment1).not.toBeNull();
             expect(Number.isInteger(establishmentId)).toEqual(true);
 
@@ -3068,7 +3138,7 @@ describe ("worker", async () => {
             allWorkers = allWorkersResponse.body.workers;
         });
 
-        it.skip("should fetch a single worker", async () => {
+        it("should fetch a single worker", async () => {
             expect(secondWorker).not.toBeNull();
             const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
             expect(uuidRegex.test(secondWorker.uid.toUpperCase())).toEqual(true);
@@ -3086,10 +3156,10 @@ describe ("worker", async () => {
 
             const currentEpoch = new Date().getTime();
             const createdEpoch = new Date(fetchedWorkerResponse.body.created).getTime();
-            expect(currentEpoch-createdEpoch).toBeLessThan(1000);   // within the last 1 second
+            expect(currentEpoch-createdEpoch).toBeLessThan(MAX_TIME_TOLERANCE);   // within the last 1 second
             expect(fetchedWorkerResponse.body.updated).not.toBeNull();
             const updatedEpoch = new Date(fetchedWorkerResponse.body.updated).getTime();
-            expect(currentEpoch-updatedEpoch).toBeLessThan(1000);   // within the last 1 second
+            expect(currentEpoch-updatedEpoch).toBeLessThan(MAX_TIME_TOLERANCE);   // within the last 1 second
 
             expect(fetchedWorkerResponse.body.updatedBy).toEqual(establishment1Username);
 
@@ -3117,7 +3187,7 @@ describe ("worker", async () => {
                 .expect(401);
         });
 
-        it.skip("should have creation and update change history", async () => {
+        it("should have creation and update change history", async () => {
             expect(establishment1).not.toBeNull();
             expect(Number.isInteger(establishmentId)).toEqual(true);
 
@@ -3143,10 +3213,10 @@ describe ("worker", async () => {
 
             const currentEpoch = new Date().getTime();
             const createdEpoch = new Date(fetchedWorkerResponse.body.created).getTime();
-            expect(currentEpoch-createdEpoch).toBeLessThan(1000);   // within the last 1 second
+            expect(currentEpoch-createdEpoch).toBeLessThan(MAX_TIME_TOLERANCE);   // within the last 1 second
             expect(fetchedWorkerResponse.body.updated).not.toBeNull();
             const updatedEpoch = new Date(fetchedWorkerResponse.body.updated).getTime();
-            expect(currentEpoch-updatedEpoch).toBeLessThan(1000);   // within the last 1 second
+            expect(currentEpoch-updatedEpoch).toBeLessThan(MAX_TIME_TOLERANCE);   // within the last 1 second
 
             expect(fetchedWorkerResponse.body.updatedBy).toEqual(establishment1Username);
 
@@ -3175,6 +3245,15 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.history.length).toEqual(2);
             expect(fetchedWorkerResponse.body.history[0].event).toEqual('updated');
             expect(fetchedWorkerResponse.body.history[1].event).toEqual('created');
+        });
+
+        it("Should report on response times", () => {
+            const properties = Object.keys(PropertiesResponses);
+            let consoleOutput = '';
+            properties.forEach(thisProperty => {
+                consoleOutput += `\x1b[0m\x1b[33m${thisProperty.padEnd(35, '.')}\x1b[37m\x1b[2m${PropertiesResponses[thisProperty]} ms\n`;
+            });
+            console.log(consoleOutput);
         });
     });
 
