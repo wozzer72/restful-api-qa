@@ -1492,7 +1492,7 @@ describe ("worker", async () => {
                 .send({
                     yearArrived: {
                         value: "Yes",
-                        year: 1920              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
+                        year: 1919              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -1502,7 +1502,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.yearArrived.value).toEqual('Yes');
-            expect(fetchedWorkerResponse.body.yearArrived.year).toEqual(1920);
+            expect(fetchedWorkerResponse.body.yearArrived.year).toEqual(1919);
 
             // now test change history
             let requestEpoch = new Date().getTime();
@@ -1516,7 +1516,7 @@ describe ("worker", async () => {
             validatePropertyChangeHistory(
                 'yearArrived',
                 workerChangeHistory.body.yearArrived,
-                1920,
+                1919,
                 2019,
                 establishment1Username,
                 requestEpoch,
@@ -1557,7 +1557,7 @@ describe ("worker", async () => {
                 .send({
                     yearArrived: {
                         value: "Yes",
-                        year: 1919              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
+                        year: 1918              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
                     }
                 })
                 .expect('Content-Type', /html/)
@@ -1597,7 +1597,7 @@ describe ("worker", async () => {
                 .send({
                     socialCareStartDate: {
                         value: "Yes",
-                        year: 1920              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
+                        year: 1919              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -1607,7 +1607,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
                 expect(fetchedWorkerResponse.body.socialCareStartDate.value).toEqual('Yes');
-                expect(fetchedWorkerResponse.body.socialCareStartDate.year).toEqual(1920);
+                expect(fetchedWorkerResponse.body.socialCareStartDate.year).toEqual(1919);
 
             // now test change history
             let requestEpoch = new Date().getTime();
@@ -1621,7 +1621,7 @@ describe ("worker", async () => {
             validatePropertyChangeHistory(
                 'socialCareStartDate',
                 workerChangeHistory.body.socialCareStartDate,
-                1920,
+                1919,
                 2019,
                 establishment1Username,
                 requestEpoch,
@@ -1662,7 +1662,7 @@ describe ("worker", async () => {
                 .send({
                     socialCareStartDate: {
                         value: "Yes",
-                        year: 1919              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
+                        year: 1918              // lower boundary - this year (yes, I could have used a date to calculate, but you'll need to update the tests in one years time - good time to review tests)
                     }
                 })
                 .expect('Content-Type', /html/)
