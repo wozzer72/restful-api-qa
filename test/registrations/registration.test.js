@@ -9,7 +9,7 @@
 // }
 
 const supertest = require('supertest');
-const baseEndpoint = 'http://localhost:3000/api';
+const baseEndpoint = require('../utils/baseUrl').baseurl;
 const apiEndpoint = supertest(baseEndpoint);
 
 // mocked real postcode/location data

@@ -1,43 +1,43 @@
 // http://localhost:3000/api/test/postcodes/random?limit=5
-exports.data = [
+exports.data =  [
     {
-        "uprn": "100080233000",
-        "address1": "7 RECTORY CLOSE ",
-        "townAndCity": "NEWBURY",
-        "county": "WEST BERKSHIRE",
-        "postcode": "RG14 6DF",
-        "localCustodianCode": "340"
+        "uprn": "100021275800",
+        "address1": "DUDLEY HOUSE 31 LOWER ROAD ",
+        "townAndCity": "HARROW",
+        "county": "HARROW",
+        "postcode": "HA2 0DE",
+        "localCustodianCode": "5450"
     },
     {
-        "uprn": "100120473160",
-        "address1": "56 GRANGE ROAD ",
-        "townAndCity": "GLOUCESTER",
-        "county": "GLOUCESTERSHIRE",
-        "postcode": "GL4 0PG",
-        "localCustodianCode": "1620"
+        "uprn": "200004434447",
+        "address1": "63 PARK CRESCENT ",
+        "townAndCity": "HARROW",
+        "county": "HARROW",
+        "postcode": "HA3 6EU",
+        "localCustodianCode": "5450"
     },
     {
-        "uprn": "100070636333",
-        "address1": "36 COTTAGE FARM ROAD ",
-        "townAndCity": "COVENTRY",
-        "county": "COVENTRY",
-        "postcode": "CV6 2FA",
-        "localCustodianCode": "4610"
+        "uprn": "100080023590",
+        "address1": "55 KNIGHTS AVENUE ",
+        "townAndCity": "BEDFORD",
+        "county": "BEDFORD",
+        "postcode": "MK41 6DG",
+        "localCustodianCode": "235"
     },
     {
-        "uprn": "10070835057",
-        "address1": "TOFT HILL HOUSE ACCESS ",
-        "townAndCity": "",
-        "county": "GATESHEAD",
-        "postcode": "",
-        "localCustodianCode": "4505"
+        "uprn": "100050580831",
+        "address1": "22 RICHARDSON STREET ",
+        "townAndCity": "YORK",
+        "county": "YORK",
+        "postcode": "YO23 1JU",
+        "localCustodianCode": "2741"
     },
     {
-        "uprn": "100121343087",
-        "address1": "MANCHESTER ROAD ",
-        "townAndCity": "",
-        "county": "SWINDON",
-        "postcode": "",
-        "localCustodianCode": "3935"
+        "uprn": "10070269337",
+        "address1": "13 DOUGLAS CLOSE ",
+        "townAndCity": "STANMORE",
+        "county": "HARROW",
+        "postcode": "HA7 3FE",
+        "localCustodianCode": "5450"
     }
 ];
