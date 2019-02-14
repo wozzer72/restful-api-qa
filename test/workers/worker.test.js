@@ -2536,7 +2536,7 @@ describe ("worker", async () => {
                 .send({
                     annualHourlyPay : {
                         value : "Hourly",
-                        rate : 100                  // upper boundary
+                        rate : 200                  // upper boundary
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -2546,7 +2546,7 @@ describe ("worker", async () => {
                 .send({
                     annualHourlyPay : {
                         value : "Hourly",
-                        rate : 100.01                // upper boundary
+                        rate : 200.01                // upper boundary
                     }
                 })
                 .expect('Content-Type', /html/)
