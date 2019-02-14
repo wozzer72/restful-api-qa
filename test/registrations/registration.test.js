@@ -208,6 +208,27 @@ describe ("Registrations", async () => {
         expect(registeredEstablishment.body.message).toEqual('Username \'unKNown UsEr\' not found');
     });
 
+    it("should lookup a known username via usernameOrPasswword with success", async () => {
+        const knownUsername = nonCQCSite.user.username;
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(knownUsername))
+            .expect(200);
+    });
+    it("should lookup an unknown username via usernameOrPasswword with not found", async () => {
+        const unknownUsername = nonCQCSite.user.username + 'A';
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(unknownUsername))
+            .expect(404);
+    });
+    it("should lookup a known email via usernameOrPasswword with success", async () => {
+        const knownEmail = nonCQCSite.user.emailAddress;
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(knownEmail))
+            .expect(200);
+    });
+    it("should lookup an unknown email via usernameOrPasswword with not found", async () => {
+        const unknownEmail = nonCQCSite.user.emailAddress + 'A';
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(unknownEmail))
+            .expect(404);
+    });
+
     it("should lookup a known establishment by name with success", async () => {
         const knownEstablishmentName = cqcSite.locationName;
         const registeredEstablishment = await apiEndpoint.get('/registration/estbname/' + encodeURI(knownEstablishmentName))
