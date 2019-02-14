@@ -70,7 +70,7 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(nonCqcEstablishment.body.success).toEqual(1);
+            expect(nonCqcEstablishment.body.status).toEqual(1);
             expect(Number.isInteger(nonCqcEstablishment.body.establishmentId)).toEqual(true);
             establishmentId = nonCqcEstablishment.body.establishmentId;
         });
@@ -100,6 +100,7 @@ describe ("establishment", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            
             expect(secondLoginResponse.body.isFirstLogin).toEqual(false);
             expect(secondLoginResponse.body.establishment.name).toEqual(site.locationName);
             expect(secondLoginResponse.body.mainService.name).toEqual(site.mainService);
@@ -108,6 +109,7 @@ describe ("establishment", async () => {
             
             // assert and store the auth token
             authToken = secondLoginResponse.header.authorization;
+            //console.log("TEST DEBUG - auth token: ", authToken)
         });
 
         it("should update the employer type", async () => {
@@ -835,7 +837,7 @@ describe ("establishment", async () => {
             // before update expect the "localAuthorities" attribute as an array but it will be empty
             expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
             expect(updateResponse.body.localAuthorities.length).toEqual(2);
-            });
+        });
 
         it("should get the Establishment", async () => {
             expect(authToken).not.toBeNull();
@@ -871,7 +873,7 @@ describe ("establishment", async () => {
         });
     });
 
-    describe("CQC Establishment", async ( )=> {
+    describe.skip("CQC Establishment", async ( )=> {
         // it("should create a CQC registation", async () => {
         //     const cqcSite = registrationUtils.newCqcSite(locations[0], cqcServices);
         //     apiEndpoint.post('/registration')
