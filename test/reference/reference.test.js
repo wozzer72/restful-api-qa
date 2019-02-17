@@ -52,6 +52,12 @@ describe ("Expected reference services", async () => {
             .expect(200);
         expect(laS.body).toMatchSnapshot();
     });
+    it("should fetch Primary Authority", async () => {
+        const primartAuthority = await apiEndpoint.get('/localAuthority/SE19%203NS')
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(primartAuthority.body).toMatchSnapshot();
+    });
 
     it("should fetch Ethnicities", async () => {
         const ethnicities = await apiEndpoint.get('/ethnicity')
