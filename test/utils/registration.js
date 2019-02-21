@@ -41,7 +41,7 @@ exports.newNonCqcSite = (postcode, nonCqcServices) => {
             "emailAddress": faker.internet.email(),
             "contactNumber": faker.phone.phoneNumber('01#########'),
             "username": faker.internet.userName(),
-            "password": "password",
+            "password": "Password00",
             "securityQuestion": "When is dinner?",
             "securityAnswer": "All Day"
         }
