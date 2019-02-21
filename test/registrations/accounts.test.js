@@ -114,7 +114,7 @@ describe ("Password Restes", async () => {
         expect(uuidV4Regex.test(response.body.uuid)).toEqual(true);
     });
 
-    it("it should fail validation on validating password reset", async () => {
+    it("should fail validation on validating password reset", async () => {
         await apiEndpoint.post('/registration/validateResetPassword')
             .send({
                 uid: "not a valid attribute name"
@@ -128,7 +128,7 @@ describe ("Password Restes", async () => {
             })
             .expect(400);
     });
-    it("it should fail on unknown reset uuid on validating password reset", async () => {
+    it("should fail on unknown reset uuid on validating password reset", async () => {
         const randomUuid = uuid.v4();
         await apiEndpoint.post('/registration/validateResetPassword')
             .send({
@@ -136,7 +136,7 @@ describe ("Password Restes", async () => {
             })
             .expect(404);
     });
-    it("it should fail on expired token when validating password reset", async () => {
+    it("should fail on expired token when validating password reset", async () => {
         const reqResponse = await apiEndpoint.post('/registration/requestPasswordReset')
             .send({
                 usernameOrEmail: nonCQCSite.user.emailAddress,
@@ -153,7 +153,8 @@ describe ("Password Restes", async () => {
             .expect(403);
     });
     let successfulUuid = null;
-    it("it should return JWT on Authorization header on successfull validating password reset", async () => {
+    let successfullToken = null;
+    it("should return JWT on Authorization header on successfull validating password reset", async () => {
         const reqResponse = await apiEndpoint.post('/registration/requestPasswordReset')
             .send({
                 usernameOrEmail: nonCQCSite.user.emailAddress,
@@ -173,17 +174,97 @@ describe ("Password Restes", async () => {
         expect(JWTbearerRegex.test(validateResponse.headers.authorization)).toEqual(true);
         expect(validateResponse.body.username).toEqual(nonCQCSite.user.username);
         expect(validateResponse.body.fullname).toEqual(nonCQCSite.user.fullname);
+
+        successfullToken = validateResponse.headers.authorization;
     });
-    it("it should fail on completed token when validating password reset", async () => {
+    it("should not fail on completed token when re-validating password reset", async () => {
         expect(successfulUuid).not.toBeNull();
 
         await apiEndpoint.post('/registration/validateResetPassword')
             .send({
                 uuid: successfulUuid
             })
-            .expect(401);
+            .expect(200);
     });
 
-    it.skip("", async () => {
+    it("should fail on reset password if no Authorization header given", async () => {
+        const passwrdResetResponse = await apiEndpoint.post('/user/resetPassword')
+            .send({
+                password: "password"
+            })
+            .expect(401);
+    });
+    it("should fail on reset password if Authorization header if invalid", async () => {
+        // invalid token includes trying to use a login token (fails on aud)
+        const loginResponse = await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: nonCQCSite.user.password
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        const loginAuthToken = loginResponse.header.authorization;
+        await apiEndpoint.post('/user/resetPassword')
+            .set('Authorization', loginAuthToken)
+            .send({
+                password: "password"
+            })
+            .expect(403);
+    });
+    
+    it("should fail on reset password if no password given", async () => {
+        await apiEndpoint.post('/user/resetPassword')
+            .set('Authorization', successfullToken)
+            .send({
+                Password: "password"        // case sensitive
+            })
+            .expect(400);
+    });
+    it("should fail on reset password if password given fails validation (strength)", async () => {
+        await apiEndpoint.post('/user/resetPassword')
+            .set('Authorization', successfullToken)
+            .send({
+                password: "password"        // password must include one uppercase and one number
+            })
+            .expect(400);
+    });
+
+
+    it("should success on reset password if using a valid token and valid password", async () => {
+        expect(successfulUuid).not.toBeNull();
+
+        const passwrdResetResponse = await apiEndpoint.post('/user/resetPassword')
+            .set('Authorization', successfullToken)
+            .send({
+                password: 'NewPassword00'
+            })
+            .expect(200);
+
+        // after successful password reset, the reset token should now be invalid
+        await apiEndpoint.post('/registration/validateResetPassword')
+            .send({
+                uuid: successfulUuid
+            })
+            .expect(401);
+
+        // login using the old password should fail
+        await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: nonCQCSite.user.password
+            })
+            .expect('Content-Type', /json/)
+            .expect(401);
+
+        // login using the new password should now work
+         // login using the old password should fail
+         await apiEndpoint.post('/login')
+         .send({
+             username: nonCQCSite.user.username,
+             password: 'NewPassword00'
+         })
+         .expect('Content-Type', /json/)
+         .expect(200);
     });
 });
