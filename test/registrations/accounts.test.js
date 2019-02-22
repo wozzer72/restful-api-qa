@@ -24,13 +24,6 @@ const serviceUtils = require('../utils/services');
 describe ("Password Restes", async () => {
     let nonCqcServices = null;
     beforeAll(async () => {
-        // clean the database
-        if (process.env.CLEAN_DB) {
-            await apiEndpoint.post('/test/clean')
-            .send({})
-            .expect(200);
-        }
-
         const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
             .expect('Content-Type', /json/)
             .expect(200);
@@ -230,11 +223,11 @@ describe ("Password Restes", async () => {
             .expect(400);
     });
 
-
+    let successfulLoginToken = null;
     it("should success on reset password if using a valid token and valid password", async () => {
         expect(successfulUuid).not.toBeNull();
 
-        const passwrdResetResponse = await apiEndpoint.post('/user/resetPassword')
+        await apiEndpoint.post('/user/resetPassword')
             .set('Authorization', successfullToken)
             .send({
                 password: 'NewPassword00'
@@ -258,13 +251,114 @@ describe ("Password Restes", async () => {
             .expect(401);
 
         // login using the new password should now work
-         // login using the old password should fail
-         await apiEndpoint.post('/login')
-         .send({
-             username: nonCQCSite.user.username,
-             password: 'NewPassword00'
-         })
-         .expect('Content-Type', /json/)
-         .expect(200);
+        const successfulLoginResponse = await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: 'NewPassword00'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        successfulLoginToken = successfulLoginResponse.headers.authorization;
+    });
+
+    it("should fail for change password with 401 if no authorization header", async () => {
+        await apiEndpoint.post('/user/changePassword')
+            .send({
+                currentPassword: 'password',
+                newPassword: 'new password'
+            })
+            .expect('Content-Type', /html/)
+            .expect(401);
+    });
+    it("should fail for change password with 403 if no authorisation header is not a valid logged in JWT", async () => {
+        expect(successfulUuid).not.toBeNull();
+
+        await apiEndpoint.post('/user/changePassword')
+            .set('Authorization', successfullToken)
+            .send({
+                currentPassword: 'password',
+                newPassword: 'new password'
+            })
+            .expect('Content-Type', /html/)
+            .expect(403);
+    });
+
+    it("should fail for change password with 400 current/new password is not given", async () => {
+        expect(successfulLoginToken).not.toBeNull();
+
+        await apiEndpoint.post('/user/changePassword')
+            .set('Authorization', successfulLoginToken)
+            .send({
+                ccurrentPassword: 'password',
+                newPassword: 'new password'
+            })
+            .expect('Content-Type', /html/)
+            .expect(400);
+
+        await apiEndpoint.post('/user/changePassword')
+            .set('Authorization', successfulLoginToken)
+            .send({
+                currentPassword: 'password',
+                nnewPassword: 'new password'
+            })
+            .expect('Content-Type', /html/)
+            .expect(400);
+    });
+
+    it("should fail for change password with 400 new password is not of required complexity", async () => {
+        expect(successfulLoginToken).not.toBeNull();
+
+        // NOTE - there is no checking on history of password used
+        // Intentionally not validating complexity of current password
+        await apiEndpoint.post('/user/changePassword')
+            .set('Authorization', successfulLoginToken)
+            .send({
+                currentPassword: 'Password00',
+                newPassword: 'password'
+            })
+            .expect('Content-Type', /html/)
+            .expect(400);
+    });
+
+
+    it("should fail for change password with 403 if header is good, but current password is incorrect", async () => {
+        expect(successfulLoginToken).not.toBeNull();
+
+        await apiEndpoint.post('/user/changePassword')
+            .set('Authorization', successfulLoginToken)
+            .send({
+                currentPassword: 'password',        // should be "NewPassword00" from 'should success on reset password if using a valid token and valid password' test above
+                newPassword: 'NewPassword00'
+            })
+            .expect(403);
+    });
+
+    it('should success in changing user\'s password', async () => {
+        await apiEndpoint.post('/user/changePassword')
+            .set('Authorization', successfulLoginToken)
+            .send({
+                currentPassword: "NewPassword00",
+                newPassword: "Password00"
+            })
+            .expect('Content-Type', /html/)
+            .expect(200);
+
+        // should fail login if using old password
+        await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: 'NewPassword00'
+            })
+            .expect('Content-Type', /json/)
+            .expect(401);
+
+        // shoudl pass login if using new passowrd
+        await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: 'Password00'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
     });
 });
