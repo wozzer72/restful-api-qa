@@ -82,7 +82,7 @@ describe ("establishment", async () => {
             const loginResponse = await apiEndpoint.post('/login')
                 .send({
                     username: site.user.username,
-                    password: 'password'
+                    password: 'Password00'
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -96,7 +96,7 @@ describe ("establishment", async () => {
             const secondLoginResponse = await apiEndpoint.post('/login')
                 .send({
                     username: site.user.username,
-                    password: 'password'
+                    password: 'Password00'
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -774,12 +774,18 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
+            const primaryAuthority = await apiEndpoint.get('/localAuthority/' + escape(site.postalCode))
+                .expect('Content-Type', /json/)
+                .expect(200);
+            const primaryLocalAuthorityCustodianCode = primaryAuthority.body.id;
+
             const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.name).toEqual(site.locationName);
+
             expect(firstResponse.body.primaryAuthority.custodianCode).toEqual(primaryLocalAuthorityCustodianCode);
             expect(firstResponse.body.primaryAuthority).toHaveProperty('name');     // we cannot validate the name of the Local Authority - this is not known in reference data
 
@@ -815,7 +821,6 @@ describe ("establishment", async () => {
 
             expect(updateResponse.body.id).toEqual(establishmentId);
             expect(updateResponse.body.name).toEqual(site.locationName);
-            expect(updateResponse.body).toHaveProperty('primaryAuthority');
 
             // but localAuthority is and should include only the main and random authority only (everything else ignored)
             expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
