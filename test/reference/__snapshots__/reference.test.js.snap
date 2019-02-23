@@ -3200,24 +3200,44 @@ Object {
 exports[`Expected reference services should fetch services 1`] = `
 Array [
   Object {
-    "category": "Adult residential",
-    "name": "Care home services with nursing",
-    "serviceId": 24,
+    "category": "Adult community care",
+    "name": "Carers support",
+    "serviceId": 1,
   },
   Object {
-    "category": "Adult residential",
-    "name": "Care home services without nursing",
-    "serviceId": 25,
+    "category": "Adult community care",
+    "name": "Community support and outreach",
+    "serviceId": 2,
   },
   Object {
-    "category": "Adult residential",
-    "name": "Sheltered housing",
-    "serviceId": 13,
+    "category": "Adult community care",
+    "name": "Disability adaptations / assistive technology services",
+    "serviceId": 3,
   },
   Object {
-    "category": "Adult residential",
-    "name": "Other adult residential care services",
-    "serviceId": 12,
+    "category": "Adult community care",
+    "name": "Information and advice services",
+    "serviceId": 4,
+  },
+  Object {
+    "category": "Adult community care",
+    "name": "Occupational / employment-related services",
+    "serviceId": 5,
+  },
+  Object {
+    "category": "Adult community care",
+    "name": "Other adult community care service",
+    "serviceId": 6,
+  },
+  Object {
+    "category": "Adult community care",
+    "name": "Short breaks / respite care",
+    "serviceId": 7,
+  },
+  Object {
+    "category": "Adult community care",
+    "name": "Social work and care management",
+    "serviceId": 8,
   },
   Object {
     "category": "Adult day",
@@ -3231,123 +3251,23 @@ Array [
   },
   Object {
     "category": "Adult domiciliary",
-    "name": "Domiciliary care services",
-    "serviceId": 20,
-  },
-  Object {
-    "category": "Adult domiciliary",
     "name": "Domestic services and home help",
     "serviceId": 11,
   },
   Object {
-    "category": "Adult domiciliary",
-    "name": "Extra care housing services",
-    "serviceId": 21,
+    "category": "Adult residential",
+    "name": "Other adult residential care services",
+    "serviceId": 12,
   },
   Object {
-    "category": "Adult domiciliary",
-    "name": "Supported living services",
-    "serviceId": 23,
-  },
-  Object {
-    "category": "Adult domiciliary",
-    "name": "Other adult domiciliary care service",
-    "serviceId": 18,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Carers support",
-    "serviceId": 1,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Short breaks / respite care",
-    "serviceId": 7,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Community support and outreach",
-    "serviceId": 2,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Social work and care management",
-    "serviceId": 8,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Shared lives",
-    "serviceId": 19,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Disability adaptations / assistive technology services",
-    "serviceId": 3,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Occupational / employment-related services",
-    "serviceId": 5,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Information and advice services",
-    "serviceId": 4,
-  },
-  Object {
-    "category": "Adult community care",
-    "name": "Other adult community care service",
-    "serviceId": 6,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Community based services for people with a learning disability",
-    "serviceId": 27,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Community based services for people with mental health needs",
-    "serviceId": 28,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Community based services for people who misuse substances",
-    "serviceId": 26,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Community healthcare services",
-    "serviceId": 29,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Hospice services",
-    "serviceId": 30,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Long term conditions services",
-    "serviceId": 32,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Hospital services for people with mental health needs, learning disabilities and/or problems with substance misuse",
-    "serviceId": 31,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Rehabilitation services",
-    "serviceId": 33,
-  },
-  Object {
-    "category": "Healthcare",
-    "name": "Residential substance misuse treatment/ rehabilitation services",
-    "serviceId": 34,
+    "category": "Adult residential",
+    "name": "Sheltered housing",
+    "serviceId": 13,
   },
   Object {
     "category": "Other",
-    "name": "Other healthcare service",
-    "serviceId": 17,
+    "name": "Any childrens / young peoples services",
+    "serviceId": 14,
   },
   Object {
     "category": "Other",
@@ -3361,18 +3281,98 @@ Array [
   },
   Object {
     "category": "Other",
-    "name": "Specialist college services",
-    "serviceId": 36,
+    "name": "Other healthcare service",
+    "serviceId": 17,
   },
   Object {
-    "category": "Other",
-    "name": "Any childrens / young peoples services",
-    "serviceId": 14,
+    "category": "Adult domiciliary",
+    "name": "Other adult domiciliary care service",
+    "serviceId": 18,
+  },
+  Object {
+    "category": "Adult community care",
+    "name": "Shared lives",
+    "serviceId": 19,
+  },
+  Object {
+    "category": "Adult domiciliary",
+    "name": "Domiciliary care services",
+    "serviceId": 20,
+  },
+  Object {
+    "category": "Adult domiciliary",
+    "name": "Extra care housing services",
+    "serviceId": 21,
   },
   Object {
     "category": "Adult domiciliary",
     "name": "Nurses agency",
     "serviceId": 22,
+  },
+  Object {
+    "category": "Adult domiciliary",
+    "name": "Supported living services",
+    "serviceId": 23,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Community based services for people who misuse substances",
+    "serviceId": 26,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Community based services for people with a learning disability",
+    "serviceId": 27,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Community based services for people with mental health needs",
+    "serviceId": 28,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Community healthcare services",
+    "serviceId": 29,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Hospice services",
+    "serviceId": 30,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Hospital services for people with mental health needs, learning disabilities and/or problems with substance misuse",
+    "serviceId": 31,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Long term conditions services",
+    "serviceId": 32,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Rehabilitation services",
+    "serviceId": 33,
+  },
+  Object {
+    "category": "Healthcare",
+    "name": "Residential substance misuse treatment/ rehabilitation services",
+    "serviceId": 34,
+  },
+  Object {
+    "category": "Other",
+    "name": "Specialist college services",
+    "serviceId": 36,
+  },
+  Object {
+    "category": "Adult residential",
+    "name": "Care home services with nursing",
+    "serviceId": 24,
+  },
+  Object {
+    "category": "Adult residential",
+    "name": "Care home services without nursing",
+    "serviceId": 25,
   },
 ]
 `;
