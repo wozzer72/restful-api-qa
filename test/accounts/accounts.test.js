@@ -46,22 +46,22 @@ describe ("Password Restes", async () => {
 
     it("should lookup a known username via usernameOrPasswword with success", async () => {
         const knownUsername = nonCQCSite.user.username;
-        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(knownUsername))
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(knownUsername))
             .expect(200);
     });
     it("should lookup an unknown username via usernameOrPasswword with not found", async () => {
         const unknownUsername = nonCQCSite.user.username + 'A';
-        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(unknownUsername))
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(unknownUsername))
             .expect(404);
     });
     it("should lookup a known email via usernameOrPasswword with success", async () => {
         const knownEmail = nonCQCSite.user.emailAddress;
-        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(knownEmail))
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(knownEmail))
             .expect(200);
     });
     it("should lookup an unknown email via usernameOrPasswword with not found", async () => {
         const unknownEmail = nonCQCSite.user.emailAddress + 'A';
-        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(unknownEmail))
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(unknownEmail))
             .expect(404);
     });
 

@@ -157,6 +157,8 @@ describe ("worker", async () => {
                 .expect(200);
             establishment1Token = site1LoginResponse.header.authorization;
             establishment1Username = site1.user.username;
+
+            if (site1LoginResponse.status !== 200) throw new Error("Failed to login");
         });
 
         let newWorker = null;
@@ -2855,7 +2857,7 @@ describe ("worker", async () => {
         it("should update a Worker's Social Care qualifications", async () => {
             const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updateWWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -2868,11 +2870,12 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
+            
             expect(fetchedWorkerResponse.body.socialCareQualification.qualificationId).toEqual(randomQualification.id);
             expect(fetchedWorkerResponse.body.socialCareQualification.title).toEqual(randomQualification.level);
 
-            const secondQualification = randomQualification.id == 2 ? 12 : 2;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const secondQualification = randomQualification.id == 2 ? 3 : 2;
+            const updateWorkerResponse2 = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -2904,7 +2907,7 @@ describe ("worker", async () => {
 
             // update qualification by name
             const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updateQualificationByNameResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -3032,7 +3035,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.highestQualification.qualificationId).toEqual(randomQualification.id);
             expect(fetchedWorkerResponse.body.highestQualification.title).toEqual(randomQualification.level);
 
-            const secondQualification = randomQualification.id == 2 ? 12 : 2;
+            const secondQualification = randomQualification.id == 2 ? 3 : 2;
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
