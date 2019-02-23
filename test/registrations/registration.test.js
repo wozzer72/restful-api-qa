@@ -63,7 +63,7 @@ describe ("Registrations", async () => {
                     emailAddress: "bob@bob.com",
                     contactNumber: "01111 111111",
                     username: "aylingw",
-                    password: "password",
+                    password: "Password00",
                     securityQuestion: "What is dinner?",
                     securityAnswer: "All Day"
                 }
@@ -91,7 +91,7 @@ describe ("Registrations", async () => {
                     emailAddress: "bob@bob.com",
                     contactNumber: "01111 111111",
                     username: "aylingw",
-                    password: "password",
+                    password: "Password00",
                     securityQuestion: "What is dinner?",
                     securityAnswer: "All Day"
                 }
@@ -137,7 +137,6 @@ describe ("Registrations", async () => {
         expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);    
     });
 
-
     it("should fail on CQC is site with location id, postcode and name already existing", async () => {
         const registeredEstablishment = await apiEndpoint.post('/registration')
             .send([cqcSite])
@@ -154,6 +153,7 @@ describe ("Registrations", async () => {
         expect(registeredEstablishment.body.status).toEqual(-100);
         expect(registeredEstablishment.body.message).toEqual('Duplicate non-CQC Establishment');
     });
+
     it("should fail if username is already existing", async () => {
         const newNonCQCSite = registrationUtils.newNonCqcSite(postcodes[0], nonCqcServices);
         newNonCQCSite.user.username = nonCQCSite.user.username;
@@ -262,5 +262,4 @@ describe ("Registrations", async () => {
         expect(registeredEstablishment.body.status).toEqual("0");
         expect(registeredEstablishment.body.message).toEqual(`Establishment by name '${knownEstablishmentName}' and by location id 'i-00000000000000' not found`);
     });
-
 });
