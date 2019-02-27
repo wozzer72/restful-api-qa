@@ -63,7 +63,7 @@ describe ("Registrations", async () => {
                     emailAddress: "bob@bob.com",
                     contactNumber: "01111 111111",
                     username: "aylingw",
-                    password: "password",
+                    password: "Password00",
                     securityQuestion: "What is dinner?",
                     securityAnswer: "All Day"
                 }
@@ -91,7 +91,7 @@ describe ("Registrations", async () => {
                     emailAddress: "bob@bob.com",
                     contactNumber: "01111 111111",
                     username: "aylingw",
-                    password: "password",
+                    password: "Password00",
                     securityQuestion: "What is dinner?",
                     securityAnswer: "All Day"
                 }
@@ -137,7 +137,6 @@ describe ("Registrations", async () => {
         expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);    
     });
 
-
     it("should fail on CQC is site with location id, postcode and name already existing", async () => {
         const registeredEstablishment = await apiEndpoint.post('/registration')
             .send([cqcSite])
@@ -154,6 +153,7 @@ describe ("Registrations", async () => {
         expect(registeredEstablishment.body.status).toEqual(-100);
         expect(registeredEstablishment.body.message).toEqual('Duplicate non-CQC Establishment');
     });
+
     it("should fail if username is already existing", async () => {
         const newNonCQCSite = registrationUtils.newNonCqcSite(postcodes[0], nonCqcServices);
         newNonCQCSite.user.username = nonCQCSite.user.username;
@@ -177,14 +177,14 @@ describe ("Registrations", async () => {
 
     it("should lookup a known service with success", async () => {
         const knownService = serviceUtils.lookupRandomService(cqcServices);
-        const registeredEstablishment = await apiEndpoint.get('/registration/service/' + encodeURI(knownService.name))
+        const registeredEstablishment = await apiEndpoint.get('/registration/service/' + encodeURIComponent(knownService.name))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("1");
         expect(registeredEstablishment.body.message).toEqual(`Service name '${knownService.name}' found`);
     });
     it("should lookup an unknown service with success", async () => {
-        const registeredEstablishment = await apiEndpoint.get('/registration/service/'+ encodeURI('unKNown serViCE'))
+        const registeredEstablishment = await apiEndpoint.get('/registration/service/'+ encodeURIComponent('unKNown serViCE'))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("0");
@@ -194,14 +194,14 @@ describe ("Registrations", async () => {
 
     it("should lookup a known username with success", async () => {
         const knownUsername = nonCQCSite.user.username;
-        const registeredEstablishment = await apiEndpoint.get('/registration/username/' + encodeURI(knownUsername))
+        const registeredEstablishment = await apiEndpoint.get('/registration/username/' + encodeURIComponent(knownUsername))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("1");
         expect(registeredEstablishment.body.message).toEqual(`Username '${knownUsername}' found`);
     });
     it("should lookup an unknown username with success", async () => {
-        const registeredEstablishment = await apiEndpoint.get('/registration/username/' + encodeURI('unKNown UsEr'))
+        const registeredEstablishment = await apiEndpoint.get('/registration/username/' + encodeURIComponent('unKNown UsEr'))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("0");
@@ -210,35 +210,35 @@ describe ("Registrations", async () => {
 
     it("should lookup a known username via usernameOrPasswword with success", async () => {
         const knownUsername = nonCQCSite.user.username;
-        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(knownUsername))
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(knownUsername))
             .expect(200);
     });
     it("should lookup an unknown username via usernameOrPasswword with not found", async () => {
         const unknownUsername = nonCQCSite.user.username + 'A';
-        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(unknownUsername))
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(unknownUsername))
             .expect(404);
     });
     it("should lookup a known email via usernameOrPasswword with success", async () => {
         const knownEmail = nonCQCSite.user.emailAddress;
-        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(knownEmail))
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(knownEmail))
             .expect(200);
     });
     it("should lookup an unknown email via usernameOrPasswword with not found", async () => {
         const unknownEmail = nonCQCSite.user.emailAddress + 'A';
-        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURI(unknownEmail))
+        await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(unknownEmail))
             .expect(404);
     });
 
     it("should lookup a known establishment by name with success", async () => {
         const knownEstablishmentName = cqcSite.locationName;
-        const registeredEstablishment = await apiEndpoint.get('/registration/estbname/' + encodeURI(knownEstablishmentName))
+        const registeredEstablishment = await apiEndpoint.get('/registration/estbname/' + encodeURIComponent(knownEstablishmentName))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("1");
         expect(registeredEstablishment.body.message).toEqual(`Establishment by name '${knownEstablishmentName}' found`);
     });
     it("should lookup an unknown establishment by name with success", async () => {
-        const registeredEstablishment = await apiEndpoint.get('/registration/estbname/' + encodeURI('unKNown esTABliShmENt'))
+        const registeredEstablishment = await apiEndpoint.get('/registration/estbname/' + encodeURIComponent('unKNown esTABliShmENt'))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("0");
@@ -256,11 +256,10 @@ describe ("Registrations", async () => {
     });
     it("should lookup an unknown establishment by name and location id with success", async () => {
         const knownEstablishmentName = duplicateCqcSite.locationName;
-        const registeredEstablishment = await apiEndpoint.get('/registration/estb/' + encodeURI(knownEstablishmentName) + '/' + encodeURI('i-00000000000000'))
+        const registeredEstablishment = await apiEndpoint.get('/registration/estb/' + encodeURI(knownEstablishmentName) + '/' + encodeURIComponent('i-00000000000000'))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("0");
         expect(registeredEstablishment.body.message).toEqual(`Establishment by name '${knownEstablishmentName}' and by location id 'i-00000000000000' not found`);
     });
-
 });
