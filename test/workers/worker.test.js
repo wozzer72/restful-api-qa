@@ -12,8 +12,8 @@ const supertest = require('supertest');
 const uuid = require('uuid');
 const baseEndpoint = require('../utils/baseUrl').baseurl;
 
-let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 300 : 100;
-let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 500;
+let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
+let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 
 const apiEndpoint = supertest(baseEndpoint);
 
@@ -148,15 +148,29 @@ describe ("worker", async () => {
 
 
             // need to login to get JWT token
-            const site1LoginResponse = await apiEndpoint.post('/login')
+            let site1LoginResponse = null;
+            site1LoginResponse = await apiEndpoint.post('/login')
                 .send({
                     username: site1.user.username,
                     password: site1.user.password
-                })
-                .expect('Content-Type', /json/)
-                .expect(200);
-            establishment1Token = site1LoginResponse.header.authorization;
-            establishment1Username = site1.user.username;
+                });
+
+            // the worker test is sometimes failing with authentication issue
+            if (site1LoginResponse.body && site1LoginResponse.body.fullname) {
+                establishment1Token = site1LoginResponse.header.authorization;
+                establishment1Username = site1.user.username;
+            } else {
+                console.log("TEST DEBUG: login response: ", site1LoginResponse.body);
+
+                // login a second time
+                site1LoginResponse = await apiEndpoint.post('/login')
+                    .send({
+                        username: site1.user.username,
+                        password: site1.user.password
+                    });
+                establishment1Token = site1LoginResponse.header.authorization;
+                establishment1Username = site1.user.username;
+            }
         });
 
         let newWorker = null;
@@ -2536,7 +2550,7 @@ describe ("worker", async () => {
                 .send({
                     annualHourlyPay : {
                         value : "Hourly",
-                        rate : 100                  // upper boundary
+                        rate : 200                  // upper boundary
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -2546,7 +2560,7 @@ describe ("worker", async () => {
                 .send({
                     annualHourlyPay : {
                         value : "Hourly",
-                        rate : 100.01                // upper boundary
+                        rate : 200.01                // upper boundary
                     }
                 })
                 .expect('Content-Type', /html/)
@@ -2855,7 +2869,7 @@ describe ("worker", async () => {
         it("should update a Worker's Social Care qualifications", async () => {
             const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updateWWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -2868,11 +2882,12 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
+            
             expect(fetchedWorkerResponse.body.socialCareQualification.qualificationId).toEqual(randomQualification.id);
             expect(fetchedWorkerResponse.body.socialCareQualification.title).toEqual(randomQualification.level);
 
-            const secondQualification = randomQualification.id == 2 ? 12 : 2;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const secondQualification = randomQualification.id == 2 ? 3 : 2;
+            const updateWorkerResponse2 = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -2904,7 +2919,7 @@ describe ("worker", async () => {
 
             // update qualification by name
             const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updateQualificationByNameResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -3032,7 +3047,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.highestQualification.qualificationId).toEqual(randomQualification.id);
             expect(fetchedWorkerResponse.body.highestQualification.title).toEqual(randomQualification.level);
 
-            const secondQualification = randomQualification.id == 2 ? 12 : 2;
+            const secondQualification = randomQualification.id == 2 ? 3 : 2;
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({

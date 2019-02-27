@@ -18,9 +18,9 @@ exports.newCqcSite = (location, cqcServices) => {
             "emailAddress": faker.internet.email(),
             "contactNumber": faker.phone.phoneNumber('01#########'),
             "username": faker.internet.userName(),
-            "password": "password",
-            "securityQuestion": "What is for dinner?",
-            "securityAnswer": "Beef Stew"
+            "password": "Password00",
+            "securityQuestion": faker.lorem.words(2),
+            "securityAnswer": faker.lorem.words(4)
         }
     };
 };
@@ -41,9 +41,9 @@ exports.newNonCqcSite = (postcode, nonCqcServices) => {
             "emailAddress": faker.internet.email(),
             "contactNumber": faker.phone.phoneNumber('01#########'),
             "username": faker.internet.userName(),
-            "password": "password",
-            "securityQuestion": "When is dinner?",
-            "securityAnswer": "All Day"
+            "password": "Password00",
+            "securityQuestion": faker.lorem.words(2),
+            "securityAnswer": faker.lorem.words(4)
         }
     };
 };
