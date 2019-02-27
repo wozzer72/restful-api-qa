@@ -1949,6 +1949,13 @@ Array [
 ]
 `;
 
+exports[`Expected reference services should fetch Primary Authority 1`] = `
+Object {
+  "id": 708,
+  "name": "Lambeth",
+}
+`;
+
 exports[`Expected reference services should fetch countries 1`] = `
 Object {
   "countries": Array [

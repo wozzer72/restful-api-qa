@@ -9,6 +9,7 @@
 // }
 
 const supertest = require('supertest');
+const querystring = require('querystring');
 const faker = require('faker');
 const baseEndpoint = 'http://localhost:3000/api';
 const apiEndpoint = supertest(baseEndpoint);
@@ -87,8 +88,10 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
+            const nmdsIdregex = /[A-Z][0-9]{7}/;
             expect(loginResponse.body.establishment.id).toEqual(establishmentId);
             expect(loginResponse.body.establishment.isRegulated).toEqual(false);
+            expect(nmdsIdregex.test(loginResponse.body.establishment.nmdsId)).toEqual(true);
             expect(loginResponse.body.isFirstLogin).toEqual(true);
             expect(Number.isInteger(loginResponse.body.mainService.id)).toEqual(true);
 
@@ -781,6 +784,7 @@ describe ("establishment", async () => {
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
+
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.name).toEqual(site.locationName);
 
@@ -802,7 +806,7 @@ describe ("establishment", async () => {
                     notes: "ignored because no custodianCode field"
                 },
                 {
-                    custodianCode: primaryLocalAuthorityCustodianCode
+                    custodianCode: primaryAuthority.id
                 },
                 {
                     custodianCode: "abc",
@@ -826,7 +830,7 @@ describe ("establishment", async () => {
             // but localAuthority is and should include only the main and random authority only (everything else ignored)
             expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
             expect(updateResponse.body.localAuthorities.length).toEqual(2);
-            const foundMainAuthority = updateResponse.body.localAuthorities.find(thisLA => thisLA.custodianCode === primaryLocalAuthorityCustodianCode);
+            const foundMainAuthority = updateResponse.body.localAuthorities.find(thisLA => thisLA.custodianCode === primaryAuthority.id);
             const foundRandomAuthority = updateResponse.body.localAuthorities.find(thisLA => thisLA.custodianCode === randomAuthorityCustodianCode);
 
             expect(foundMainAuthority !== null && foundRandomAuthority !== null).toEqual(true);
@@ -837,8 +841,8 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
             expect(updateResponse.body.name).toEqual(site.locationName);
-            expect(updateResponse.body.primaryAuthority.custodianCode).toEqual(primaryLocalAuthorityCustodianCode);
-            expect(updateResponse.body.primaryAuthority).toHaveProperty('name');     // we cannot validate the name of the Local Authority - this is not known in reference data
+            expect(Number.isInteger(updateResponse.body.primaryAuthority.custodianCode)).toEqual(true);
+            expect(updateResponse.body.primaryAuthority).toHaveProperty('name');
 
             // before update expect the "localAuthorities" attribute as an array but it will be empty
             expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
@@ -848,6 +852,7 @@ describe ("establishment", async () => {
         it("should get the Establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
+            const nmdsIdregex = /[A-Z][0-9]{7}/;
 
             const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}`)
                 .set('Authorization', authToken)
@@ -855,6 +860,7 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(nmdsIdregex.test(firstResponse.body.nmdsId)).toEqual(true);
             expect(firstResponse.body.postcode).toEqual(site.postalCode);
             expect(firstResponse.body.numberOfStaff).not.toBeNull();
             expect(firstResponse.body.numberOfStaff).toBeGreaterThan(0);
