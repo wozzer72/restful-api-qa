@@ -8,7 +8,6 @@ const getReferenceAuthorities = async (apiEndpoint) => {
         const laS = await apiEndpoint.get('/localAuthority')
             .expect('Content-Type', /json/)
             .expect(200);
-        expect(laS.body).toMatchSnapshot();
         allLocalAuthorities = laS.body;
     }
 }
