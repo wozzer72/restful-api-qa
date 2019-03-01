@@ -1196,7 +1196,7 @@ describe ("Change User Details", async () => {
     });
 
     // update all properties before checking the timeline history
-    it.skip('should get user with timeline history', async () => {
+    it('should get user with timeline history', async () => {
         expect(knownUserUid).not.toBeNull();
         expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
@@ -1254,8 +1254,8 @@ describe ("Change User Details", async () => {
         const allUpdatedEvents = getUserResponse.body.history.filter(thisEvent => {
             return thisEvent.event == 'updated';
         });
-        console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
-        expect(allUpdatedEvents.length).toEqual(6); // six properties to have been updated
+        // console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
+        expect(allUpdatedEvents.length).toEqual(18); // six properties to have been updated (three times)
         allUpdatedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
             expect(thisEvent.change).toBeNull();
@@ -1267,8 +1267,8 @@ describe ("Change User Details", async () => {
         const allChangedEvents = getUserResponse.body.history.filter(thisEvent => {
             return thisEvent.event == 'changed';
         });
-        console.log("TEST DEBUG: Number of changed events: ", allChangedEvents.length);
-        expect(allChangedEvents.length).toEqual(6); // six properties to have been updated
+        // console.log("TEST DEBUG: Number of changed events: ", allChangedEvents.length);
+        expect(allChangedEvents.length).toEqual(12); // six properties to have been updated twice
         allChangedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
             expect(thisEvent.change).not.toBeNull();
@@ -1282,8 +1282,8 @@ describe ("Change User Details", async () => {
         const allSavedEvents = getUserResponse.body.history.filter(thisEvent => {
             return thisEvent.event == 'saved';
         });
-        console.log("TEST DEBUG: Number of saved events: ", allSavedEvents.length);
-        expect(allSavedEvents.length).toEqual(12); // six properties to have been saved twice (once with change and once without change)
+        // console.log("TEST DEBUG: Number of saved events: ", allSavedEvents.length);
+        expect(allSavedEvents.length).toEqual(18); // six properties to have been saved three times (twice with change and once without change)
         allSavedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
             expect(thisEvent.change).toBeNull();
@@ -1292,7 +1292,7 @@ describe ("Change User Details", async () => {
         });
     });
 
-    it.skip('should get user with full history', async () => {
+    it('should get user with full history', async () => {
         expect(knownUserUid).not.toBeNull();
         expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
@@ -1307,7 +1307,7 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(401);
 
-        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=timeline`)
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=full`)
             .set('Authorization', loginAuthToken)
             .send({
             })
@@ -1334,28 +1334,22 @@ describe ("Change User Details", async () => {
         });
         // console.log("TEST DEBUG: login success event: ", loginSuccess);
         expect(loginSuccess.username).toEqual(nonCQCSite.user.username);
-        expect(loginSuccess.change).toEqual({});
-        expect(loginSuccess.property).toEqual('password');
         expect(loginSuccess.when).toEqual(new Date(loginSuccess.when).toISOString());
         const loginFailed = getUserResponse.body.history.find(thisEvent => {
             return thisEvent.event === 'loginFailed';
         });
         // console.log("TEST DEBUG: login failed event: ", loginFailed);
         expect(loginFailed.username).toEqual(nonCQCSite.user.username);
-        expect(loginFailed.change).toEqual({});
-        expect(loginFailed.property).toEqual('password');
         expect(loginFailed.when).toEqual(new Date(loginFailed.when).toISOString());
 
         // in full history mode, there should be updated events
         const allUpdatedEvents = getUserResponse.body.history.filter(thisEvent => {
             return thisEvent.event == 'updated';
         });
-        console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
-        expect(allUpdatedEvents.length).toEqual(6); // six properties to have been updated
+        // console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
+        expect(allUpdatedEvents.length).toEqual(18); // six properties to have been updated three times (twice with change and once without change)
         allUpdatedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
-            expect(thisEvent.change).toBeNull();
-            expect(thisEvent.property).toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
 
@@ -1363,12 +1357,10 @@ describe ("Change User Details", async () => {
         const allChangedEvents = getUserResponse.body.history.filter(thisEvent => {
             return thisEvent.event == 'changed';
         });
-        console.log("TEST DEBUG: Number of changed events: ", allChangedEvents.length);
         expect(allChangedEvents.length).toEqual(0);
         const allSavedEvents = getUserResponse.body.history.filter(thisEvent => {
             return thisEvent.event == 'saved';
         });
-        console.log("TEST DEBUG: Number of saved events: ", allSavedEvents.length);
         expect(allSavedEvents.length).toEqual(0);
     });
 
