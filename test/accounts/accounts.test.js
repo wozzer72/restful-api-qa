@@ -21,7 +21,7 @@ const postcodes = require('../mockdata/postcodes').data;
 const registrationUtils = require('../utils/registration');
 const serviceUtils = require('../utils/services');
 
-describe ("Password Restes", async () => {
+describe.skip("Password Restes", async () => {
     let nonCqcServices = null;
     beforeAll(async () => {
         const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
@@ -361,4 +361,76 @@ describe ("Password Restes", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
     });
+});
+
+
+describe ("Change User Details", async () => {
+    let nonCqcServices = null;
+    beforeAll(async () => {
+        const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
+            .expect('Content-Type', /json/)
+            .expect(200);
+        nonCqcServices = nonCqcServicesResults.body;
+    });
+
+    beforeEach(async () => {
+    });
+
+    let nonCQCSite = null;
+    it("should create a non-CQC registation", async () => {
+        nonCQCSite = registrationUtils.newNonCqcSite(postcodes[3], nonCqcServices);
+        const registeredEstablishment = await apiEndpoint.post('/registration')
+            .send([nonCQCSite])
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(registeredEstablishment.body.status).toEqual(1);
+        expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);
+    });
+
+    it('should return a list of all establishment users', async () => {
+        const loginResponse = await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: nonCQCSite.user.password
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        const establishmentId = loginResponse.body.establishment.id;
+        
+        const loginAuthToken = loginResponse.header.authorization;
+        const allUsersResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(200);
+
+        expect(Array.isArray(allUsersResponse.body.users)).toEqual(true);
+        expect(allUsersResponse.body.users.length).toEqual(1);
+        expect(allUsersResponse.body.users[0]).toHaveProperty('uid');
+        expect(allUsersResponse.body.users[0]).toHaveProperty('fullname');
+        expect(allUsersResponse.body.users[0]).toHaveProperty('email');
+        expect(allUsersResponse.body.users[0]).toHaveProperty('username');
+        expect(allUsersResponse.body.users[0]).toHaveProperty('created');
+        expect(allUsersResponse.body.users[0]).toHaveProperty('updated');
+        expect(allUsersResponse.body.users[0]).toHaveProperty('updatedBy');
+
+        const uuidV4Regex = /^[A-F\d]{8}-[A-F\d]{4}-4[A-F\d]{3}-[89AB][A-F\d]{3}-[A-F\d]{12}$/i;
+        expect(uuidV4Regex.test(allUsersResponse.body.users[0].uid)).toEqual(true);
+
+        // now test for unexpected results
+        await apiEndpoint.get(`/user/establishment/${establishmentId}`)
+            .send({
+            })
+            .expect(401);
+        await apiEndpoint.get(`/user/establishment/${establishmentId+1}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(403);
+    });
+
+    it.skip('', async () => {
+
+    });
+
 });
