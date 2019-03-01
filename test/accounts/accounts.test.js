@@ -445,6 +445,8 @@ describe ("Change User Details", async () => {
 
         expect(getUserResponse.body.uid).toEqual(knownUserUid);
         expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
+        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
         expect(getUserResponse.body.fullname).toEqual(nonCQCSite.user.fullname);
         expect(getUserResponse.body.jobTitle).toEqual(nonCQCSite.user.jobTitle);
         expect(getUserResponse.body.email).toEqual(nonCQCSite.user.emailAddress);
@@ -452,8 +454,6 @@ describe ("Change User Details", async () => {
         expect(getUserResponse.body.securityQuestion).toEqual(nonCQCSite.user.securityQuestion);
         expect(getUserResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer);
         expect(getUserResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
-        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
-        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
 
 
         // and now expected errors
@@ -487,14 +487,14 @@ describe ("Change User Details", async () => {
             .expect(200);
         expect(getUserResponse.body.uid).toEqual(knownUserUid);
         expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
+        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
         expect(getUserResponse.body.fullname).toEqual(nonCQCSite.user.fullname);
         expect(getUserResponse.body.jobTitle).toEqual(nonCQCSite.user.jobTitle);
         expect(getUserResponse.body.email).toEqual(nonCQCSite.user.emailAddress);
         expect(getUserResponse.body.phone).toEqual(nonCQCSite.user.contactNumber);
         expect(getUserResponse.body.securityQuestion).toEqual(nonCQCSite.user.securityQuestion);
         expect(getUserResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer);
-        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
-        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
 
         // and now expected errors
         await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('unknown user')}?history=none`)
@@ -512,6 +512,153 @@ describe ("Change User Details", async () => {
             })
             .expect(401);
     });
+
+    it('should get user with property history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
+        const fetchUsername = nonCQCSite.user.username;
+        expect(establishmentId).not.toBeNull();
+
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=property`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(200);
+        expect(getUserResponse.body.uid).toEqual(knownUserUid);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
+        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
+
+        expect(getUserResponse.body.fullname).toEqual({
+            currentValue: nonCQCSite.user.fullname,
+            lastSavedBy: nonCQCSite.user.username,
+            lastChangedBy: nonCQCSite.user.username,
+            lastSaved: new Date(getUserResponse.body.fullname.lastSaved).toISOString(),
+            lastChanged: new Date(getUserResponse.body.fullname.lastChanged).toISOString()
+        });
+        expect(getUserResponse.body.jobTitle).toEqual({
+            currentValue: nonCQCSite.user.jobTitle,
+            lastSavedBy: nonCQCSite.user.username,
+            lastChangedBy: nonCQCSite.user.username,
+            lastSaved: new Date(getUserResponse.body.jobTitle.lastSaved).toISOString(),
+            lastChanged: new Date(getUserResponse.body.jobTitle.lastChanged).toISOString()
+        });
+        expect(getUserResponse.body.email).toEqual({
+            currentValue: nonCQCSite.user.emailAddress,
+            lastSavedBy: nonCQCSite.user.username,
+            lastChangedBy: nonCQCSite.user.username,
+            lastSaved: new Date(getUserResponse.body.email.lastSaved).toISOString(),
+            lastChanged: new Date(getUserResponse.body.email.lastChanged).toISOString()
+        });
+        expect(getUserResponse.body.phone).toEqual({
+            currentValue: nonCQCSite.user.contactNumber,
+            lastSavedBy: nonCQCSite.user.username,
+            lastChangedBy: nonCQCSite.user.username,
+            lastSaved: new Date(getUserResponse.body.phone.lastSaved).toISOString(),
+            lastChanged: new Date(getUserResponse.body.phone.lastChanged).toISOString()
+        });
+        expect(getUserResponse.body.securityQuestion).toEqual({
+            currentValue: nonCQCSite.user.securityQuestion,
+            lastSavedBy: nonCQCSite.user.username,
+            lastChangedBy: nonCQCSite.user.username,
+            lastSaved: new Date(getUserResponse.body.securityQuestion.lastSaved).toISOString(),
+            lastChanged: new Date(getUserResponse.body.securityQuestion.lastChanged).toISOString()
+        });
+        expect(getUserResponse.body.securityQuestionAnswer).toEqual({
+            currentValue: nonCQCSite.user.securityAnswer,
+            lastSavedBy: nonCQCSite.user.username,
+            lastChangedBy: nonCQCSite.user.username,
+            lastSaved: new Date(getUserResponse.body.securityQuestionAnswer.lastSaved).toISOString(),
+            lastChanged: new Date(getUserResponse.body.securityQuestionAnswer.lastChanged).toISOString()
+        });
+    });
+
+    it('should get user with timeline history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
+        const fetchUsername = nonCQCSite.user.username;
+        expect(establishmentId).not.toBeNull();
+
+        // force a login failure (to expect on event)
+        await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: 'bob'
+            })
+            .expect('Content-Type', /json/)
+            .expect(401);
+
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=timeline`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(200);
+        expect(getUserResponse.body.uid).toEqual(knownUserUid);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
+        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
+
+        expect(getUserResponse.body).toHaveProperty('history');
+        expect(Array.isArray(getUserResponse.body.history)).toEqual(true);
+        expect(getUserResponse.body.history.length).toBeGreaterThan(0);
+
+        // as this is a new registration, we expect to find created and login success/failed
+        // NOTE - registration is not yet creating "created" event!!!
+        // const userCreated = getUserResponse.body.history[getUserResponse.body.history.length-1];        // the very last (earlist record)
+        // expect(userCreated.username).toEqual(nonCQCSite.user.username);
+        // expect(userCreated.event).toEqual('created');
+        // expect(userCreated.when).toEqual(new Date().userCreated.whentoISOString());
+        // expect(userCreated.change).toBeNull();
+        // expect(userCreated.property).toBeNull();
+        const loginSuccess = getUserResponse.body.history.find(thisEvent => {
+            return thisEvent.event === 'loginSuccess';
+        });
+        // console.log("TEST DEBUG: login success event: ", loginSuccess);
+        expect(loginSuccess.username).toEqual(nonCQCSite.user.username);
+        expect(loginSuccess.change).toEqual({});
+        expect(loginSuccess.property).toEqual('password');
+        expect(loginSuccess.when).toEqual(new Date(loginSuccess.when).toISOString());
+        const loginFailed = getUserResponse.body.history.find(thisEvent => {
+            return thisEvent.event === 'loginFailed';
+        });
+        // console.log("TEST DEBUG: login failed event: ", loginFailed);
+        expect(loginFailed.username).toEqual(nonCQCSite.user.username);
+        expect(loginFailed.change).toEqual({});
+        expect(loginFailed.property).toEqual('password');
+        expect(loginFailed.when).toEqual(new Date(loginFailed.when).toISOString());
+    });
+
+    it.skip('should get user with full history', async () => {
+
+    });
+
+    it.skip('should, having updated some properties have overall updated events', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
+        const fetchUsername = nonCQCSite.user.username;
+        expect(establishmentId).not.toBeNull();
+
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=timeline`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(200);
+        expect(getUserResponse.body.history.length).toBeGreaterThan(0);
+
+        // all updated events should have no propery or change
+        const allUpdatedEvents = getUserResponse.body.history.filter(thisEvent => {
+            return thisEvent.event == 'updated';
+        });
+        console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
+        expect(allUpdatedEvents.length).toBeGreaterThan(0);
+        allUpdatedEvents.forEach(thisEvent => {
+            expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.change).toBeNull();
+            expect(thisEvent.property).toBeNull();
+            expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
+        });
+    });
+
 
 
     it.skip('', async () => {
