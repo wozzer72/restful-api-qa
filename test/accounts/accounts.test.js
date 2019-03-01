@@ -13,6 +13,8 @@ const baseEndpoint = require('../utils/baseUrl').baseurl;
 const apiEndpoint = supertest(baseEndpoint);
 const uuid = require('uuid');
 
+const uuidV4Regex = /^[A-F\d]{8}-[A-F\d]{4}-4[A-F\d]{3}-[89AB][A-F\d]{3}-[A-F\d]{12}$/i;
+
 // mocked real postcode/location data
 // http://localhost:3000/api/test/locations/random?limit=5
 const locations = require('../mockdata/locations').data;
@@ -102,8 +104,6 @@ describe.skip("Password Restes", async () => {
             // .expect(200);
         expect(response.body).toHaveProperty('resetLink');
         expect(response.body).toHaveProperty('uuid');
-
-        const uuidV4Regex = /^[A-F\d]{8}-[A-F\d]{4}-4[A-F\d]{3}-[89AB][A-F\d]{3}-[A-F\d]{12}$/i;
         expect(uuidV4Regex.test(response.body.uuid)).toEqual(true);
     });
 
@@ -387,6 +387,9 @@ describe ("Change User Details", async () => {
         expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);
     });
 
+    let knownUserUid = null;
+    let loginAuthToken = null;
+    let establishmentId = null;
     it('should return a list of all establishment users', async () => {
         const loginResponse = await apiEndpoint.post('/login')
             .send({
@@ -395,9 +398,9 @@ describe ("Change User Details", async () => {
             })
             .expect('Content-Type', /json/)
             .expect(200);
-        const establishmentId = loginResponse.body.establishment.id;
+        establishmentId = loginResponse.body.establishment.id;
         
-        const loginAuthToken = loginResponse.header.authorization;
+        loginAuthToken = loginResponse.header.authorization;
         const allUsersResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}`)
             .set('Authorization', loginAuthToken)
             .send({
@@ -413,9 +416,9 @@ describe ("Change User Details", async () => {
         expect(allUsersResponse.body.users[0]).toHaveProperty('created');
         expect(allUsersResponse.body.users[0]).toHaveProperty('updated');
         expect(allUsersResponse.body.users[0]).toHaveProperty('updatedBy');
-
-        const uuidV4Regex = /^[A-F\d]{8}-[A-F\d]{4}-4[A-F\d]{3}-[89AB][A-F\d]{3}-[A-F\d]{12}$/i;
         expect(uuidV4Regex.test(allUsersResponse.body.users[0].uid)).toEqual(true);
+
+        knownUserUid = allUsersResponse.body.users[0].uid;
 
         // now test for unexpected results
         await apiEndpoint.get(`/user/establishment/${establishmentId}`)
@@ -429,8 +432,89 @@ describe ("Change User Details", async () => {
             .expect(403);
     });
 
-    it.skip('', async () => {
+    it('should return a User by uid no history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
+        expect(establishmentId).not.toBeNull();
+        
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=none`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(200);
+
+        expect(getUserResponse.body.uid).toEqual(knownUserUid);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.fullname).toEqual(nonCQCSite.user.fullname);
+        expect(getUserResponse.body.jobTitle).toEqual(nonCQCSite.user.jobTitle);
+        expect(getUserResponse.body.email).toEqual(nonCQCSite.user.emailAddress);
+        expect(getUserResponse.body.phone).toEqual(nonCQCSite.user.contactNumber);
+        expect(getUserResponse.body.securityQuestion).toEqual(nonCQCSite.user.securityQuestion);
+        expect(getUserResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer);
+        expect(getUserResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
+        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
+
+
+        // and now expected errors
+        await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('28a401f5-99a6-41c0-b685-91950f90e8f6')}?history=none`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(404);
+        await apiEndpoint.get(`/user/establishment/${establishmentId+1}/${encodeURIComponent(knownUserUid)}?history=none`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(403);
+        await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('28a401f5-99a6-41c0-b685-91950f90e8f6')}?history=none`)
+            .send({
+            })
+            .expect(401);
 
     });
 
+    it('should return a User by username no history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
+        const fetchUsername = nonCQCSite.user.username;
+        expect(establishmentId).not.toBeNull();
+
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=none`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(200);
+        expect(getUserResponse.body.uid).toEqual(knownUserUid);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.fullname).toEqual(nonCQCSite.user.fullname);
+        expect(getUserResponse.body.jobTitle).toEqual(nonCQCSite.user.jobTitle);
+        expect(getUserResponse.body.email).toEqual(nonCQCSite.user.emailAddress);
+        expect(getUserResponse.body.phone).toEqual(nonCQCSite.user.contactNumber);
+        expect(getUserResponse.body.securityQuestion).toEqual(nonCQCSite.user.securityQuestion);
+        expect(getUserResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer);
+        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
+        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
+
+        // and now expected errors
+        await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('unknown user')}?history=none`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(404);
+        await apiEndpoint.get(`/user/establishment/${establishmentId+1}/${encodeURIComponent(fetchUsername)}?history=none`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(403);
+        await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('unknown user')}?history=none`)
+            .send({
+            })
+            .expect(401);
+    });
+
+
+    it.skip('', async () => {
+
+    });
 });
