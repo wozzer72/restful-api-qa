@@ -992,11 +992,207 @@ describe ("Change User Details", async () => {
             })
             .expect(400);
     });
-    it.skip('should update security question property', async () => {
 
+    it('should update security question property', async () => {
+        const updatedSecurityQuestionResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestion" : nonCQCSite.user.securityQuestion + ' updated'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(uuidV4Regex.test(updatedSecurityQuestionResponse.body.uid)).toEqual(true);
+        expect(updatedSecurityQuestionResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedSecurityQuestionResponse.body.created).toEqual(new Date(updatedSecurityQuestionResponse.body.created).toISOString());
+        expect(updatedSecurityQuestionResponse.body.updated).toEqual(new Date(updatedSecurityQuestionResponse.body.updated).toISOString());
+        expect(updatedSecurityQuestionResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(updatedSecurityQuestionResponse.body.securityQuestion).toEqual(nonCQCSite.user.securityQuestion + ' updated');
+
+        //validatePropertyChangeHistory
+        // and now check change history
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestion" : nonCQCSite.user.securityQuestion + ' updated again'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        let requestEpoch = new Date().getTime();
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+            .set('Authorization', loginAuthToken)
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(userChangeHistory.body.securityQuestion).toHaveProperty('lastSaved');
+        expect(userChangeHistory.body.securityQuestion.lastSaved).toEqual(userChangeHistory.body.securityQuestion.lastChanged);
+        expect(userChangeHistory.body.securityQuestion.lastSavedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.securityQuestion.lastChangedBy).toEqual(nonCQCSite.user.username);
+        let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
+        expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+        // test change history for both the rate and the value
+        validatePropertyChangeHistory(
+            'securityQuestion',
+            PropertiesResponses,
+            userChangeHistory.body.securityQuestion,
+            nonCQCSite.user.securityQuestion + ' updated again',
+            nonCQCSite.user.securityQuestion + ' updated',
+            nonCQCSite.user.username,
+            requestEpoch,
+            (ref, given) => {
+                return ref == given
+            });
+        let lastSavedDate = userChangeHistory.body.securityQuestion.lastSaved;
+        
+        // now update the property but with same value - expect no change
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestion" : nonCQCSite.user.securityQuestion + ' updated again'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+            .set('Authorization', loginAuthToken)
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(userChangeHistory.body.securityQuestion.currentValue).toEqual(nonCQCSite.user.securityQuestion + ' updated again');
+        expect(userChangeHistory.body.securityQuestion.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+        expect(new Date(userChangeHistory.body.securityQuestion.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+        // and now expect on failures on updates
+        // no authorization header
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .send({
+                "securityQuestion" : nonCQCSite.user.securityQuestion
+            })
+            .expect(401);
+
+        // unexpected establishment id
+        await apiEndpoint.put(`/user/establishment/${establishmentId+1}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestion" : nonCQCSite.user.securityQuestion
+            })
+            .expect(403);
+        
+        // unexpected UUID/username
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestion" : nonCQCSite.user.securityQuestion
+            })
+            .expect(404);
+
+        // exceeds length
+        const randomSecurityQuestion = randomString(256);
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestion" : randomSecurityQuestion
+            })
+            .expect(400);
     });
-    it.skip('should update security question answer property', async () => {
 
+    it('should update security question answer property', async () => {
+        const updatedSecurityQuestionAnswerResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestionAnswer" : nonCQCSite.user.securityAnswer + ' updated'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(uuidV4Regex.test(updatedSecurityQuestionAnswerResponse.body.uid)).toEqual(true);
+        expect(updatedSecurityQuestionAnswerResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedSecurityQuestionAnswerResponse.body.created).toEqual(new Date(updatedSecurityQuestionAnswerResponse.body.created).toISOString());
+        expect(updatedSecurityQuestionAnswerResponse.body.updated).toEqual(new Date(updatedSecurityQuestionAnswerResponse.body.updated).toISOString());
+        expect(updatedSecurityQuestionAnswerResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(updatedSecurityQuestionAnswerResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer + ' updated');
+
+        //validatePropertyChangeHistory
+        // and now check change history
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestionAnswer" : nonCQCSite.user.securityAnswer + ' updated again'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        let requestEpoch = new Date().getTime();
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+            .set('Authorization', loginAuthToken)
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(userChangeHistory.body.securityQuestionAnswer).toHaveProperty('lastSaved');
+        expect(userChangeHistory.body.securityQuestionAnswer.lastSaved).toEqual(userChangeHistory.body.securityQuestionAnswer.lastChanged);
+        expect(userChangeHistory.body.securityQuestionAnswer.lastSavedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.securityQuestionAnswer.lastChangedBy).toEqual(nonCQCSite.user.username);
+        let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
+        expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+        // test change history for both the rate and the value
+        validatePropertyChangeHistory(
+            'securityQuestionAnswer',
+            PropertiesResponses,
+            userChangeHistory.body.securityQuestionAnswer,
+            nonCQCSite.user.securityAnswer + ' updated again',
+            nonCQCSite.user.securityAnswer + ' updated',
+            nonCQCSite.user.username,
+            requestEpoch,
+            (ref, given) => {
+                return ref == given
+            });
+        let lastSavedDate = userChangeHistory.body.securityQuestionAnswer.lastSaved;
+        
+        // now update the property but with same value - expect no change
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestionAnswer" : nonCQCSite.user.securityAnswer + ' updated again'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+            .set('Authorization', loginAuthToken)
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(userChangeHistory.body.securityQuestionAnswer.currentValue).toEqual(nonCQCSite.user.securityAnswer + ' updated again');
+        expect(userChangeHistory.body.securityQuestionAnswer.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+        expect(new Date(userChangeHistory.body.securityQuestionAnswer.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+        // and now expect on failures on updates
+        // no authorization header
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .send({
+                "securityQuestionAnswer" : nonCQCSite.user.securityAnswer
+            })
+            .expect(401);
+
+        // unexpected establishment id
+        await apiEndpoint.put(`/user/establishment/${establishmentId+1}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestionAnswer" : nonCQCSite.user.securityAnswer
+            })
+            .expect(403);
+        
+        // unexpected UUID/username
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestionAnswer" : nonCQCSite.user.securityAnswer
+            })
+            .expect(404);
+
+        // exceeds length
+        const randomSecurityQuestionAnswer = randomString(256);
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "securityQuestionAnswer" : randomSecurityQuestionAnswer
+            })
+            .expect(400);
     });
 
     // update all properties before checking the timeline history
