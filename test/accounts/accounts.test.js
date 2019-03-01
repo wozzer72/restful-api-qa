@@ -27,7 +27,7 @@ let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
 let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 const PropertiesResponses = {};
 
-describe.skip("Password Restes", async () => {
+describe("Password Restes", async () => {
     let nonCqcServices = null;
     beforeAll(async () => {
         const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
