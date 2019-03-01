@@ -806,7 +806,7 @@ describe ("establishment", async () => {
                     notes: "ignored because no custodianCode field"
                 },
                 {
-                    custodianCode: primaryAuthority.id
+                    custodianCode: primaryLocalAuthorityCustodianCode
                 },
                 {
                     custodianCode: "abc",
