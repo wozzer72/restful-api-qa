@@ -762,8 +762,98 @@ describe ("Change User Details", async () => {
         })
         .expect(400);
     });
-    it.skip('should update email property', async () => {
 
+    it('should update email property', async () => {
+        const updatedEmailResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "email" : nonCQCSite.user.email + ' Updated'
+        })
+        .expect('Content-Type', /json/)
+        .expect(200);
+    expect(uuidV4Regex.test(updatedEmailResponse.body.uid)).toEqual(true);
+    expect(updatedEmailResponse.body.username).toEqual(nonCQCSite.user.username);
+    expect(updatedEmailResponse.body.created).toEqual(new Date(updatedEmailResponse.body.created).toISOString());
+    expect(updatedEmailResponse.body.updated).toEqual(new Date(updatedEmailResponse.body.updated).toISOString());
+    expect(updatedEmailResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+    expect(updatedEmailResponse.body.email).toEqual(nonCQCSite.user.email + ' Updated');
+
+    //validatePropertyChangeHistory
+    // and now check change history
+    await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "email" : nonCQCSite.user.email + ' Updated Again'
+        })
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+    let requestEpoch = new Date().getTime();
+    let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+        .set('Authorization', loginAuthToken)
+        .expect('Content-Type', /json/)
+        .expect(200);
+    expect(userChangeHistory.body.email).toHaveProperty('lastSaved');
+    expect(userChangeHistory.body.email.lastSaved).toEqual(userChangeHistory.body.email.lastChanged);
+    expect(userChangeHistory.body.email.lastSavedBy).toEqual(nonCQCSite.user.username);
+    expect(userChangeHistory.body.email.lastChangedBy).toEqual(nonCQCSite.user.username);
+    let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
+    expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+    // test change history for both the rate and the value
+    validatePropertyChangeHistory(
+        'email',
+        PropertiesResponses,
+        userChangeHistory.body.email,
+        nonCQCSite.user.email + ' Updated Again',
+        nonCQCSite.user.email + ' Updated',
+        nonCQCSite.user.username,
+        requestEpoch,
+        (ref, given) => {
+            return ref == given
+        });
+    let lastSavedDate = userChangeHistory.body.email.lastSaved;
+    
+    // now update the property but with same value - expect no change
+    await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "email" : nonCQCSite.user.email + ' Updated Again'
+        })
+        .expect('Content-Type', /json/)
+        .expect(200);
+    userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+        .set('Authorization', loginAuthToken)
+        .expect('Content-Type', /json/)
+        .expect(200);
+    expect(userChangeHistory.body.email.currentValue).toEqual(nonCQCSite.user.email + ' Updated Again');
+    expect(userChangeHistory.body.email.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+    expect(new Date(userChangeHistory.body.email.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+    // and now expect on failures on updates
+    // no authorization header
+    await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .send({
+            "email" : nonCQCSite.user.email
+        })
+        .expect(401);
+
+    // unexpected establishment id
+    await apiEndpoint.put(`/user/establishment/${establishmentId+1}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "email" : nonCQCSite.user.email
+        })
+        .expect(403);
+
+    // exceeds maximum length
+    const randomEmail = randomString(121);
+    await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "email" : randomEmail
+        })
+        .expect(400);
     });
     it.skip('should update phone property', async () => {
 
