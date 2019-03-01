@@ -12,16 +12,20 @@ const supertest = require('supertest');
 const baseEndpoint = require('../utils/baseUrl').baseurl;
 const apiEndpoint = supertest(baseEndpoint);
 const uuid = require('uuid');
-
 const uuidV4Regex = /^[A-F\d]{8}-[A-F\d]{4}-4[A-F\d]{3}-[89AB][A-F\d]{3}-[A-F\d]{12}$/i;
+
+const randomString = require('../utils/random').randomString;
 
 // mocked real postcode/location data
 // http://localhost:3000/api/test/locations/random?limit=5
-const locations = require('../mockdata/locations').data;
 const postcodes = require('../mockdata/postcodes').data;
-
 const registrationUtils = require('../utils/registration');
-const serviceUtils = require('../utils/services');
+
+// change history validation
+const validatePropertyChangeHistory = require('../utils/changeHistory').validatePropertyChangeHistory;
+let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
+let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
+const PropertiesResponses = {};
 
 describe.skip("Password Restes", async () => {
     let nonCqcServices = null;
@@ -573,7 +577,117 @@ describe ("Change User Details", async () => {
         });
     });
 
-    it('should get user with timeline history', async () => {
+    it('should update fullname property', async () => {
+        const updatedFullnameResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "fullname" : nonCQCSite.user.fullname + ' Updated'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(uuidV4Regex.test(updatedFullnameResponse.body.uid)).toEqual(true);
+        expect(updatedFullnameResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedFullnameResponse.body.created).toEqual(new Date(updatedFullnameResponse.body.created).toISOString());
+        expect(updatedFullnameResponse.body.updated).toEqual(new Date(updatedFullnameResponse.body.updated).toISOString());
+        expect(updatedFullnameResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(updatedFullnameResponse.body.fullname).toEqual(nonCQCSite.user.fullname + ' Updated');
+
+        //validatePropertyChangeHistory
+        // and now check change history
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "fullname" : nonCQCSite.user.fullname + ' Updated Again'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+        let requestEpoch = new Date().getTime();
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+            .set('Authorization', loginAuthToken)
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(userChangeHistory.body.fullname).toHaveProperty('lastSaved');
+        expect(userChangeHistory.body.fullname.lastSaved).toEqual(userChangeHistory.body.fullname.lastChanged);
+        expect(userChangeHistory.body.fullname.lastSavedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.fullname.lastChangedBy).toEqual(nonCQCSite.user.username);
+        let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
+        expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+        // test change history for both the rate and the value
+        validatePropertyChangeHistory(
+            'fullname',
+            PropertiesResponses,
+            userChangeHistory.body.fullname,
+            nonCQCSite.user.fullname + ' Updated Again',
+            nonCQCSite.user.fullname + ' Updated',
+            nonCQCSite.user.username,
+            requestEpoch,
+            (ref, given) => {
+                return ref == given
+            });
+        let lastSavedDate = userChangeHistory.body.fullname.lastSaved;
+        
+        // now update the property but with same value - expect no change
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "fullname" : nonCQCSite.user.fullname + ' Updated Again'
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+            .set('Authorization', loginAuthToken)
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(userChangeHistory.body.fullname.currentValue).toEqual(nonCQCSite.user.fullname + ' Updated Again');
+        expect(userChangeHistory.body.fullname.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+        expect(new Date(userChangeHistory.body.fullname.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+        // and now expect on failures on updates
+        // no authorization header
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .send({
+                "fullname" : nonCQCSite.user.fullname
+            })
+            .expect(401);
+
+        // unexpected establishment id
+        await apiEndpoint.put(`/user/establishment/${establishmentId+1}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "fullname" : nonCQCSite.user.fullname
+            })
+            .expect(403);
+
+        // exceeds maximum length
+        const randomFullname = randomString(121);
+        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+            .set('Authorization', loginAuthToken)
+            .send({
+                "fullname" : randomFullname
+            })
+            .expect(400);
+    
+    });
+    it.skip('should update job title property', async () => {
+
+    });
+    it.skip('should update email property', async () => {
+
+    });
+    it.skip('should update phone property', async () => {
+
+    });
+    it.skip('should update security question property', async () => {
+
+    });
+    it.skip('should update security question answer property', async () => {
+
+    });
+
+    // update all properties before checking the timeline history
+    it.skip('should get user with timeline history', async () => {
         expect(knownUserUid).not.toBeNull();
         expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
@@ -626,42 +740,135 @@ describe ("Change User Details", async () => {
         expect(loginFailed.change).toEqual({});
         expect(loginFailed.property).toEqual('password');
         expect(loginFailed.when).toEqual(new Date(loginFailed.when).toISOString());
-    });
-
-    it.skip('should get user with full history', async () => {
-
-    });
-
-    it.skip('should, having updated some properties have overall updated events', async () => {
-        expect(knownUserUid).not.toBeNull();
-        expect(loginAuthToken).not.toBeNull();
-        const fetchUsername = nonCQCSite.user.username;
-        expect(establishmentId).not.toBeNull();
-
-        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=timeline`)
-            .set('Authorization', loginAuthToken)
-            .send({
-            })
-            .expect(200);
-        expect(getUserResponse.body.history.length).toBeGreaterThan(0);
 
         // all updated events should have no propery or change
         const allUpdatedEvents = getUserResponse.body.history.filter(thisEvent => {
             return thisEvent.event == 'updated';
         });
         console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
-        expect(allUpdatedEvents.length).toBeGreaterThan(0);
+        expect(allUpdatedEvents.length).toEqual(6); // six properties to have been updated
         allUpdatedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
             expect(thisEvent.change).toBeNull();
             expect(thisEvent.property).toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
+
+        // all changed events should have propery and change activity
+        const allChangedEvents = getUserResponse.body.history.filter(thisEvent => {
+            return thisEvent.event == 'changed';
+        });
+        console.log("TEST DEBUG: Number of changed events: ", allChangedEvents.length);
+        expect(allChangedEvents.length).toEqual(6); // six properties to have been updated
+        allChangedEvents.forEach(thisEvent => {
+            expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.change).not.toBeNull();
+            expect(thisEvent.change).toHaveProperty('new');
+            expect(thisEvent.change).toHaveProperty('current');
+            expect(thisEvent.property).not.toBeNull();
+            expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
+        });
+
+        // all saved events should have propery but no change activity
+        const allSavedEvents = getUserResponse.body.history.filter(thisEvent => {
+            return thisEvent.event == 'saved';
+        });
+        console.log("TEST DEBUG: Number of saved events: ", allSavedEvents.length);
+        expect(allSavedEvents.length).toEqual(12); // six properties to have been saved twice (once with change and once without change)
+        allSavedEvents.forEach(thisEvent => {
+            expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.change).toBeNull();
+            expect(thisEvent.property).not.toBeNull();
+            expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
+        });
     });
 
+    it.skip('should get user with full history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
+        const fetchUsername = nonCQCSite.user.username;
+        expect(establishmentId).not.toBeNull();
 
+        // force a login failure (to expect on event)
+        await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: 'bob'
+            })
+            .expect('Content-Type', /json/)
+            .expect(401);
 
-    it.skip('', async () => {
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=timeline`)
+            .set('Authorization', loginAuthToken)
+            .send({
+            })
+            .expect(200);
+        expect(getUserResponse.body.uid).toEqual(knownUserUid);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
+        expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
 
+        expect(getUserResponse.body).toHaveProperty('history');
+        expect(Array.isArray(getUserResponse.body.history)).toEqual(true);
+        expect(getUserResponse.body.history.length).toBeGreaterThan(0);
+
+        // as this is a new registration, we expect to find created and login success/failed
+        // NOTE - registration is not yet creating "created" event!!!
+        // const userCreated = getUserResponse.body.history[getUserResponse.body.history.length-1];        // the very last (earlist record)
+        // expect(userCreated.username).toEqual(nonCQCSite.user.username);
+        // expect(userCreated.event).toEqual('created');
+        // expect(userCreated.when).toEqual(new Date().userCreated.whentoISOString());
+        // expect(userCreated.change).toBeNull();
+        // expect(userCreated.property).toBeNull();
+        const loginSuccess = getUserResponse.body.history.find(thisEvent => {
+            return thisEvent.event === 'loginSuccess';
+        });
+        // console.log("TEST DEBUG: login success event: ", loginSuccess);
+        expect(loginSuccess.username).toEqual(nonCQCSite.user.username);
+        expect(loginSuccess.change).toEqual({});
+        expect(loginSuccess.property).toEqual('password');
+        expect(loginSuccess.when).toEqual(new Date(loginSuccess.when).toISOString());
+        const loginFailed = getUserResponse.body.history.find(thisEvent => {
+            return thisEvent.event === 'loginFailed';
+        });
+        // console.log("TEST DEBUG: login failed event: ", loginFailed);
+        expect(loginFailed.username).toEqual(nonCQCSite.user.username);
+        expect(loginFailed.change).toEqual({});
+        expect(loginFailed.property).toEqual('password');
+        expect(loginFailed.when).toEqual(new Date(loginFailed.when).toISOString());
+
+        // in full history mode, there should be updated events
+        const allUpdatedEvents = getUserResponse.body.history.filter(thisEvent => {
+            return thisEvent.event == 'updated';
+        });
+        console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
+        expect(allUpdatedEvents.length).toEqual(6); // six properties to have been updated
+        allUpdatedEvents.forEach(thisEvent => {
+            expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.change).toBeNull();
+            expect(thisEvent.property).toBeNull();
+            expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
+        });
+
+        // in full history mode, there should be no changed or saved events
+        const allChangedEvents = getUserResponse.body.history.filter(thisEvent => {
+            return thisEvent.event == 'changed';
+        });
+        console.log("TEST DEBUG: Number of changed events: ", allChangedEvents.length);
+        expect(allChangedEvents.length).toEqual(0);
+        const allSavedEvents = getUserResponse.body.history.filter(thisEvent => {
+            return thisEvent.event == 'saved';
+        });
+        console.log("TEST DEBUG: Number of saved events: ", allSavedEvents.length);
+        expect(allSavedEvents.length).toEqual(0);
+    });
+
+    it("should report on response times", () => {
+        const properties = Object.keys(PropertiesResponses);
+        let consoleOutput = '';
+        properties.forEach(thisProperty => {
+            consoleOutput += `\x1b[0m\x1b[33m${thisProperty.padEnd(35, '.')}\x1b[37m\x1b[2m${PropertiesResponses[thisProperty]} ms\n`;
+        });
+        console.log(consoleOutput);
     });
 });
