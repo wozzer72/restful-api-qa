@@ -668,10 +668,99 @@ describe ("Change User Details", async () => {
                 "fullname" : randomFullname
             })
             .expect(400);
-    
     });
-    it.skip('should update job title property', async () => {
 
+    it('should update job title property', async () => {
+        const updatedJobTitleResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "jobTitle" : nonCQCSite.user.jobTitle + ' Updated'
+        })
+        .expect('Content-Type', /json/)
+        .expect(200);
+    expect(uuidV4Regex.test(updatedJobTitleResponse.body.uid)).toEqual(true);
+    expect(updatedJobTitleResponse.body.username).toEqual(nonCQCSite.user.username);
+    expect(updatedJobTitleResponse.body.created).toEqual(new Date(updatedJobTitleResponse.body.created).toISOString());
+    expect(updatedJobTitleResponse.body.updated).toEqual(new Date(updatedJobTitleResponse.body.updated).toISOString());
+    expect(updatedJobTitleResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+    expect(updatedJobTitleResponse.body.jobTitle).toEqual(nonCQCSite.user.jobTitle + ' Updated');
+
+    //validatePropertyChangeHistory
+    // and now check change history
+    await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "jobTitle" : nonCQCSite.user.jobTitle + ' Updated Again'
+        })
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+    let requestEpoch = new Date().getTime();
+    let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+        .set('Authorization', loginAuthToken)
+        .expect('Content-Type', /json/)
+        .expect(200);
+    expect(userChangeHistory.body.jobTitle).toHaveProperty('lastSaved');
+    expect(userChangeHistory.body.jobTitle.lastSaved).toEqual(userChangeHistory.body.jobTitle.lastChanged);
+    expect(userChangeHistory.body.jobTitle.lastSavedBy).toEqual(nonCQCSite.user.username);
+    expect(userChangeHistory.body.jobTitle.lastChangedBy).toEqual(nonCQCSite.user.username);
+    let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
+    expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+    // test change history for both the rate and the value
+    validatePropertyChangeHistory(
+        'jobTitle',
+        PropertiesResponses,
+        userChangeHistory.body.jobTitle,
+        nonCQCSite.user.jobTitle + ' Updated Again',
+        nonCQCSite.user.jobTitle + ' Updated',
+        nonCQCSite.user.username,
+        requestEpoch,
+        (ref, given) => {
+            return ref == given
+        });
+    let lastSavedDate = userChangeHistory.body.jobTitle.lastSaved;
+    
+    // now update the property but with same value - expect no change
+    await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "jobTitle" : nonCQCSite.user.jobTitle + ' Updated Again'
+        })
+        .expect('Content-Type', /json/)
+        .expect(200);
+    userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+        .set('Authorization', loginAuthToken)
+        .expect('Content-Type', /json/)
+        .expect(200);
+    expect(userChangeHistory.body.jobTitle.currentValue).toEqual(nonCQCSite.user.jobTitle + ' Updated Again');
+    expect(userChangeHistory.body.jobTitle.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+    expect(new Date(userChangeHistory.body.jobTitle.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+    // and now expect on failures on updates
+    // no authorization header
+    await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .send({
+            "jobTitle" : nonCQCSite.user.jobTitle
+        })
+        .expect(401);
+
+    // unexpected establishment id
+    await apiEndpoint.put(`/user/establishment/${establishmentId+1}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "jobTitle" : nonCQCSite.user.jobTitle
+        })
+        .expect(403);
+
+    // exceeds maximum length
+    const randomJobTitle = randomString(121);
+    await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        .set('Authorization', loginAuthToken)
+        .send({
+            "jobTitle" : randomJobTitle
+        })
+        .expect(400);
     });
     it.skip('should update email property', async () => {
 
