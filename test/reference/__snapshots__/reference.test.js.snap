@@ -1034,10 +1034,6 @@ Object {
       "nationality": "Brazilian",
     },
     Object {
-      "id": 28,
-      "nationality": "British",
-    },
-    Object {
       "id": 29,
       "nationality": "British Virgin Islander",
     },
@@ -1951,8 +1947,8 @@ Array [
 
 exports[`Expected reference services should fetch Primary Authority 1`] = `
 Object {
-  "id": 708,
-  "name": "Lambeth",
+  "id": 721,
+  "name": "Croydon",
 }
 `;
 
