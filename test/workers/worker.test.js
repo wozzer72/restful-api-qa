@@ -257,6 +257,9 @@ describe ("worker", async () => {
 
             expect(updatedWorkerResponse.body.uid).not.toBeNull();
             expect(updatedWorkerResponse.body.uid).toEqual(workerUid);
+            expect(updatedWorkerResponse.body.nameOrId).toEqual(updatedNameId);
+            expect(updatedWorkerResponse.body.contract).toEqual(updatedContract);
+            expect(updatedWorkerResponse.body.mainJob.jobId).toEqual(updatedJobId);
 
             let requestEpoch = new Date().getTime();
             let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
@@ -297,6 +300,34 @@ describe ("worker", async () => {
                 (ref, given) => {
                     return ref.jobId == given
                 });
+
+            // now update all properties but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.nameOrId.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "nameOrId" : updatedNameId,
+                    "contract" : updatedContract,
+                    "mainJob" : {
+                        "jobId" : updatedJobId
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.nameOrId.currentValue).toEqual(updatedNameId);
+            expect(workerChangeHistory.body.nameOrId.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.nameOrId.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            expect(workerChangeHistory.body.contract.currentValue).toEqual(updatedContract);
+            expect(workerChangeHistory.body.contract.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.contract.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            expect(workerChangeHistory.body.mainJob.currentValue.jobId).toEqual(updatedJobId);
+            expect(workerChangeHistory.body.mainJob.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.mainJob.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+        
 
             // successful updates of each property at a time
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -409,13 +440,15 @@ describe ("worker", async () => {
 
         it("should update a Worker's Approved Mental Health Worker property", async () => {
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "approvedMentalHealthWorker" : "Don't know"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.approvedMentalHealthWorker).toEqual('Don\'t know');
+
             let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -458,6 +491,24 @@ describe ("worker", async () => {
                     return ref == given
                 });
 
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.approvedMentalHealthWorker.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            .set('Authorization', establishment1Token)
+                .send({
+                    "approvedMentalHealthWorker" : "Yes"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.approvedMentalHealthWorker.currentValue).toEqual('Yes');
+            expect(workerChangeHistory.body.approvedMentalHealthWorker.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.approvedMentalHealthWorker.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+            // expected failures
             apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -476,14 +527,15 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Main Job Start Date property", async () => {
-            // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJobStartDate" : "2019-01-15"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.mainJobStartDate).toEqual("2019-01-15");
+
             const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -519,6 +571,24 @@ describe ("worker", async () => {
                     return ref == given
                 });
 
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.mainJobStartDate.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "mainJobStartDate" : "2019-01-14"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.mainJobStartDate.currentValue).toEqual('2019-01-14');
+            expect(workerChangeHistory.body.mainJobStartDate.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.mainJobStartDate.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+            // expected failures
             const tomorrow = new Date();
             tomorrow.setDate(new Date().getDate()+1);
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -538,13 +608,14 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's NI Number property", async () => {
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nationalInsuranceNumber" : "NY 21 26 12 A"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.nationalInsuranceNumber).toEqual("NY 21 26 12 A");
             const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -577,7 +648,24 @@ describe ("worker", async () => {
                 requestEpoch,
                 (ref, given) => {
                     return ref == given
-                });            
+                });
+
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.nationalInsuranceNumber.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            .set('Authorization', establishment1Token)
+                .send({
+                    "nationalInsuranceNumber" : "NY 21 26 12 B"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.nationalInsuranceNumber.currentValue).toEqual('NY 21 26 12 B');
+            expect(workerChangeHistory.body.nationalInsuranceNumber.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.nationalInsuranceNumber.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // "NI" is not a valid prefix for a NI Number.
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -598,14 +686,14 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's DOB property", async () => {
-            // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "dateOfBirth" : "1994-01-15"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.dateOfBirth).toEqual("1994-01-15");
             const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -641,6 +729,24 @@ describe ("worker", async () => {
                     return ref == given
                 });
 
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.dateOfBirth.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "dateOfBirth" : "1994-01-16"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.dateOfBirth.currentValue).toEqual('1994-01-16');
+            expect(workerChangeHistory.body.dateOfBirth.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.dateOfBirth.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            
+            // forced failures
             // 1994 is not a leap year, so there are only 28 days in Feb
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -663,13 +769,14 @@ describe ("worker", async () => {
 
         it("should update a Worker's postcode property", async () => {
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "postcode" : "SE13 7SN"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.postcode).toEqual("SE13 7SN");
             const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -705,6 +812,24 @@ describe ("worker", async () => {
                     return ref == given
                 });
 
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.postcode.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "postcode" : "SE13 7SS"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.postcode.currentValue).toEqual('SE13 7SS');
+            expect(workerChangeHistory.body.postcode.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.postcode.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            
+            // forced failures
             // 1994 is not a leap year, so there are only 28 days in Feb
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -717,13 +842,14 @@ describe ("worker", async () => {
 
         it("should update a Worker's gender", async () => {
             // NOTE - the gender options are case sensitive (know!); test all expected options
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "gender" : "Male"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.gender).toEqual("Male");
             let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -758,6 +884,24 @@ describe ("worker", async () => {
                     return ref == given
                 });
 
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.gender.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "gender" : "Female"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.gender.currentValue).toEqual('Female');
+            expect(workerChangeHistory.body.gender.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.gender.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+            // update using each expected value
             fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -788,6 +932,7 @@ describe ("worker", async () => {
                 .expect(200);
             expect(fetchedWorkerResponse.body.gender).toEqual("Don't know");
 
+            // forced failure
             // 1994 is not a leap year, so there are only 28 days in Feb
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
@@ -800,13 +945,14 @@ describe ("worker", async () => {
 
         it("should update a Worker's disability", async () => {
             // NOTE - the gender options are case sensitive (know!); test all expected options
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "disability" : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.disability).toEqual("Yes");
             let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -840,7 +986,24 @@ describe ("worker", async () => {
                 (ref, given) => {
                     return ref == given
                 });
-            
+
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.disability.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "disability" : "No"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.disability.currentValue).toEqual('No');
+            expect(workerChangeHistory.body.disability.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.disability.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
             fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -884,7 +1047,7 @@ describe ("worker", async () => {
         it("should update a Worker's ethnicity", async () => {
             const randomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     ethnicity : {
@@ -893,6 +1056,9 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.ethnicity.ethnicityId).toEqual(randomEthnicity.id);
+            expect(updatedWorkerResponse.body.ethnicity.ethnicity).toEqual(randomEthnicity.ethnicity);
+
             let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -931,6 +1097,25 @@ describe ("worker", async () => {
                 (ref, given) => {
                     return ref.ethnicityId == given
                 });
+
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.ethnicity.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    ethnicity : {
+                        ethnicityId: secondEthnicity
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.ethnicity.currentValue.ethnicityId).toEqual(secondEthnicity);
+            expect(workerChangeHistory.body.ethnicity.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.ethnicity.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // update ethnicity by name
             const secondRandomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
@@ -975,7 +1160,7 @@ describe ("worker", async () => {
         it("should update a Worker's nationality", async () => {
             const randomNationality = nationalityUtils.lookupRandomNationality(nationalities);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -987,6 +1172,9 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.nationality.other.nationalityId).toEqual(randomNationality.id);
+            expect(updatedWorkerResponse.body.nationality.other.nationality).toEqual(randomNationality.nationality);
+
             let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -1028,6 +1216,28 @@ describe ("worker", async () => {
                 (ref, given) => {
                     return ref.value === 'Other' && ref.other.nationalityId == given
                 });
+
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.nationality.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Other",
+                        other : {
+                            nationalityId : secondNationality
+                        }
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.nationality.currentValue.nationalityId).toEqual(secondNationality);
+            expect(workerChangeHistory.body.nationality.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.nationality.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // update nationaltity by given value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1111,7 +1321,7 @@ describe ("worker", async () => {
         it("should update a Worker's country of birth", async () => {
             const randomCountry = countryUtils.lookupRandomCountry(countries);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1123,6 +1333,9 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
+            expect(updatedWorkerResponse.body.countryOfBirth.other.countryId).toEqual(randomCountry.id);
+            expect(updatedWorkerResponse.body.countryOfBirth.other.country).toEqual(randomCountry.country);
+
             let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
@@ -1164,6 +1377,28 @@ describe ("worker", async () => {
                 (ref, given) => {
                     return ref.value === 'Other' && ref.other.countryId == given
                 });
+
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.countryOfBirth.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Other",
+                        other : {
+                            countryId : secondCountry
+                        }
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.countryOfBirth.currentValue.countryId).toEqual(secondCountry);
+            expect(workerChangeHistory.body.countryOfBirth.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.countryOfBirth.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // update country by given value
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1243,7 +1478,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
         });
-
+/*
         it("should update a Worker's recruited from", async () => {
             const randomOrigin = recruitedFromUtils.lookupRandomRecruitedFrom(recruitedOrigins);
 
@@ -3235,7 +3470,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.history[0].event).toEqual('updated');
             expect(fetchedWorkerResponse.body.history[1].event).toEqual('created');
         });
-
+*/
         it("Should report on response times", () => {
             const properties = Object.keys(PropertiesResponses);
             let consoleOutput = '';
