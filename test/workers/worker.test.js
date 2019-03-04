@@ -12,9 +12,6 @@ const supertest = require('supertest');
 const uuid = require('uuid');
 const baseEndpoint = require('../utils/baseUrl').baseurl;
 
-let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
-let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
-
 const apiEndpoint = supertest(baseEndpoint);
 
 // mocked real postcode/location data
@@ -37,64 +34,11 @@ const qualificationUtils = require('../utils/qualifications');
 const recruitedFromUtils = require('../utils/recruitedFrom');
 const jobUtils = require('../utils/jobs');
 
+// change history validation
+const validatePropertyChangeHistory = require('../utils/changeHistory').validatePropertyChangeHistory;
+let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
+let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 const PropertiesResponses = {};
-
-const validatePropertyChangeHistory = (name, property, currentValue, previousValue, username, requestEpoch, compareFunction) => {
-    /* eg.
-    { currentValue: [ { jobId: 7, title: 'Assessment Officer' } ],
-      lastSavedBy: 'Federico.Lebsack',
-      lastChangedBy: 'Federico.Lebsack',
-      lastSaved: '2019-01-31T07:57:09.645Z',
-      lastChanged: '2019-01-31T07:57:09.645Z',
-      changeHistory:
-       [ { username: 'Federico.Lebsack',
-           when: '2019-01-31T07:57:09.652Z',
-           event: 'changed',
-           change: [Object] },
-         { username: 'Federico.Lebsack',
-           when: '2019-01-31T07:57:09.652Z',
-           event: 'saved' },
-         { username: 'Federico.Lebsack',
-           when: '2019-01-31T07:57:09.557Z',
-           event: 'changed',
-           change: [Object] },
-         { username: 'Federico.Lebsack',
-           when: '2019-01-31T07:57:09.557Z',
-           event: 'saved' }
-       ]
-    }
-    */
-    expect(compareFunction(property.currentValue, currentValue)).toEqual(true);
-
-    // console.log("TEST DEBUG: Last Save time difference: ", Math.abs(new Date(property.lastSaved).getTime() - requestEpoch));
-    const lastChangedResponseTime = Math.abs(new Date(property.lastChanged).getTime() - requestEpoch);
-    PropertiesResponses[name] = lastChangedResponseTime;
-
-    expect(Math.abs(new Date(property.lastSaved).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
-    expect(Math.abs(new Date(property.lastChanged).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
-    expect(property.lastSavedBy).toEqual(username);
-    expect(property.lastChangedBy).toEqual(username);
-
-    const changeHistory = property.changeHistory;
-    expect(Array.isArray(changeHistory)).toEqual(true);
-    expect(changeHistory.length).toEqual(4);
-    expect(changeHistory[0].username).toEqual(username);
-    expect(changeHistory[1].username).toEqual(username);
-    expect(changeHistory[2].username).toEqual(username);
-    expect(changeHistory[3].username).toEqual(username);
-    expect(Math.abs(new Date(changeHistory[0].when).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
-    expect(Math.abs(new Date(changeHistory[1].when).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
-    expect(Math.abs(new Date(changeHistory[2].when).getTime() - requestEpoch)).toBeLessThan(MAX_TIME_TOLERANCE);
-    expect(Math.abs(new Date(changeHistory[3].when).getTime() - requestEpoch)).toBeLessThan(MAX_TIME_TOLERANCE);
-    expect(changeHistory[0].event).toEqual('changed');
-    expect(changeHistory[1].event).toEqual('saved');
-    expect(changeHistory[2].event).toEqual('changed');
-    expect(changeHistory[3].event).toEqual('saved');
-
-    // validate the change event before and after property values
-    expect(compareFunction(changeHistory[0].change.new, currentValue)).toEqual(true);
-    expect(compareFunction(changeHistory[0].change.current, previousValue)).toEqual(true);
-};
 
 describe ("worker", async () => {
     let nonCqcServices = null;
@@ -324,6 +268,7 @@ describe ("worker", async () => {
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
             validatePropertyChangeHistory('NameOrId',
+                                          PropertiesResponses,
                                           workerChangeHistory.body.nameOrId,
                                           updatedNameId,
                                           newWorker.nameOrId,
@@ -333,6 +278,7 @@ describe ("worker", async () => {
                                             return ref == given
                                           });
             validatePropertyChangeHistory('contract',
+                PropertiesResponses,
                 workerChangeHistory.body.contract,
                 updatedContract,
                 newWorker.contract,
@@ -342,6 +288,7 @@ describe ("worker", async () => {
                   return ref == given
                 });
             validatePropertyChangeHistory('mainJob',
+                PropertiesResponses,
                 workerChangeHistory.body.mainJob,
                 updatedJobId,
                 newWorker.mainJob.jobId,
@@ -501,6 +448,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'approvedMentalHealthWorker',
+                PropertiesResponses,
                 workerChangeHistory.body.approvedMentalHealthWorker,
                 "Yes",
                 "Don't know",
@@ -561,6 +509,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'mainJobStartDate',
+                PropertiesResponses,
                 workerChangeHistory.body.mainJobStartDate,
                 "2019-01-14",
                 "2019-01-15",
@@ -620,6 +569,7 @@ describe ("worker", async () => {
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
             validatePropertyChangeHistory('nationalInsuranceNumber',
+                PropertiesResponses,
                 workerChangeHistory.body.nationalInsuranceNumber,
                 "NY 21 26 12 B",
                 "NY 21 26 12 A",
@@ -681,6 +631,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'dateOfBirth',
+                PropertiesResponses,
                 workerChangeHistory.body.dateOfBirth,
                 "1994-01-16",
                 "1994-01-15",
@@ -744,6 +695,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'postcode',
+                PropertiesResponses,
                 workerChangeHistory.body.postcode,
                 "SE13 7SS",
                 "SE13 7SN",
@@ -796,6 +748,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'gender',
+                PropertiesResponses,
                 workerChangeHistory.body.gender,
                 "Female",
                 "Male",
@@ -878,6 +831,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'disability',
+                PropertiesResponses,
                 workerChangeHistory.body.disability,
                 "No",
                 "Yes",
@@ -968,6 +922,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'ethnicity',
+                PropertiesResponses,
                 workerChangeHistory.body.ethnicity,
                 secondEthnicity,
                 randomEthnicity.id,
@@ -1064,6 +1019,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'nationality',
+                PropertiesResponses,
                 workerChangeHistory.body.nationality,
                 secondNationality,
                 randomNationality.id,
@@ -1199,6 +1155,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'countryOfBirth',
+                PropertiesResponses,
                 workerChangeHistory.body.countryOfBirth,
                 secondCountry,
                 randomCountry.id,
@@ -1334,6 +1291,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'recruitedFrom',
+                PropertiesResponses,
                 workerChangeHistory.body.recruitedFrom,
                 secondOrigin,
                 randomOrigin.id,
@@ -1450,6 +1408,7 @@ describe ("worker", async () => {
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
             validatePropertyChangeHistory('britishCitizenship',
+                PropertiesResponses,
                 workerChangeHistory.body.britishCitizenship,
                 'No',
                 'Yes',
@@ -1529,6 +1488,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'yearArrived',
+                PropertiesResponses,
                 workerChangeHistory.body.yearArrived,
                 1919,
                 2019,
@@ -1634,6 +1594,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'socialCareStartDate',
+                PropertiesResponses,
                 workerChangeHistory.body.socialCareStartDate,
                 1919,
                 2019,
@@ -1748,6 +1709,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'otherJobs',
+                PropertiesResponses,
                 workerChangeHistory.body.otherJobs,
                 secondRandomJobId,
                 firstRandomJob.id,
@@ -1953,6 +1915,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'daysSick',
+                PropertiesResponses,
                 workerChangeHistory.body.daysSick,
                 12.0,
                 1.5,
@@ -2092,6 +2055,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'zeroHoursContract',
+                PropertiesResponses,
                 workerChangeHistory.body.zeroHoursContract,
                 'Yes',
                 'No',
@@ -2170,6 +2134,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'weeklyHoursAverage',
+                PropertiesResponses,
                 workerChangeHistory.body.weeklyHoursAverage,
                 'No',
                 'Yes',
@@ -2316,6 +2281,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'weeklyHoursContracted',
+                PropertiesResponses,
                 workerChangeHistory.body.weeklyHoursContracted,
                 'No',
                 'Yes',
@@ -2464,6 +2430,7 @@ describe ("worker", async () => {
             // test change history for both the rate and the value
             validatePropertyChangeHistory(
                 'annualHourlyPay',
+                PropertiesResponses,
                 workerChangeHistory.body.annualHourlyPay,
                 25677,
                 50.00,
@@ -2474,6 +2441,7 @@ describe ("worker", async () => {
                 });
             validatePropertyChangeHistory(
                 'annualHourlyPay',
+                PropertiesResponses,
                 workerChangeHistory.body.annualHourlyPay,
                 'Annually',
                 'Hourly',
@@ -2690,6 +2658,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'careCertificate',
+                PropertiesResponses,
                 workerChangeHistory.body.careCertificate,
                 'Yes, completed',
                 'Yes, in progress or partially completed',
@@ -2761,6 +2730,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'apprenticeshipTraining',
+                PropertiesResponses,
                 workerChangeHistory.body.apprenticeshipTraining,
                 'Yes',
                 'Don\'t know',
@@ -2833,6 +2803,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'qualificationInSocialCare',
+                PropertiesResponses,
                 workerChangeHistory.body.qualificationInSocialCare,
                 'Yes',
                 'Don\'t know',
@@ -2908,6 +2879,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'socialCareQualification',
+                PropertiesResponses,
                 workerChangeHistory.body.socialCareQualification,
                 secondQualification,
                 randomQualification.id,
@@ -2995,6 +2967,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'otherQualification',
+                PropertiesResponses,
                 workerChangeHistory.body.otherQualification,
                 'Yes',
                 'Don\'t know',
@@ -3069,6 +3042,7 @@ describe ("worker", async () => {
 
             validatePropertyChangeHistory(
                 'highestQualification',
+                PropertiesResponses,
                 workerChangeHistory.body.highestQualification,
                 secondQualification,
                 randomQualification.id,
