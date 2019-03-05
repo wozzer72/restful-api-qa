@@ -162,6 +162,22 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.employerType).toEqual('Other');
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .send({
+                    employerType : "Local Authority (generic/other)"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.employerType).toEqual('Local Authority (generic/other)');
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .send({
+                    employerType : "Local Authority (adult services)"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.employerType).toEqual('Local Authority (adult services)');
 
             // now test for an unexpected employer type
             apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
