@@ -1258,7 +1258,16 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    nationality : {
+                        value : "Other"     // even though value is other, "other" is optional
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
             // update nationaltity by name
             const secondRandomNationality = nationalityUtils.lookupRandomNationality(nationalities);
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -1415,6 +1424,15 @@ describe ("worker", async () => {
                 .send({
                     countryOfBirth : {
                         value : "Don't know"
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    countryOfBirth : {
+                        value : "Other"     // even though value is other, "other" is optional
                     }
                 })
                 .expect('Content-Type', /json/)
