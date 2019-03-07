@@ -3661,6 +3661,99 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
+        it("should update a Worker's Completed status", async () => {
+            let updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    completed : true
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updatedWorkerResponse.body.completed).toEqual(true);
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.completed).toEqual(true);
+
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    completed : "false"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(fetchedWorkerResponse.body.completed).toEqual(false);
+
+            // now test change history
+            let requestEpoch = new Date().getTime();
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            let updatedEpoch = new Date(workerChangeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            validatePropertyChangeHistory(
+                'completed',
+                PropertiesResponses,
+                workerChangeHistory.body.completed,
+                false,    // the property value in history is a string
+                true,     // the property value in history is a string
+                establishment1Username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
+
+            // now update the property but with same value - expect no change
+            let lastSavedDate = workerChangeHistory.body.completed.lastSaved;
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    completed : false
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+                .set('Authorization', establishment1Token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(workerChangeHistory.body.completed.currentValue).toEqual(false);
+            expect(workerChangeHistory.body.completed.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(workerChangeHistory.body.completed.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
+    
+            // with expected value
+            updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    completed : "true"
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updatedWorkerResponse.body.completed).toEqual(true);
+            updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    completed : false
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updatedWorkerResponse.body.completed).toEqual(false);
+            
+            // unexpected given value
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    completed : "tRue"      // case sensitive
+                })
+                .expect('Content-Type', /html/)
+                .expect(400);
+        });
 
         let allWorkers = null;
         let secondWorkerInput = null;
