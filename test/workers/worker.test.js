@@ -235,7 +235,7 @@ describe ("worker", async () => {
             const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
             expect(uuidRegex.test(workerUid.toUpperCase())).toEqual(true);            
         });
-/*
+
         it("should update a Worker's mandatory properties", async () => {
             expect(establishment1).not.toBeNull();
             expect(workerUid).not.toBeNull();
@@ -3804,7 +3804,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.history[0].event).toEqual('updated');
             expect(fetchedWorkerResponse.body.history[1].event).toEqual('created');
         });
-*/
+
         it("should have delete worker", async () => {
             expect(establishment1).not.toBeNull();
             expect(Number.isInteger(establishmentId)).toEqual(true);
@@ -3818,7 +3818,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(Array.isArray(allWorkersResponse.body.workers)).toEqual(true);
-            expect(allWorkersResponse.body.workers.length).toEqual(1);
+            expect(allWorkersResponse.body.workers.length).toEqual(4);
 
             // now add another worker
             const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
@@ -3832,7 +3832,7 @@ describe ("worker", async () => {
                 .send()
                 .expect('Content-Type', /json/)
                 .expect(200);
-            expect(allWorkersResponse.body.workers.length).toEqual(2);
+            expect(allWorkersResponse.body.workers.length).toEqual(5);
 
 
             // now delete the first worker
@@ -3847,8 +3847,7 @@ describe ("worker", async () => {
                 .send()
                 .expect('Content-Type', /json/)
                 .expect(200);
-            expect(allWorkersResponse.body.workers.length).toEqual(1);
-            expect(allWorkersResponse.body.workers[0].uid).toEqual(newWorkerUuid);
+            expect(allWorkersResponse.body.workers.length).toEqual(4);
 
             // now try to get, update and delete again the original Worker expecting failure
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
@@ -3865,7 +3864,6 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .send()
                 .expect(404);
-
         });
 
         it("Should report on response times", () => {
