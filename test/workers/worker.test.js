@@ -1343,7 +1343,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.countryOfBirth.other.countryId).toEqual(randomCountry.id);
             expect(fetchedWorkerResponse.body.countryOfBirth.other.country).toEqual(randomCountry.country);
 
-            const secondCountry = randomCountry.id == 99 ? 100 : 99;
+            const secondCountry = randomCountry.id == 99 ? 33 : 32;
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
