@@ -2332,54 +2332,6 @@ Object {
       "id": 94,
     },
     Object {
-      "country": "Gibraltar",
-      "id": 95,
-    },
-    Object {
-      "country": "Greece",
-      "id": 96,
-    },
-    Object {
-      "country": "Greenland",
-      "id": 97,
-    },
-    Object {
-      "country": "Grenada",
-      "id": 98,
-    },
-    Object {
-      "country": "Guadeloupe",
-      "id": 99,
-    },
-    Object {
-      "country": "Guam",
-      "id": 100,
-    },
-    Object {
-      "country": "Guatemala",
-      "id": 101,
-    },
-    Object {
-      "country": "Guernsey",
-      "id": 102,
-    },
-    Object {
-      "country": "Guinea",
-      "id": 103,
-    },
-    Object {
-      "country": "Guinea-Bissau",
-      "id": 104,
-    },
-    Object {
-      "country": "Guyana",
-      "id": 105,
-    },
-    Object {
-      "country": "Haiti",
-      "id": 106,
-    },
-    Object {
       "country": "Heard Island and McDonald Islands",
       "id": 107,
     },
@@ -2976,7 +2928,7 @@ Object {
       "id": 256,
     },
     Object {
-      "country": "Zimbabwe ",
+      "country": "Zimbabwe",
       "id": 257,
     },
   ],

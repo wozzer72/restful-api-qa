@@ -377,54 +377,6 @@ exports.data = [
         "country": "Haiti"
     },
     {
-        "id": 95,
-        "country": "Gibraltar"
-    },
-    {
-        "id": 96,
-        "country": "Greece"
-    },
-    {
-        "id": 97,
-        "country": "Greenland"
-    },
-    {
-        "id": 98,
-        "country": "Grenada"
-    },
-    {
-        "id": 99,
-        "country": "Guadeloupe"
-    },
-    {
-        "id": 100,
-        "country": "Guam"
-    },
-    {
-        "id": 101,
-        "country": "Guatemala"
-    },
-    {
-        "id": 102,
-        "country": "Guernsey"
-    },
-    {
-        "id": 103,
-        "country": "Guinea"
-    },
-    {
-        "id": 104,
-        "country": "Guinea-Bissau"
-    },
-    {
-        "id": 105,
-        "country": "Guyana"
-    },
-    {
-        "id": 106,
-        "country": "Haiti"
-    },
-    {
         "id": 107,
         "country": "Heard Island and McDonald Islands"
     },
@@ -1022,6 +974,6 @@ exports.data = [
     },
     {
         "id": 257,
-        "country": "Zimbabwe "
+        "country": "Zimbabwe"
     }
 ];

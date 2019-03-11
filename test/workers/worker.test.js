@@ -1352,7 +1352,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.countryOfBirth.other.countryId).toEqual(randomCountry.id);
             expect(fetchedWorkerResponse.body.countryOfBirth.other.country).toEqual(randomCountry.country);
 
-            const secondCountry = randomCountry.id == 99 ? 100 : 99;
+            const secondCountry = randomCountry.id == 99 ? 33 : 32;
             await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
@@ -3914,6 +3914,67 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.history.length).toEqual(2);
             expect(fetchedWorkerResponse.body.history[0].event).toEqual('updated');
             expect(fetchedWorkerResponse.body.history[1].event).toEqual('created');
+        });
+
+        it("should have delete worker", async () => {
+            expect(establishment1).not.toBeNull();
+            expect(Number.isInteger(establishmentId)).toEqual(true);
+            expect(establishment1Token).not.toBeNull();
+            expect(workerUid).not.toBeNull();
+
+            // first get a list of all Workers for the given establishment
+            let allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send()
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(Array.isArray(allWorkersResponse.body.workers)).toEqual(true);
+            expect(allWorkersResponse.body.workers.length).toEqual(4);
+
+            // now add another worker
+            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(workerUtils.newWorker(jobs))
+                .expect('Content-Type', /json/)
+                .expect(201);
+            const newWorkerUuid = newWorkerResponse.body.uid;
+            allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send()
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(allWorkersResponse.body.workers.length).toEqual(5);
+
+
+            // now delete the first worker
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send()
+                .expect(204);
+
+            // check there is now only one worker
+            allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send()
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(allWorkersResponse.body.workers.length).toEqual(4);
+
+            // now try to get, update and delete again the original Worker expecting failure
+            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    "completed" : true
+                })
+                .expect(404);
+            await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send()
+                .expect(404);
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send()
+                .expect(404);
         });
 
         it("Should report on response times", () => {
