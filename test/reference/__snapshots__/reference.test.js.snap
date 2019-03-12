@@ -3270,6 +3270,16 @@ Array [
     "serviceId": 23,
   },
   Object {
+    "category": "Adult residential",
+    "name": "Care home services with nursing",
+    "serviceId": 24,
+  },
+  Object {
+    "category": "Adult residential",
+    "name": "Care home services without nursing",
+    "serviceId": 25,
+  },
+  Object {
     "category": "Healthcare",
     "name": "Community based services for people who misuse substances",
     "serviceId": 26,
@@ -3318,16 +3328,6 @@ Array [
     "category": "Other",
     "name": "Specialist college services",
     "serviceId": 36,
-  },
-  Object {
-    "category": "Adult residential",
-    "name": "Care home services with nursing",
-    "serviceId": 24,
-  },
-  Object {
-    "category": "Adult residential",
-    "name": "Care home services without nursing",
-    "serviceId": 25,
   },
 ]
 `;
