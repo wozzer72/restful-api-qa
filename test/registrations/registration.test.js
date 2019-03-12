@@ -137,7 +137,7 @@ describe ("Registrations", async () => {
         expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);    
     });
 
-    it("should fail on CQC is site with location id, postcode and name already existing", async () => {
+    it("should fail on CQC if site with location id, postcode and name already existing", async () => {
         const registeredEstablishment = await apiEndpoint.post('/registration')
             .send([cqcSite])
             .expect('Content-Type', /json/)
@@ -145,6 +145,7 @@ describe ("Registrations", async () => {
         expect(registeredEstablishment.body.status).toEqual(-150);
         expect(registeredEstablishment.body.message).toEqual('Duplicate CQC Establishment');
     });
+
     it("should fail on non-CQC site with postcode and name already existing", async () => {
         const registeredEstablishment = await apiEndpoint.post('/registration')
             .send([nonCQCSite])
