@@ -416,6 +416,10 @@ describe ("Change User Details", async () => {
         expect(allUsersResponse.body.users[0]).toHaveProperty('uid');
         expect(allUsersResponse.body.users[0]).toHaveProperty('fullname');
         expect(allUsersResponse.body.users[0]).toHaveProperty('email');
+        expect(allUsersResponse.body.users[0]).toHaveProperty('role');
+        expect(['Edit', 'Read'].includes(allUsersResponse.body.users[0].role)).toEqual(true);
+        expect(allUsersResponse.body.users[0]).toHaveProperty('lastLoggedIn');
+        expect(new Date(allUsersResponse.body.users[0].lastLoggedIn).toISOString()).toEqual(allUsersResponse.body.users[0].lastLoggedIn);
         expect(allUsersResponse.body.users[0]).toHaveProperty('username');
         expect(allUsersResponse.body.users[0]).toHaveProperty('created');
         expect(allUsersResponse.body.users[0]).toHaveProperty('updated');
