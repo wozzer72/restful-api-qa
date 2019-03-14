@@ -1463,6 +1463,55 @@ describe ("Change User Details", async () => {
 
     });
 
+    it.skip('should edit a pending add user registration, including sending of email', async () => {
+        // first using primary user, register a new user
+        // extract the tracking UUID and the user UUID
+
+        // get a list of all establishment users - confirm the new (registered) user is listed (using the retained User UID)
+        // expect on null username
+
+        // validate the new tracking UUID - expect on the email address
+
+        // now, using the retained user UUID, edit the user (change the email address)
+        // expect on tracking UUID - must differ to the above (because when editing a partly added user, a new tracking record will be created)
+
+        // repeat the get of all establishment users - confirm the update user by expecting on the email address
+
+        // validate the new tracking UUID - expect on the new email address
+
+        // complete on the add user
+
+        // repeat the above, only this time, changing the user's role - expect on the role on completion (full registration) of the new user
+
+        // expect on error
+        // 1. set the TTL in the update to -10 - expect failure (403 - timeout) on validating the tracking UUID
+    });
+
+    it.skip('should edit an existing user but not role', async () => {
+        // a user's role is set when a user is created but a user cannot change their own role
+
+        // the PUT is graceful, in that it simply removes the role if is not allowed
+
+        // first:
+        // login is a read only and then an edit user
+
+        // in both cases update name/email - expect on response to show success
+
+        // in both cases, update on role - expect on response to show no succes
+
+        
+        // now login as read only user
+        //  and expect to fail (HTTP 403 - unauthorised) when trying to update another user
+
+        // now login as edit only user
+        //  and expect to success - when trying to update another user
+        //  expect on response to confirm successfully updating on name, job title, email address, phone and significantly role
+        //  expect on response to NOT confirm successfully updating on security question and answer
+
+        // but the role is a User property
+    });
+    
+
     it("should report on response times", () => {
         const properties = Object.keys(PropertiesResponses);
         let consoleOutput = '';
