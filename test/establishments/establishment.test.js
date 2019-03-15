@@ -19,6 +19,8 @@ const locations = require('../mockdata/locations').data;
 const postcodes = require('../mockdata/postcodes').data;
 
 const Random = require('../utils/random');
+const uuidV4Regex = /^[A-F\d]{8}-[A-F\d]{4}-4[A-F\d]{3}-[89AB][A-F\d]{3}-[A-F\d]{12}$/i;
+const nmdsIdRegex = /^[A-Z]1[\d]{6}$/i;  // G1001163
 
 const registrationUtils = require('../utils/registration');
 const laUtils = require('../utils/localAuthorities');
@@ -52,6 +54,7 @@ describe ("establishment", async () => {
     describe("Non CQC Establishment", async ( )=> {
         let site = null;
         let establishmentId = null;
+        let establishmentUid = null;
         let primaryLocalAuthorityCustodianCode = null;
         let loginSuccess = null;
         let authToken = null;
@@ -73,7 +76,10 @@ describe ("establishment", async () => {
 
             expect(nonCqcEstablishment.body.status).toEqual(1);
             expect(Number.isInteger(nonCqcEstablishment.body.establishmentId)).toEqual(true);
+            expect(uuidV4Regex.test(nonCqcEstablishment.body.establishmentUid)).toEqual(true);
+            expect(nonCqcEstablishment.body.primaryUser).toEqual(site.user.username);
             establishmentId = nonCqcEstablishment.body.establishmentId;
+            establishmentUid = nonCqcEstablishment.body.establishmentUid;
         });
 
         it("should login using the given username", async () => {
@@ -88,10 +94,10 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            const nmdsIdregex = /[A-Z][0-9]{7}/;
             expect(loginResponse.body.establishment.id).toEqual(establishmentId);
+            expect(loginResponse.body.establishment.uid).toEqual(establishmentUid);
             expect(loginResponse.body.establishment.isRegulated).toEqual(false);
-            expect(nmdsIdregex.test(loginResponse.body.establishment.nmdsId)).toEqual(true);
+            expect(nmdsIdRegex.test(loginResponse.body.establishment.nmdsId)).toEqual(true);
             expect(loginResponse.body.isFirstLogin).toEqual(true);
             expect(Number.isInteger(loginResponse.body.mainService.id)).toEqual(true);
 
@@ -868,15 +874,21 @@ describe ("establishment", async () => {
         it("should get the Establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
-            const nmdsIdregex = /[A-Z][0-9]{7}/;
 
             const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
+
+            // create/update tracking
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
             expect(firstResponse.body.name).toEqual(site.locationName);
-            expect(nmdsIdregex.test(firstResponse.body.nmdsId)).toEqual(true);
+            expect(nmdsIdRegex.test(firstResponse.body.nmdsId)).toEqual(true);
             expect(firstResponse.body.postcode).toEqual(site.postalCode);
             expect(firstResponse.body.numberOfStaff).not.toBeNull();
             expect(firstResponse.body.numberOfStaff).toBeGreaterThan(0);
