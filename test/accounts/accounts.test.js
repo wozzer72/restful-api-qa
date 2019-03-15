@@ -27,7 +27,7 @@ let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
 let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 const PropertiesResponses = {};
 
-describe("Password Restes", async () => {
+describe("Password Resets", async () => {
     let nonCqcServices = null;
     beforeAll(async () => {
         const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
@@ -246,7 +246,7 @@ describe("Password Restes", async () => {
         await apiEndpoint.post('/user/resetPassword')
             .set('Authorization', successfullToken)
             .send({
-                password: 'NewPassword00'
+                password: 'M*y$0s\'p"c!Pa%'
             })
             .expect(200);
 
@@ -270,7 +270,7 @@ describe("Password Restes", async () => {
         const successfulLoginResponse = await apiEndpoint.post('/login')
             .send({
                 username: nonCQCSite.user.username,
-                password: 'NewPassword00'
+                password: 'M*y$0s\'p"c!Pa%'
             })
             .expect('Content-Type', /json/)
             .expect(200);
@@ -353,8 +353,8 @@ describe("Password Restes", async () => {
         await apiEndpoint.post('/user/changePassword')
             .set('Authorization', successfulLoginToken)
             .send({
-                currentPassword: "NewPassword00",
-                newPassword: "Password00"
+                currentPassword: "M*y$0s'p\"c!Pa%",
+                newPassword: "9+7*~Ab\{7;"
             })
             .expect('Content-Type', /html/)
             .expect(200);
@@ -363,7 +363,7 @@ describe("Password Restes", async () => {
         await apiEndpoint.post('/login')
             .send({
                 username: nonCQCSite.user.username,
-                password: 'NewPassword00'
+                password: 'M*y$0s\'p"c!Pa%'
             })
             .expect('Content-Type', /json/)
             .expect(401);
@@ -372,7 +372,7 @@ describe("Password Restes", async () => {
         await apiEndpoint.post('/login')
             .send({
                 username: nonCQCSite.user.username,
-                password: 'Password00'
+                password: '9+7*~Ab\{7;'
             })
             .expect('Content-Type', /json/)
             .expect(200);
