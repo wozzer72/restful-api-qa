@@ -50,6 +50,18 @@ describe("Password Restes", async () => {
         expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);
     });
 
+    it("should login to the registered site and primary user should have edit role", async() => {
+        const loginResponse = await apiEndpoint.post('/login')
+            .send({
+                username: nonCQCSite.user.username,
+                password: nonCQCSite.user.password
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(loginResponse.body.role).toEqual('Edit');
+    
+    });
+
     it("should lookup a known username via usernameOrPasswword with success", async () => {
         const knownUsername = nonCQCSite.user.username;
         await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(knownUsername))
@@ -243,7 +255,7 @@ describe("Password Restes", async () => {
             .send({
                 uuid: successfulUuid
             })
-            .expect(401);
+            .expect(403);
 
         // login using the old password should fail
         await apiEndpoint.post('/login')
@@ -416,6 +428,10 @@ describe ("Change User Details", async () => {
         expect(allUsersResponse.body.users[0]).toHaveProperty('uid');
         expect(allUsersResponse.body.users[0]).toHaveProperty('fullname');
         expect(allUsersResponse.body.users[0]).toHaveProperty('email');
+        expect(allUsersResponse.body.users[0]).toHaveProperty('role');
+        expect(['Edit', 'Read'].includes(allUsersResponse.body.users[0].role)).toEqual(true);
+        expect(allUsersResponse.body.users[0]).toHaveProperty('lastLoggedIn');
+        expect(new Date(allUsersResponse.body.users[0].lastLoggedIn).toISOString()).toEqual(allUsersResponse.body.users[0].lastLoggedIn);
         expect(allUsersResponse.body.users[0]).toHaveProperty('username');
         expect(allUsersResponse.body.users[0]).toHaveProperty('created');
         expect(allUsersResponse.body.users[0]).toHaveProperty('updated');
@@ -677,7 +693,7 @@ describe ("Change User Details", async () => {
             })
             .expect(400);
     });
-
+ 
     it('should update job title property', async () => {
         const updatedJobTitleResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
@@ -1363,6 +1379,138 @@ describe ("Change User Details", async () => {
         });
         expect(allSavedEvents.length).toEqual(0);
     });
+ 
+    it.skip('should register (part add) new user against existing establishment', async () => {
+        // first login with a user account having "Edit" role to get the Authorization header and establishment id
+
+        // then register new user with endpoint http://localhost:3000/api/user/add/establishment/:eid
+        // expect on each of the mandatory properties
+        // expect on username being present but it must be null
+        // expect on the trackingUUID
+
+        // extract the trackingUUID
+
+        // expect on errors
+        // 1. All mandatory properties - HTTP 400
+        // 2. Validation on role - Edit/Read - HTTP 400
+        // 3. HTTP 401 - missing Authorization header
+        // 4. Incorrect Authorization header (use a password reset header) - HTTP 403
+        // 5. Establishment ID in URL not equal to establishment ID in token - HTTP 403
+        // 6. HTTP 403 is login has role not equal to "Edit"
+    });
+
+    it.skip('should validate (part add) new user against existing establishment', async () => {
+        // expect upon the  extracted trackingUUID from previous test
+
+        // call upon http://localhost:3000/api/user/validateAddUser using the extracted trackingUUID
+        // expect on the original mandatory properties in the response (all except role)
+
+        // extract the JWT from Authorization header
+
+        // expect on errors
+        // 1. Using an unknown uuid (uuid.v4()) - HTTP 403
+        // 2. Using an already used uuid - HTTP 403
+        // 3. Using an expired uuid - HTTP 403 (need to register a new user with a minus TTL)
+        // 4. tracking UUID is given - HTTP 400
+        // 5. tracking UUID is a V4 UUID - HTTP 400
+
+    });
+
+    it.skip('should add new user (having been part registered) against existing establishment', async () => {
+        // expect upon the  extracted JWT from previous test
+
+        // call upon http://localhost:3000/api/user/add using the extracted JWT
+        // expect on the original mandatory properties in the response (all except role)
+        // expect on additional required properties of username and password, security question and security question answer
+        // expect on all properties being returned and equal to their input - includes username
+
+        // now also get a list of establishment users
+        //   expect that the new user is listed - with username now
+        //   expect that there is on one such user registered (use full name) - thus demonstrating the original "User" record has been deleted
+
+        // expect on errors:
+        // 1. mising authorization - HTTP 401
+        // 2. invlaid JWT - HTTP 401
+        // 3. Mising Mandatory properties
+        // 4. Role property not allowed!
+        // 5. Invalid username - more than 50 chars
+        // 6. Inavlid password - password complexity
+        // 7. Duplicate username - is covered in next test case
+
+        // and now having completed upon the registration, expect failure (403) on trying reuse (revalidate) the add user UUID
+        
+    });
+
+    it.skip('should safely rollback new user on duplicate username', async () => {
+        // duplicate username (which will incur a rollback)
+        // first register another new user, and validate that new user request and then try to add with duplicate username
+        
+        // immediately following the failure, validate the add user UUID - should still pass (because it's not completed)
+
+        // immediately following the failure, 
+
+    });
+
+    it.skip('should add read only user and not be able to add new users', async () => {
+        // first login with primary user (having Edit)
+
+        // add new read only user
+
+        // now login with read only user
+        //  expect the role to be read
+
+        // now expect adding (registering) a new user fails
+
+    });
+
+    it.skip('should edit a pending add user registration, including sending of email', async () => {
+        // first using primary user, register a new user
+        // extract the tracking UUID and the user UUID
+
+        // get a list of all establishment users - confirm the new (registered) user is listed (using the retained User UID)
+        // expect on null username
+
+        // validate the new tracking UUID - expect on the email address
+
+        // now, using the retained user UUID, edit the user (change the email address)
+        // expect on tracking UUID - must differ to the above (because when editing a partly added user, a new tracking record will be created)
+
+        // repeat the get of all establishment users - confirm the update user by expecting on the email address
+
+        // validate the new tracking UUID - expect on the new email address
+
+        // complete on the add user
+
+        // repeat the above, only this time, changing the user's role - expect on the role on completion (full registration) of the new user
+
+        // expect on error
+        // 1. set the TTL in the update to -10 - expect failure (403 - timeout) on validating the tracking UUID
+    });
+
+    it.skip('should edit an existing user but not role', async () => {
+        // a user's role is set when a user is created but a user cannot change their own role
+
+        // the PUT is graceful, in that it simply removes the role if is not allowed
+
+        // first:
+        // login is a read only and then an edit user
+
+        // in both cases update name/email - expect on response to show success
+
+        // in both cases, update on role - expect on response to show no succes
+
+        
+        // now login as read only user
+        //  and expect to fail (HTTP 403 - unauthorised) when trying to update another user
+
+        // now login as edit only user
+        //  and expect to success - when trying to update another user
+        //  expect on response to confirm successfully updating on name, job title, email address, phone and significantly role
+        //  expect on response to NOT confirm successfully updating on security question and answer
+
+        // but the role is a User property
+    });
+    
 
     it("should report on response times", () => {
         const properties = Object.keys(PropertiesResponses);
