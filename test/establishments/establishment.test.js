@@ -25,6 +25,12 @@ const nmdsIdRegex = /^[A-Z]1[\d]{6}$/i;  // G1001163
 const registrationUtils = require('../utils/registration');
 const laUtils = require('../utils/localAuthorities');
 
+// change history validation
+const validatePropertyChangeHistory = require('../utils/changeHistory').validatePropertyChangeHistory;
+let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
+let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
+const PropertiesResponses = {};
+
 describe ("establishment", async () => {
     let cqcServices = null;
     let nonCqcServices = null;
@@ -890,6 +896,12 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(nmdsIdRegex.test(firstResponse.body.nmdsId)).toEqual(true);
             expect(firstResponse.body.postcode).toEqual(site.postalCode);
+            expect(firstResponse.body.isRegulated).toEqual(false);
+            expect(firstResponse.body.address).not.toBeNull();
+            expect(firstResponse.body.mainService).not.toBeNull();
+            expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
+            expect(firstResponse.body.mainService.name).not.toBeNull();
+
             expect(firstResponse.body.numberOfStaff).not.toBeNull();
             expect(firstResponse.body.numberOfStaff).toBeGreaterThan(0);
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
@@ -910,6 +922,92 @@ describe ("establishment", async () => {
                 const foundCapacity = firstResponse.body.capacities.find(thisCapacity => thisCapacity.questionId === thisExpectedCapacity.questionId);
                 expect(foundCapacity !== null).toEqual(true);
             });
+        });
+
+        it.skip('should get establishment with property history', async () => {
+        });
+
+        it('should get user with timeline history', async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}?history=timeline`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+
+            // create/update tracking
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
+            expect(firstResponse.body).toHaveProperty('history');
+            expect(Array.isArray(firstResponse.body.history)).toEqual(true);
+            expect(firstResponse.body.history.length).toBeGreaterThan(0);
+
+            // all updated events should have no propery or change
+            const createdEvents = firstResponse.body.history.filter(thisEvent => {
+                return thisEvent.event == 'created';
+            });
+            //console.log("TEST DEBUG: Created event: ", createdEvents[0].change);
+            expect(createdEvents.length).toEqual(1);
+            expect(createdEvents[0].username).toEqual(site.user.username);
+            expect(createdEvents[0].change).toBeNull();
+            expect(createdEvents[0].property).toBeNull();
+            expect(createdEvents[0].when).toEqual(new Date(createdEvents[0].when).toISOString());
+        });
+
+        it('should get user with full history', async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(nmdsIdRegex.test(firstResponse.body.nmdsId)).toEqual(true);
+            expect(firstResponse.body.postcode).toEqual(site.postalCode);
+            expect(firstResponse.body.isRegulated).toEqual(false);
+            expect(firstResponse.body.address).not.toBeNull();
+            expect(firstResponse.body.mainService).not.toBeNull();
+            expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
+            expect(firstResponse.body.mainService.name).not.toBeNull();
+
+
+            // create/update tracking
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
+            expect(firstResponse.body).toHaveProperty('history');
+            expect(Array.isArray(firstResponse.body.history)).toEqual(true);
+            expect(firstResponse.body.history.length).toBeGreaterThan(0);
+
+            // all updated events should have no propery or change
+            const createdEvents = firstResponse.body.history.filter(thisEvent => {
+                return thisEvent.event == 'created';
+            });
+            //console.log("TEST DEBUG: Created event: ", createdEvents[0]);
+            expect(createdEvents.length).toEqual(1);
+            expect(createdEvents[0].username).toEqual(site.user.username);
+            expect(createdEvents[0]).not.toHaveProperty('change');
+            expect(createdEvents[0]).not.toHaveProperty('property');
+            expect(createdEvents[0].when).toEqual(new Date(createdEvents[0].when).toISOString());
+        });
+
+        it("should report on response times", () => {
+            const properties = Object.keys(PropertiesResponses);
+            let consoleOutput = '';
+            properties.forEach(thisProperty => {
+                consoleOutput += `\x1b[0m\x1b[33m${thisProperty.padEnd(35, '.')}\x1b[37m\x1b[2m${PropertiesResponses[thisProperty]} ms\n`;
+            });
+            console.log(consoleOutput);
         });
     });
 
