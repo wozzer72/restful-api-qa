@@ -142,8 +142,8 @@ describe ("Registrations", async () => {
             .send([cqcSite])
             .expect('Content-Type', /json/)
             .expect(400);
-        expect(registeredEstablishment.body.status).toEqual(-150);
-        expect(registeredEstablishment.body.message).toEqual('Duplicate CQC Establishment');
+        expect(registeredEstablishment.body.status).toEqual(-190);
+        expect(registeredEstablishment.body.message).toEqual('Duplicate Establishment');
     });
 
     it("should fail on non-CQC site with postcode and name already existing", async () => {
@@ -151,8 +151,8 @@ describe ("Registrations", async () => {
             .send([nonCQCSite])
             .expect('Content-Type', /json/)
             .expect(400);
-        expect(registeredEstablishment.body.status).toEqual(-100);
-        expect(registeredEstablishment.body.message).toEqual('Duplicate non-CQC Establishment');
+        expect(registeredEstablishment.body.status).toEqual(-190);
+        expect(registeredEstablishment.body.message).toEqual('Duplicate Establishment');
     });
 
     it("should fail if username is already existing", async () => {
