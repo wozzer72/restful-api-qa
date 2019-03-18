@@ -136,8 +136,9 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(firstResponse.body.name).toEqual(site.locationName);
-            expect(firstResponse.body.employerType).toBeNull();
+            expect(firstResponse.body).not.toHaveProperty('employerType');
 
             let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
                 .set('Authorization', authToken)
@@ -158,14 +159,59 @@ describe ("establishment", async () => {
             expect(secondResponse.body.name).toEqual(site.locationName);
             expect(secondResponse.body.employerType).toEqual('Private Sector');
 
-            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+            // and now check change history
+            await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
                 .set('Authorization', authToken)
                 .send({
-                    employerType : "Voluntary / Charity"
+                    employerType : 'Voluntary / Charity'
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            expect(updateResponse.body.employerType).toEqual('Voluntary / Charity');
+
+            let requestEpoch = new Date().getTime();
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/employerType?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.employerType).toHaveProperty('lastSaved');
+            expect(changeHistory.body.employerType.currentValue).toEqual('Voluntary / Charity');
+            expect(changeHistory.body.employerType.lastSaved).toEqual(changeHistory.body.employerType.lastChanged);
+            expect(changeHistory.body.employerType.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.employerType.lastChangedBy).toEqual(site.user.username);
+            let updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Employer Type',
+                PropertiesResponses,
+                changeHistory.body.employerType,
+                'Voluntary / Charity',
+                'Private Sector',
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
+            let lastSavedDate = changeHistory.body.employerType.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .send({
+                    employerType : 'Voluntary / Charity'
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/employerType?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.employerType.currentValue).toEqual('Voluntary / Charity');
+            expect(changeHistory.body.employerType.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.employerType.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+            // confirm expected values
             updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
                 .set('Authorization', authToken)
                 .send({
@@ -200,7 +246,7 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /text/)
                 .expect(400)
                 .end((err,res) => {
-                    expect(res.text).toEqual('Unexpected employer type: Unknown');
+                    expect(res.text).toEqual('Unexpected Input.');
                     expect(res.error.status).toEqual(400);
                 });
             
@@ -215,11 +261,12 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(firstResponse.body.name).toEqual(site.locationName);
-            expect(firstResponse.body.numberOfStaff).toBeNull();
+            expect(firstResponse.body).not.toHaveProperty('numberOfStaff');
 
 
-            const newNumberOfStaff = Random.randomInt(10,999);
+            const newNumberOfStaff = Random.randomInt(1,999);
             let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/staff/${newNumberOfStaff}`)
                 .set('Authorization', authToken)
                 .send({})
@@ -229,15 +276,87 @@ describe ("establishment", async () => {
             expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.numberOfStaff).toEqual(newNumberOfStaff);
 
+            // and now check change history
+            let secondNumberOfStaff = Random.randomInt(1,998);
+            if (secondNumberOfStaff === newNumberOfStaff) {
+                secondNumberOfStaff = newNumberOfStaff+1;
+            }
+            await apiEndpoint.post(`/establishment/${establishmentId}/staff/${secondNumberOfStaff}`)
+                .set('Authorization', authToken)
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
             const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/staff`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(secondResponse.body.id).toEqual(establishmentId);
             expect(secondResponse.body.name).toEqual(site.locationName);
-            expect(secondResponse.body.numberOfStaff).toEqual(newNumberOfStaff);
+            expect(secondResponse.body.numberOfStaff).toEqual(secondNumberOfStaff);
 
+            let requestEpoch = new Date().getTime();
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/staff?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.numberOfStaff).toHaveProperty('lastSaved');
+            expect(changeHistory.body.numberOfStaff.currentValue).toEqual(secondNumberOfStaff);
+            expect(changeHistory.body.numberOfStaff.lastSaved).toEqual(changeHistory.body.numberOfStaff.lastChanged);
+            expect(changeHistory.body.numberOfStaff.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.numberOfStaff.lastChangedBy).toEqual(site.user.username);
+            let updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Number of Staff',
+                PropertiesResponses,
+                changeHistory.body.numberOfStaff,
+                secondNumberOfStaff,
+                newNumberOfStaff,
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
+            let lastSavedDate = changeHistory.body.numberOfStaff.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/staff/${secondNumberOfStaff}`)
+                .set('Authorization', authToken)
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/staff?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.numberOfStaff.currentValue).toEqual(secondNumberOfStaff);
+            expect(changeHistory.body.numberOfStaff.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.numberOfStaff.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+            // // confirm expected values
+            // await apiEndpoint.post(`/establishment/${establishmentId}/staff/0`)
+            //     .set('Authorization', authToken)
+            //     .send({})
+            //     .expect('Content-Type', /json/)
+            //     .expect(200);
+            // await apiEndpoint.post(`/establishment/${establishmentId}/staff/999`)
+            //     .set('Authorization', authToken)
+            //     .send({})
+            //     .expect('Content-Type', /json/)
+            //     .expect(200);
+            
             // now test for an out of range number of staff
+            // await apiEndpoint.post(`/establishment/${establishmentId}/staff/-1`)
+            //     .set('Authorization', authToken)
+            //     .send({})
+            //     .expect(400);
+            // await apiEndpoint.post(`/establishment/${establishmentId}/staff/1000`)
+            //     .set('Authorization', authToken)
+            //     .send({})
+            //     .expect(400);
             apiEndpoint.post(`/establishment/${establishmentId}/staff/1000`)
                 .set('Authorization', authToken)
                 .send({
@@ -246,15 +365,16 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /text/)
                 .expect(400)
                 .end((err,res) => {
-                    expect(res.text).toEqual('Unexpected  number of staff: 1000');
+                    expect(res.text).toEqual('Unexpected Input.');
                     expect(res.error.status).toEqual(400);
                 });
         });
 
-        it.skip("should validate the list of all services returned on GET all=true", async () => {
+        /*it.skip("should validate the list of all services returned on GET all=true", async () => {
         });
         it.skip("should validate the list of all services returned on GET all=true having updated services and confirming those which are my other service", async () => {
         });
+        */
 
         it("should update 'other' services", async () => {
             expect(authToken).not.toBeNull();
@@ -373,10 +493,10 @@ describe ("establishment", async () => {
             expect(fetchedEqualsReturned).toEqual(true);
         });
 
-        it.skip("should validate the list of all service capacities returned on GET all=true", async () => {
+       /*  it.skip("should validate the list of all service capacities returned on GET all=true", async () => {
         });
         it.skip("should validate the list of all service capacities returned on GET all=true having updated capacities and confirming the answer", async () => {
-        });
+        }); */
         it("should update 'service capacities", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
