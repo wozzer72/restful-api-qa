@@ -337,26 +337,26 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.numberOfStaff.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // // confirm expected values
-            // await apiEndpoint.post(`/establishment/${establishmentId}/staff/0`)
-            //     .set('Authorization', authToken)
-            //     .send({})
-            //     .expect('Content-Type', /json/)
-            //     .expect(200);
-            // await apiEndpoint.post(`/establishment/${establishmentId}/staff/999`)
-            //     .set('Authorization', authToken)
-            //     .send({})
-            //     .expect('Content-Type', /json/)
-            //     .expect(200);
+            await apiEndpoint.post(`/establishment/${establishmentId}/staff/0`)
+                .set('Authorization', authToken)
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200);
+            await apiEndpoint.post(`/establishment/${establishmentId}/staff/999`)
+                .set('Authorization', authToken)
+                .send({})
+                .expect('Content-Type', /json/)
+                .expect(200);
             
             // now test for an out of range number of staff
-            // await apiEndpoint.post(`/establishment/${establishmentId}/staff/-1`)
-            //     .set('Authorization', authToken)
-            //     .send({})
-            //     .expect(400);
-            // await apiEndpoint.post(`/establishment/${establishmentId}/staff/1000`)
-            //     .set('Authorization', authToken)
-            //     .send({})
-            //     .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/staff/-1`)
+                .set('Authorization', authToken)
+                .send({})
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/staff/1000`)
+                .set('Authorization', authToken)
+                .send({})
+                .expect(400);
             apiEndpoint.post(`/establishment/${establishmentId}/staff/1000`)
                 .set('Authorization', authToken)
                 .send({
