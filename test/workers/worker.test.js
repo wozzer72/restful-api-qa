@@ -3932,12 +3932,12 @@ describe ("worker", async () => {
             expect(allWorkersResponse.body.workers.length).toEqual(4);
 
             // now add another worker
-            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            let newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
-            const newWorkerUuid = newWorkerResponse.body.uid;
+            let newWorkerUuid = newWorkerResponse.body.uid;
             allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
                 .send()
@@ -3945,11 +3945,14 @@ describe ("worker", async () => {
                 .expect(200);
             expect(allWorkersResponse.body.workers.length).toEqual(5);
 
-
             // now delete the first worker
             await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
-                .send()
+                .send({
+                    reason: {
+                        id: 8
+                    }
+                })
                 .expect(204);
 
             // check there is now only one worker
@@ -3975,6 +3978,71 @@ describe ("worker", async () => {
                 .set('Authorization', establishment1Token)
                 .send()
                 .expect(404);
+            
+                // now create another worker and give an "other" reason
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(workerUtils.newWorker(jobs))
+                .expect('Content-Type', /json/)
+                .expect(201);
+            newWorkerUuid = newWorkerResponse.body.uid;
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    reason: {
+                        id: 8,
+                        other: "Forced test dismissal"
+                    }
+                })
+                .expect(204);
+
+            // and now create another worker and give a text reason
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(workerUtils.newWorker(jobs))
+                .expect('Content-Type', /json/)
+                .expect(201);
+            newWorkerUuid = newWorkerResponse.body.uid;
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    reason: {
+                        reason: 'They moved to another role in this organisation'
+                    }
+                })
+                .expect(204);
+
+            // now forced validation errors - the worker must exist!!!
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(workerUtils.newWorker(jobs))
+                .expect('Content-Type', /json/)
+                .expect(201);
+            newWorkerUuid = newWorkerResponse.body.uid;
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    reason: {
+                        id: 32          // out of bounds
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    reason: {
+                        id: "6"          // must be an integer
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    reason: {
+                        reason: 'Non-existent reason'
+                    }
+                })
+                .expect(400);
         });
 
         it("Should report on response times", () => {
