@@ -572,7 +572,7 @@ describe ("establishment", async () => {
         });
         it.skip("should validate the list of all service capacities returned on GET all=true having updated capacities and confirming the answer", async () => {
         }); */
-        it.skip("should update 'service capacities", async () => {
+        it("should update 'service capacities", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -643,11 +643,163 @@ describe ("establishment", async () => {
                 expect(secondResponse.body).toHaveProperty('allServiceCapacities');
                 expect(Array.isArray(secondResponse.body.allServiceCapacities)).toEqual(true);
                 
+                // the result of "otherServices" is a complex Array of objects that does not equal the
+                //   array as input
+                // validating that array is complicated
+                // TODO: replace this excuse of a validation with a more thorough validation
+                expect(Array.isArray(secondResponse.body.capacities)).toEqual(true);
+
                 // but we cannot test length of allServiceCapacities because it can be zero or more!
                 // /expect(secondResponse.body.allServiceCapacities.length).toEqual(0);
-    
-                expect(Array.isArray(secondResponse.body.capacities)).toEqual(true);
                 expect(secondResponse.body.capacities.length).toEqual(availableCapacitiesToUpdate.length);
+
+                // now update a second time - to test the audut change history
+                const secondAvailableCapacitiesToUpdate = [];
+                firstResponse.body.allServiceCapacities.forEach(thisServiceCapacity => {
+                    thisServiceCapacity.questions.forEach(thisQuestion => {
+                        secondAvailableCapacitiesToUpdate.push({
+                            questionId: thisQuestion.questionId,
+                            answer: Random.randomInt(1,999)
+                        });
+                    })
+                });
+
+                updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: secondAvailableCapacitiesToUpdate
+                    })
+                    .expect('Content-Type', /json/)
+                    .expect(200);
+                expect(updateResponse.body.id).toEqual(establishmentId);
+                expect(updateResponse.body.name).toEqual(site.locationName);
+                expect(Number.isInteger(updateResponse.body.mainService.id)).toEqual(true);
+                expect(updateResponse.body.mainService.name).toEqual(site.mainService);
+                expect(updateResponse.body).not.toHaveProperty('allServiceCapacities');
+
+                let requestEpoch = new Date().getTime();
+                let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/capacity?history=full`)
+                    .set('Authorization', authToken)
+                    .expect('Content-Type', /json/)
+                    .expect(200);
+                expect(changeHistory.body.capacities).toHaveProperty('lastSaved');
+    
+                // the result of "capacities" is a complex Array of objects that does not equal the
+                //   array as input
+                // validating that array is complicated
+                // TODO: replace this excuse of a validation with a more thorough validation
+                expect(Array.isArray(changeHistory.body.capacities.currentValue)).toEqual(true);
+                expect(changeHistory.body.capacities.lastSaved).toEqual(changeHistory.body.capacities.lastChanged);
+                expect(changeHistory.body.capacities.lastSavedBy).toEqual(site.user.username);
+                expect(changeHistory.body.capacities.lastChangedBy).toEqual(site.user.username);
+                let updatedEpoch = new Date(changeHistory.body.updated).getTime();
+                expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew    
+
+                // test change history for both the rate and the value
+                validatePropertyChangeHistory(
+                    'Capacity Services',
+                    PropertiesResponses,
+                    changeHistory.body.capacities,
+                    secondAvailableCapacitiesToUpdate,
+                    availableCapacitiesToUpdate,
+                    site.user.username,
+                    requestEpoch,
+                    (ref, given) => {
+                        return Array.isArray(ref)
+                    });
+                let lastSavedDate = changeHistory.body.capacities.lastSaved;
+                
+                // now update the property but with same value - expect no change
+                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: secondAvailableCapacitiesToUpdate
+                    })
+                    .expect('Content-Type', /json/)
+                    .expect(200);
+                changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/capacity?history=property`)
+                    .set('Authorization', authToken)
+                    .expect('Content-Type', /json/)
+                    .expect(200);
+                expect(Array.isArray(changeHistory.body.capacities.currentValue)).toEqual(true);
+                expect(changeHistory.body.capacities.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+                expect(new Date(changeHistory.body.capacities.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+                // and now expect on validation error
+                let validationErrorCapacity = [{
+                    questionId: "1",     // must be an integer
+                    answer: 10
+                }];
+                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: validationErrorCapacity
+                    })
+                    .expect(400);
+                validationErrorCapacity = [{
+                    questionId: 100,     // must be within range
+                    answer: 10
+                }];
+                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: validationErrorCapacity
+                    })
+                    .expect(400);
+                validationErrorCapacity = [{
+                    qquestionId: secondAvailableCapacitiesToUpdate[0].questionId,     // must defined questionId
+                    answer: 10
+                }];
+                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: validationErrorCapacity
+                    })
+                    .expect(400);
+
+                validationErrorCapacity = [{
+                    questionId: secondAvailableCapacitiesToUpdate[0].questionId,
+                    aanswer: 10        // must be defined
+                }];
+                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: validationErrorCapacity
+                    })
+                    .expect(400);
+
+                validationErrorCapacity = [{
+                    questionId: secondAvailableCapacitiesToUpdate[0].questionId,
+                    answer: "10"        //must be an integer
+                }];
+                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: validationErrorCapacity
+                    })
+                    .expect(400);
+
+                validationErrorCapacity = [{
+                    questionId: secondAvailableCapacitiesToUpdate[0].questionId,
+                    answer: -1        // must be greater than equal to 0
+                }];
+                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: validationErrorCapacity
+                    })
+                    .expect(400);
+                validationErrorCapacity = [{
+                    questionId: secondAvailableCapacitiesToUpdate[0].questionId,
+                    answer: 1000      // must be less than equal to 999
+                }];
+                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                    .set('Authorization', authToken)
+                    .send({
+                        capacities: validationErrorCapacity
+                    })
+                    .expect(400);
+            
             }
         });
 /*
