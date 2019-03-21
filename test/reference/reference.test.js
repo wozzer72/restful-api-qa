@@ -93,4 +93,11 @@ describe ("Expected reference services", async () => {
             .expect(200);
         expect(recruitedFrom.body).toMatchSnapshot();
     });
+
+    it("should fetch worker leave reasons", async () => {
+        const workerLeaverReasons = await apiEndpoint.get('/worker/leaveReasons')
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(workerLeaverReasons.body).toMatchSnapshot();
+    });
 });

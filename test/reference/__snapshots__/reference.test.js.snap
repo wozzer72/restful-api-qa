@@ -3331,3 +3331,46 @@ Array [
   },
 ]
 `;
+
+exports[`Expected reference services should fetch worker leave reasons 1`] = `
+Object {
+  "reasons": Array [
+    Object {
+      "id": 1,
+      "reason": "They moved to another adult social care employer",
+    },
+    Object {
+      "id": 2,
+      "reason": "They moved to a role in the health sector",
+    },
+    Object {
+      "id": 3,
+      "reason": "They moved to a different sector (e.g. retail)",
+    },
+    Object {
+      "id": 4,
+      "reason": "They moved to another role in this organisation",
+    },
+    Object {
+      "id": 5,
+      "reason": "The worker chose to leave (destination unknown)",
+    },
+    Object {
+      "id": 6,
+      "reason": "The worker retired",
+    },
+    Object {
+      "id": 7,
+      "reason": "Employer terminated their employment",
+    },
+    Object {
+      "id": 8,
+      "reason": "Other",
+    },
+    Object {
+      "id": 9,
+      "reason": "Not known",
+    },
+  ],
+}
+`;
