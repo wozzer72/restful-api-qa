@@ -3921,7 +3921,7 @@ describe ("worker", async () => {
             expect(Number.isInteger(establishmentId)).toEqual(true);
             expect(establishment1Token).not.toBeNull();
             expect(workerUid).not.toBeNull();
-
+            
             // first get a list of all Workers for the given establishment
             let allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
@@ -3979,14 +3979,14 @@ describe ("worker", async () => {
                 .send()
                 .expect(404);
             
-                // now create another worker and give an "other" reason
+            // now create another worker and give an "other" reason
             newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
             newWorkerUuid = newWorkerResponse.body.uid;
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4003,7 +4003,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(201);
             newWorkerUuid = newWorkerResponse.body.uid;
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4019,7 +4019,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(201);
             newWorkerUuid = newWorkerResponse.body.uid;
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4027,7 +4027,7 @@ describe ("worker", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4035,7 +4035,7 @@ describe ("worker", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
