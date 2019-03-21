@@ -870,6 +870,79 @@ describe ("establishment", async () => {
             expect(updateResponse.body.share.with.length).toEqual(1);
             expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
 
+
+            // and now check change history
+            let requestEpoch = new Date().getTime();
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/share?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
+            expect(changeHistory.body.share).toHaveProperty('lastSaved');
+            expect(changeHistory.body.share.currentValue.enabled).toEqual(true);
+            expect(changeHistory.body.share.currentValue.with[0]).toEqual('Local Authority');
+            expect(changeHistory.body.share.lastSaved).toEqual(changeHistory.body.share.lastChanged);
+            expect(changeHistory.body.share.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.share.lastChangedBy).toEqual(site.user.username);
+            let updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Share Options',
+                PropertiesResponses,
+                changeHistory.body.share,
+                {
+                    enabled : true,
+                    with : ['Local Authority']
+                },
+                {
+                    enabled : true
+                },
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    if (ref.enabled == given.enabled) {
+                        if (ref.with && given.with) {
+                            if (ref.with[0] && given.with[0] && ref.with[0] === given.with[0]) {
+                                return true;
+                            } else if (ref.with[0] && given.with[0]) {
+                                return false;
+                            } else {
+                                return true;
+                            }
+                        } else if (ref.with || given.with) {
+                            return true;
+                        } else {
+                            return true;
+                        }
+                    } else {
+                        return false;
+                    }
+                });
+            let lastSavedDate = changeHistory.body.share.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .send({
+                    share : {
+                        enabled : true,
+                        with : ['Local Authority']
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/share?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.share.currentValue.enabled).toEqual(true);
+            expect(changeHistory.body.share.currentValue.with[0]).toEqual('Local Authority');
+            expect(changeHistory.body.share.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.share.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+
             // now disable sharing - provide with options, but they will be ignored
             updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
                 .set('Authorization', authToken)
@@ -908,7 +981,6 @@ describe ("establishment", async () => {
             expect(updateResponse.body.share.enabled).toEqual(true);
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
-            expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
 
             updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
                 .set('Authorization', authToken)
@@ -920,6 +992,35 @@ describe ("establishment", async () => {
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
             expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
+
+            // now expect failed validation
+            await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .send({
+                    share : {
+                        enabled : "false",          // need to be boolean
+                        with : ["CQC"]
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .send({
+                    share : {
+                        enabled : true,
+                        with : ["unexpected"]   // only fixed values allowed
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+                .set('Authorization', authToken)
+                .send({
+                    share : {
+                        eenabled : false,       // enabled property must be defined
+                        with : ["CQC"]
+                    }
+                })
+                .expect(400);
         });
 
         /*
