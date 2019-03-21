@@ -4028,6 +4028,22 @@ describe ("worker", async () => {
                 })
                 .expect(204);
 
+            // and now create another worker and give a text reason
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(workerUtils.newWorker(jobs))
+                .expect('Content-Type', /json/)
+                .expect(201);
+            newWorkerUuid = newWorkerResponse.body.uid;
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    reason: {
+                        reason: 'They moved to another role in this organisation'
+                    }
+                })
+                .expect(204);
+
             // now forced validation errors - the worker must exist!!!
             newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
