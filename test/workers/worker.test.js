@@ -3996,6 +3996,22 @@ describe ("worker", async () => {
                 })
                 .expect(204);
 
+            // "other" reason is optional
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send(workerUtils.newWorker(jobs))
+                .expect('Content-Type', /json/)
+                .expect(201);
+            newWorkerUuid = newWorkerResponse.body.uid;
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+                .set('Authorization', establishment1Token)
+                .send({
+                    reason: {
+                        id: 8,
+                    }
+                })
+                .expect(204);
+
             // and now create another worker and give a text reason
             newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
                 .set('Authorization', establishment1Token)
