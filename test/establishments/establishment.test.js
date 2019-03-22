@@ -138,6 +138,10 @@ describe ("establishment", async () => {
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
             expect(firstResponse.body).not.toHaveProperty('employerType');
 
             let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
@@ -263,6 +267,10 @@ describe ("establishment", async () => {
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
             expect(firstResponse.body).not.toHaveProperty('numberOfStaff');
 
 
@@ -385,7 +393,12 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
             expect(firstResponse.body.mainService.name).toEqual(site.mainService);
 
@@ -581,7 +594,12 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
             expect(firstResponse.body.mainService.name).toEqual(site.mainService);
 
@@ -799,7 +817,6 @@ describe ("establishment", async () => {
                         capacities: validationErrorCapacity
                     })
                     .expect(400);
-            
             }
         });
 
@@ -812,7 +829,12 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
             expect(firstResponse.body.share.enabled).toEqual(false);        // disabled (default) on registration
 
             // enable sharing (no options)
@@ -869,7 +891,6 @@ describe ("establishment", async () => {
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
             expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
-
 
             // and now check change history
             let requestEpoch = new Date().getTime();
@@ -941,7 +962,6 @@ describe ("establishment", async () => {
             expect(changeHistory.body.share.currentValue.with[0]).toEqual('Local Authority');
             expect(changeHistory.body.share.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
             expect(new Date(changeHistory.body.share.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
-
 
             // now disable sharing - provide with options, but they will be ignored
             updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
@@ -1023,7 +1043,6 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        /*
         it("should update the Local Authorities Share Options", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
@@ -1037,7 +1056,12 @@ describe ("establishment", async () => {
                 .expect(200);
 
             expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
 
             // primary authority may not always resolve
             if (primaryLocalAuthorityCustodianCode) {
@@ -1053,24 +1077,16 @@ describe ("establishment", async () => {
             const randomAuthorityCustodianCode = await laUtils.lookupRandomAuthority(apiEndpoint);
             const updateAuthorities = [
                 {
-                    name: "WOZILAND",
-                    notes: "ignored because no custodianCode field"
-                },
-                {
                     custodianCode: primaryLocalAuthorityCustodianCode
                 },
                 {
-                    custodianCode: "abc",
-                    notes: "Ignored because custodianCode is not an integer"
+                    custodianCode: randomAuthorityCustodianCode
                 }
             ];
-            updateAuthorities.push({
-                custodianCode: randomAuthorityCustodianCode
-            })
             let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
-                    "localAuthorities" : updateAuthorities
+                    localAuthorities : updateAuthorities
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1081,6 +1097,7 @@ describe ("establishment", async () => {
             // but localAuthority is and should include only the main and random authority only (everything else ignored)
             expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
             expect(updateResponse.body.localAuthorities.length).toEqual(2);
+            expect(updateResponse.body.primaryAuthority.custodianCode).toEqual(primaryLocalAuthorityCustodianCode);
             const foundMainAuthority = updateResponse.body.localAuthorities.find(thisLA => thisLA.custodianCode === primaryAuthority.id);
             const foundRandomAuthority = updateResponse.body.localAuthorities.find(thisLA => thisLA.custodianCode === randomAuthorityCustodianCode);
 
@@ -1098,9 +1115,133 @@ describe ("establishment", async () => {
             // before update expect the "localAuthorities" attribute as an array but it will be empty
             expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
             expect(updateResponse.body.localAuthorities.length).toEqual(2);
+
+            // and now check change history
+
+            // second update
+            const secondUpdateAuthorities = [
+                {
+                    name: 'Croydon'
+                }
+            ];
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .send({
+                    localAuthorities : secondUpdateAuthorities
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            let requestEpoch = new Date().getTime();
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.localAuthorities).toHaveProperty('lastSaved');
+            expect(Array.isArray(changeHistory.body.localAuthorities.currentValue)).toEqual(true);
+            expect(changeHistory.body.localAuthorities.currentValue.length).toEqual(1)
+            expect(changeHistory.body.localAuthorities.lastSaved).toEqual(changeHistory.body.localAuthorities.lastChanged);
+            expect(changeHistory.body.localAuthorities.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.localAuthorities.lastChangedBy).toEqual(site.user.username);
+            let updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Share With LA',
+                PropertiesResponses,
+                changeHistory.body.localAuthorities,
+                secondUpdateAuthorities,
+                updateAuthorities,
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    if (ref && Array.isArray(ref)) {
+                        return ref.every(refAuthority => {
+                            if (refAuthority.cssrId) {
+                                return given.find(givenAuthority => (givenAuthority.custodianCode === refAuthority.cssrId) || (givenAuthority.name === refAuthority.name));
+                            } else {
+                                return given.find(givenAuthority => (givenAuthority.custodianCode === refAuthority.custodianCode) || (givenAuthority.name === refAuthority.name));
+                            }
+                        });
+                    } else return false;
+                });
+            let lastSavedDate = changeHistory.body.localAuthorities.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .send({
+                    localAuthorities : secondUpdateAuthorities
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(Array.isArray(changeHistory.body.localAuthorities.currentValue)).toEqual(true);
+            expect(changeHistory.body.localAuthorities.currentValue.length).toEqual(1)
+            expect(changeHistory.body.localAuthorities.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.localAuthorities.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            
+            // forced validation errors
+            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .send({
+                    localAuthorities : [
+                        {
+                            custodianCode: "11"         //should be an integer
+                        }
+                    ]
+                })
+                .expect(400);
+            
+            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .send({
+                    localAuthorities : [
+                        {
+                            ccustodianCode: 11         // custodian property must be defined
+                        }
+                    ]
+                })
+                .expect(400);
+
+            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .send({
+                    localAuthorities : [
+                        {
+                            nname: 'Croydon'        // if no custodian code property, then name should be defined
+                        }
+                    ]
+                })
+                .expect(400);
+
+            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .send({
+                    localAuthorities : [
+                        {
+                            custodianCode: 11       // custodian code must exist
+                        }
+                    ]
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+                .set('Authorization', authToken)
+                .send({
+                    localAuthorities : [
+                        {
+                            n: 'Does not EXIST'      // name must exist
+                        }
+                    ]
+                })
+                .expect(400);
         });
 
-        it("should update the number of vacancies, starters and leavers", async () => {
+        it.skip("should update the number of vacancies, starters and leavers", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1109,7 +1250,12 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
             expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
             expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
             expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
             expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
@@ -1277,7 +1423,7 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        it("should get the Establishment", async () => {
+        it.skip("should get the Establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1327,7 +1473,7 @@ describe ("establishment", async () => {
         it.skip('should get establishment with property history', async () => {
         });
 
-        it('should get user with timeline history', async () => {
+        it.skip('should get user with timeline history', async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1360,7 +1506,7 @@ describe ("establishment", async () => {
             expect(createdEvents[0].when).toEqual(new Date(createdEvents[0].when).toISOString());
         });
 
-        it('should get user with full history', async () => {
+        it.skip('should get user with full history', async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1400,7 +1546,6 @@ describe ("establishment", async () => {
             expect(createdEvents[0]).not.toHaveProperty('property');
             expect(createdEvents[0].when).toEqual(new Date(createdEvents[0].when).toISOString());
         });
-*/
 
         it("should report on response times", () => {
             const properties = Object.keys(PropertiesResponses);
