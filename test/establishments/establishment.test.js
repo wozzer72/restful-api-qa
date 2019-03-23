@@ -820,7 +820,7 @@ describe ("establishment", async () => {
             }
         });
 
-        it("should update the sharing options", async () => {
+        it.skip("should update the sharing options", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1043,7 +1043,7 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        it("should update the Local Authorities Share Options", async () => {
+        it.skip("should update the Local Authorities Share Options", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1241,7 +1241,7 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        it.skip("should update the number of vacancies, starters and leavers", async () => {
+        it("should update the number of vacancies, starters and leavers", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1250,15 +1250,11 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
-            expect(firstResponse.body.uid).toEqual(establishmentUid);
+            expect(jobsResponse.body.uid).toEqual(establishmentUid);
             expect(jobsResponse.body.name).toEqual(site.locationName);
-            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
-            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
-
-            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
-            expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
-            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+            expect(jobsResponse.body.created).toEqual(new Date(jobsResponse.body.created).toISOString());
+            expect(jobsResponse.body.updated).toEqual(new Date(jobsResponse.body.updated).toISOString());
+            expect(jobsResponse.body.updatedBy).toEqual(site.user.username);
 
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
@@ -1266,20 +1262,16 @@ describe ("establishment", async () => {
                     jobs: {
                         vacancies: [
                             {
-                                "jobId" : 1,
-                                "total" : 999
+                                jobId : 1,
+                                total : 999
                             },
                             {
-                                "jobId" : 2,
-                                "total" : 1000,
+                                jobId : 10,
+                                total : 333
                             },
                             {
-                                "jobId" : 10,
-                                "total" : 333
-                            },
-                            {
-                                "jobId" : "18",
-                                "total" : 22
+                                title : 'Occupational Therapist',
+                                total : 22
                             }
                         ]
                     }
@@ -1287,10 +1279,11 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.uid).toEqual(establishmentUid);
             expect(jobsResponse.body.name).toEqual(site.locationName);
-            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(1332);
-            expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
-            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
+            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(1354);
+            expect(Array.isArray(jobsResponse.body.jobs.Vacancies)).toEqual(true);
+            expect(jobsResponse.body.jobs.Vacancies.length).toEqual(3);
 
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
@@ -1298,32 +1291,32 @@ describe ("establishment", async () => {
                     jobs: {
                         starters: [
                             {
-                                "jobId" : 17,
-                                "total" : 43
+                                jobId : 17,
+                                total : 43
                             },
                             {
-                                "id" : 1,
-                                "total" : 4
+                                jobId : 1,
+                                total : 4
                             },
                             {
-                                "jobId" : 2,
-                                "total" : 1000,
+                                title : 'Community, Support and Outreach Work',
+                                total : 756
                             },
                             {
-                                "jobId" : 11,
-                                "total" : 756
-                            }
+                                jobId : 12,
+                                total : 3
+                            },
                         ]
                     }
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.uid).toEqual(establishmentUid);
             expect(jobsResponse.body.name).toEqual(site.locationName);
-            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(1332);
-            expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
-            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
-
+            expect(jobsResponse.body.jobs.TotalStarters).toEqual(806);
+            expect(Array.isArray(jobsResponse.body.jobs.Starters)).toEqual(true);
+            expect(jobsResponse.body.jobs.Starters.length).toEqual(4);
             
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
@@ -1332,16 +1325,16 @@ describe ("establishment", async () => {
                         vacancies: [],
                         leavers: [
                             {
-                                "jobId" : 12,
-                                "total" : 1000,
+                                jobId : 12,
+                                total : 32,
                             },
                             {
-                                "jobId" : 9,
-                                "total" : 111
+                                title : 'Nursing Assistant',
+                                total : 0,
                             },
                             {
-                                "jobId" : 14,
-                                "total" : 11
+                                jobId : 29,
+                                total : 111
                             }
                         ]
                     }
@@ -1350,9 +1343,9 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
             expect(jobsResponse.body.name).toEqual(site.locationName);
-            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
-            expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
-            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(122);
+            expect(jobsResponse.body.jobs.TotalLeavers).toEqual(143);
+            expect(Array.isArray(jobsResponse.body.jobs.Leavers)).toEqual(true);
+            expect(jobsResponse.body.jobs.Leavers.length).toEqual(3);
 
 
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
@@ -1366,8 +1359,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
             expect(jobsResponse.body.name).toEqual(site.locationName);
-            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
-            expect(jobsResponse.body.jobs.TotalStarters).toEqual(799);
             expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
 
             // in addition to providing a set of jobs for each of vacancies, starters and leavers
@@ -1386,7 +1377,6 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.Leavers).toEqual('None');
             expect(jobsResponse.body.jobs.Starters).toEqual("Don't know");
-            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
             expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
             expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
 
@@ -1398,28 +1388,111 @@ describe ("establishment", async () => {
                         leavers: "Nne"
                     }
                 })
-                .expect('Content-Type', /html/)
                 .expect(400);
             await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
-                        starters: "Don't Know"
+                        starters: "Don't Know"      // case sensitive
                     }
                 })
-                .expect('Content-Type', /html/)
                 .expect(400);
             await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
-                        vacancies: {
+                        vacancies: {        // needs to be an array
                             jobId: 1,
                             total: 1
                         }
                     }
                 })
-                .expect('Content-Type', /html/)
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        starters: [
+                            {
+                                jobId: 1,
+                                total: -1   // // greater than 0
+                            }
+                        ]
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        leavers: [
+                            {
+                                jobId: 1,
+                                total: 1000   // // less than 1000
+                            }
+                        ]
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        leavers: [
+                            {
+                                id: 1,      // jobId must be defined
+                                total: 10
+                            }
+                        ]
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        starters: [
+                            {
+                                ttile: 'Nursing Assistant',   // title must be defined if no jobId
+                                total: 10
+                            }
+                        ]
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        vacancies: [
+                            {
+                                jobId: "4",   // jobId must be an integer
+                                total: 10
+                            }
+                        ]
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        vacancies: [
+                            {
+                                jobId: 4,
+                                total: "10" // total must be an integer
+                            }
+                        ]
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        leavers: "Don't Know"      // case sensitive
+                    }
+                })
                 .expect(400);
         });
 
