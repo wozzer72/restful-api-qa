@@ -31,6 +31,11 @@ let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
 let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 const PropertiesResponses = {};
 
+
+// owing to unexpected significant latency on the history fetches for establishment
+//  increase the timeout jest imposes on async returns
+jest.setTimeout(30000); // 30 seconds
+
 describe ("establishment", async () => {
     let cqcServices = null;
     let nonCqcServices = null;
@@ -64,7 +69,8 @@ describe ("establishment", async () => {
         let primaryLocalAuthorityCustodianCode = null;
         let loginSuccess = null;
         let authToken = null;
-        const newCapacityIDs = [];
+        let lastSetOfCapacities = null;
+        let lastSetOfServices = null;
 
         beforeAll(async () => {
             site =  registrationUtils.newNonCqcSite(postcodes[1], nonCqcServices);
@@ -127,7 +133,7 @@ describe ("establishment", async () => {
             //console.log("TEST DEBUG - auth token: ", authToken)
         });
 
-        it.skip("should update the employer type", async () => {
+        it("should update the employer type", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -256,7 +262,7 @@ describe ("establishment", async () => {
             
         });
 
-        it.skip("should update the number of staff", async () => {
+        it("should update the number of staff", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -384,7 +390,7 @@ describe ("establishment", async () => {
         });
         */
 
-        it.skip("should update 'other' services", async () => {
+        it("should update 'other' services", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -482,6 +488,7 @@ describe ("establishment", async () => {
             const modifiedSetOfServices = newNonCQCServiceIDs.concat({
                 id: firstServiceId
             });
+            lastSetOfServices = modifiedSetOfServices;
 
             const secondPostResponse = await apiEndpoint.post(`/establishment/${establishmentId}/services`)
                 .set('Authorization', authToken)
@@ -585,7 +592,7 @@ describe ("establishment", async () => {
         });
         it.skip("should validate the list of all service capacities returned on GET all=true having updated capacities and confirming the answer", async () => {
         }); */
-        it.skip("should update 'service capacities", async () => {
+        it("should update 'service capacities", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -681,6 +688,7 @@ describe ("establishment", async () => {
                         });
                     })
                 });
+                lastSetOfCapacities = secondAvailableCapacitiesToUpdate;
 
                 updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
                     .set('Authorization', authToken)
@@ -820,7 +828,7 @@ describe ("establishment", async () => {
             }
         });
 
-        it.skip("should update the sharing options", async () => {
+        it("should update the sharing options", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1043,7 +1051,7 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        it.skip("should update the Local Authorities Share Options", async () => {
+        it("should update the Local Authorities Share Options", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1685,6 +1693,46 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
             expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
 
+            // now set vacancies, starters and leavers to something definite to allow testing for GET below
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        leavers: [
+                            {
+                                jobId : 1,
+                                total : 1,
+                            }
+                        ],
+                        starters: [
+                            {
+                                jobId : 1,
+                                total : 1,
+                            },
+                            {
+                                jobId : 2,
+                                total : 2,
+                            }
+                        ],
+                        vacancies: [
+                            {
+                                jobId : 1,
+                                total : 1,
+                            },
+                            {
+                                jobId : 2,
+                                total : 2,
+                            },
+                            {
+                                jobId : 3,
+                                total : 3,
+                            }
+                        ],
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
             // forcing validation errors
             await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
@@ -1801,7 +1849,7 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        it.skip("should get the Establishment", async () => {
+        it("should get the Establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1809,6 +1857,8 @@ describe ("establishment", async () => {
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
+
+            // console.log("TEST DEBUG - get establishment: ", firstResponse.body);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
 
@@ -1817,6 +1867,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username);
 
+            // immutable properties
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(nmdsIdRegex.test(firstResponse.body.nmdsId)).toEqual(true);
             expect(firstResponse.body.postcode).toEqual(site.postalCode);
@@ -1824,28 +1875,75 @@ describe ("establishment", async () => {
             expect(firstResponse.body.address).not.toBeNull();
             expect(firstResponse.body.mainService).not.toBeNull();
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
-            expect(firstResponse.body.mainService.name).not.toBeNull();
-
-            expect(firstResponse.body.numberOfStaff).not.toBeNull();
-            expect(firstResponse.body.numberOfStaff).toBeGreaterThan(0);
-            expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
             expect(firstResponse.body.mainService.name).toEqual(site.mainService);
+
+            // number of staff/employer type
+            expect(firstResponse.body.numberOfStaff).toEqual(999);
+            expect(firstResponse.body.employerType).toEqual('Local Authority (adult services)');
+
+            // share options and share with Local Authorities - and now primary authority
             expect(firstResponse.body.share.enabled).toEqual(true);
             expect(firstResponse.body.share.with[0]).toEqual('Local Authority');
-            expect(firstResponse.body.jobs.TotalVacencies).toEqual(0);
-            expect(firstResponse.body.jobs.TotalStarters).toEqual(0);
-            expect(firstResponse.body.jobs.TotalLeavers).toEqual(0);
-            expect(Array.isArray(firstResponse.body.otherServices)).toEqual(true);
-            expect(firstResponse.body.otherServices.length).toBeGreaterThan(0);
-            expect(Array.isArray(firstResponse.body.share.authorities)).toEqual(true);
-            expect(firstResponse.body.share.authorities.length).toEqual(2);
+            expect(Array.isArray(firstResponse.body.localAuthorities)).toEqual(true);
+            expect(firstResponse.body.localAuthorities[0].name).toEqual('Croydon');
+            expect(firstResponse.body).toHaveProperty('primaryAuthority');
+            expect(firstResponse.body.primaryAuthority.custodianCode).toBeGreaterThan(100);
+            expect(firstResponse.body.primaryAuthority.custodianCode).toBeLessThan(1000);
 
-            expect(Array.isArray(firstResponse.body.capacities)).toEqual(true);
-            expect(firstResponse.body.capacities.length).toEqual(newCapacityIDs.length);
-            newCapacityIDs.forEach(thisExpectedCapacity => {
-                const foundCapacity = firstResponse.body.capacities.find(thisCapacity => thisCapacity.questionId === thisExpectedCapacity.questionId);
-                expect(foundCapacity !== null).toEqual(true);
+            // other services and capacities
+            expect(Array.isArray(firstResponse.body.otherServices)).toEqual(true);
+            let numberOfOtherServices = 0;
+            firstResponse.body.otherServices.forEach(thisServiceCategory => {
+                numberOfOtherServices += thisServiceCategory.services.length;
             });
+            expect(numberOfOtherServices).toEqual(lastSetOfServices.length);
+            expect(Array.isArray(firstResponse.body.capacities)).toEqual(true);
+            expect(firstResponse.body.capacities.length).toEqual(lastSetOfCapacities.length);
+
+            // vacancies, starters and leavers
+            // const lastKnownSetOf = {             // taken from jobs test above
+            //     jobs: {
+            //         leavers: [
+            //             {
+            //                 jobId : 1,
+            //                 total : 1,
+            //             }
+            //         ],
+            //         starters: [
+            //             {
+            //                 jobId : 1,
+            //                 total : 1,
+            //             },
+            //             {
+            //                 jobId : 2,
+            //                 total : 2,
+            //             }
+            //         ],
+            //         vacancies: [
+            //             {
+            //                 jobId : 1,
+            //                 total : 1,
+            //             },
+            //             {
+            //                 jobId : 2,
+            //                 total : 2,
+            //             },
+            //             {
+            //                 jobId : 3,
+            //                 total : 3,
+            //             }
+            //         ],
+            //     }
+            // };
+            expect(firstResponse.body.TotalVacencies).toEqual(6);
+            expect(firstResponse.body.TotalStarters).toEqual(3);
+            expect(firstResponse.body.TotalLeavers).toEqual(1);
+            expect(Array.isArray(firstResponse.body.Vacancies)).toEqual(true);
+            expect(Array.isArray(firstResponse.body.Starters)).toEqual(true);
+            expect(Array.isArray(firstResponse.body.Leavers)).toEqual(true);
+            expect(firstResponse.body.Vacancies.length).toEqual(3);
+            expect(firstResponse.body.Starters.length).toEqual(2);
+            expect(firstResponse.body.Leavers.length).toEqual(1);
         });
 
         it.skip('should get establishment with property history', async () => {
