@@ -213,7 +213,7 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(changeHistory.body.employerType.currentValue).toEqual('Voluntary / Charity');
             expect(changeHistory.body.employerType.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
-            expect(new Date(changeHistory.body.employerType.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            expect(new Date(changeHistory.body.employerType.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // confirm expected values
             updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
@@ -342,7 +342,7 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(changeHistory.body.numberOfStaff.currentValue).toEqual(secondNumberOfStaff);
             expect(changeHistory.body.numberOfStaff.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
-            expect(new Date(changeHistory.body.numberOfStaff.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            expect(new Date(changeHistory.body.numberOfStaff.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // // confirm expected values
             await apiEndpoint.post(`/establishment/${establishmentId}/staff/0`)
@@ -538,7 +538,7 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(Array.isArray(changeHistory.body.otherServices.currentValue)).toEqual(true);
             expect(changeHistory.body.otherServices.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
-            expect(new Date(changeHistory.body.otherServices.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            expect(new Date(changeHistory.body.otherServices.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
         
             // now test the get having updated 'other service'
             const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/services`)
@@ -741,7 +741,7 @@ describe ("establishment", async () => {
                     .expect(200);
                 expect(Array.isArray(changeHistory.body.capacities.currentValue)).toEqual(true);
                 expect(changeHistory.body.capacities.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
-                expect(new Date(changeHistory.body.capacities.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+                expect(new Date(changeHistory.body.capacities.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
                 // and now expect on validation error
                 let validationErrorCapacity = [{
@@ -961,7 +961,7 @@ describe ("establishment", async () => {
             expect(changeHistory.body.share.currentValue.enabled).toEqual(true);
             expect(changeHistory.body.share.currentValue.with[0]).toEqual('Local Authority');
             expect(changeHistory.body.share.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
-            expect(new Date(changeHistory.body.share.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            expect(new Date(changeHistory.body.share.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // now disable sharing - provide with options, but they will be ignored
             updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
@@ -1183,7 +1183,7 @@ describe ("establishment", async () => {
             expect(Array.isArray(changeHistory.body.localAuthorities.currentValue)).toEqual(true);
             expect(changeHistory.body.localAuthorities.currentValue.length).toEqual(1)
             expect(changeHistory.body.localAuthorities.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
-            expect(new Date(changeHistory.body.localAuthorities.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            expect(new Date(changeHistory.body.localAuthorities.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
             
             // forced validation errors
             await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
@@ -1285,6 +1285,97 @@ describe ("establishment", async () => {
             expect(Array.isArray(jobsResponse.body.jobs.Vacancies)).toEqual(true);
             expect(jobsResponse.body.jobs.Vacancies.length).toEqual(3);
 
+            // now update vacancies a second time to force a change
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        vacancies: [
+                            {
+                                jobId : 1,
+                                total : 9
+                            },
+                            {
+                                jobId : 10,
+                                total : 333
+                            },
+                            {
+                                title : 'Occupational Therapist',
+                                total : 22
+                            }
+                        ]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            // and now check change history
+            let requestEpoch = new Date().getTime();
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
+            expect(changeHistory.body.jobs.Vacancies).toHaveProperty('lastSaved');
+            expect(changeHistory.body.jobs.Vacancies.currentValue.find(thisJob => thisJob.title === 'Care Worker').total).toEqual(333);
+            expect(changeHistory.body.jobs.Vacancies.lastSaved).toEqual(changeHistory.body.jobs.Vacancies.lastChanged);
+            expect(changeHistory.body.jobs.Vacancies.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.jobs.Vacancies.lastChangedBy).toEqual(site.user.username);
+            let updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Vacancies',
+                PropertiesResponses,
+                changeHistory.body.jobs.Vacancies,
+                {
+                    jobId : 1,
+                    total : 9
+                },
+                {
+                    jobId : 1,
+                    total : 999
+                },
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    return (ref.find(thisJob => thisJob.jobId === given.jobId)).total == given.total;
+                });
+            let lastSavedDate = changeHistory.body.jobs.Vacancies.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        vacancies: [
+                            {
+                                jobId : 1,
+                                total : 9
+                            },
+                            {
+                                jobId : 10,
+                                total : 333
+                            },
+                            {
+                                title : 'Occupational Therapist',
+                                total : 22
+                            }
+                        ]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.jobs.Vacancies.currentValue.find(thisJob => thisJob.jobId === 10).total).toEqual(333);
+            expect(changeHistory.body.jobs.Vacancies.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.jobs.Vacancies.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+            // starters
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
                 .send({
@@ -1317,12 +1408,110 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.jobs.TotalStarters).toEqual(806);
             expect(Array.isArray(jobsResponse.body.jobs.Starters)).toEqual(true);
             expect(jobsResponse.body.jobs.Starters.length).toEqual(4);
+
+            // now update starters a second time to force a change
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            .set('Authorization', authToken)
+            .send({
+                jobs: {
+                    starters: [
+                        {
+                            jobId : 17,
+                            total : 43
+                        },
+                        {
+                            jobId : 1,
+                            total : 454
+                        },
+                        {
+                            title : 'Community, Support and Outreach Work',
+                            total : 756
+                        },
+                        {
+                            jobId : 12,
+                            total : 3
+                        },
+                    ]
+                }
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+            // and now check change history
+            requestEpoch = new Date().getTime();
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
             
+            expect(changeHistory.body.jobs.Starters).toHaveProperty('lastSaved');
+            expect(changeHistory.body.jobs.Starters.currentValue.find(thisJob => thisJob.title === 'Nursing Associate').total).toEqual(43);
+            expect(changeHistory.body.jobs.Starters.lastSaved).toEqual(changeHistory.body.jobs.Starters.lastChanged);
+            expect(changeHistory.body.jobs.Starters.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.jobs.Starters.lastChangedBy).toEqual(site.user.username);
+            updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Starters',
+                PropertiesResponses,
+                changeHistory.body.jobs.Starters,
+                {
+                    jobId : 1,
+                    total : 454
+                },
+                {
+                    jobId : 1,
+                    total : 4
+                },
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    return (ref.find(thisJob => thisJob.jobId === given.jobId)).total == given.total;
+                });
+            lastSavedDate = changeHistory.body.jobs.Starters.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        starters: [
+                            {
+                                jobId : 17,
+                                total : 43
+                            },
+                            {
+                                jobId : 1,
+                                total : 454
+                            },
+                            {
+                                title : 'Community, Support and Outreach Work',
+                                total : 756
+                            },
+                            {
+                                jobId : 12,
+                                total : 3
+                            },
+                        ]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.jobs.Starters.currentValue.find(thisJob => thisJob.jobId === 12).total).toEqual(3);
+            expect(changeHistory.body.jobs.Starters.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.jobs.Starters.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+            
+            // leavers
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
-                        vacancies: [],
                         leavers: [
                             {
                                 jobId : 12,
@@ -1348,6 +1537,122 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.jobs.Leavers.length).toEqual(3);
 
 
+            // now update starters a second time to force a change
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            .set('Authorization', authToken)
+            .send({
+                jobs: {
+                    leavers: [
+                        {
+                            jobId : 12,
+                            total : 32,
+                        },
+                        {
+                            title : 'Nursing Assistant',
+                            total : 0,
+                        },
+                        {
+                            jobId : 29,
+                            total : 73
+                        }
+                    ]
+                }
+            })
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+            // and now check change history
+            requestEpoch = new Date().getTime();
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            
+            expect(changeHistory.body.jobs.Leavers).toHaveProperty('lastSaved');
+            expect(changeHistory.body.jobs.Leavers.currentValue.find(thisJob => thisJob.title === 'Employment Support').total).toEqual(32);
+            expect(changeHistory.body.jobs.Leavers.lastSaved).toEqual(changeHistory.body.jobs.Leavers.lastChanged);
+            expect(changeHistory.body.jobs.Leavers.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.jobs.Leavers.lastChangedBy).toEqual(site.user.username);
+            updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Leavers',
+                PropertiesResponses,
+                changeHistory.body.jobs.Leavers,
+                {
+                    jobId : 29,
+                    total : 73
+                },
+                {
+                    jobId : 29,
+                    total : 111
+                },
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    return (ref.find(thisJob => thisJob.jobId === given.jobId)).total == given.total;
+                });
+            lastSavedDate = changeHistory.body.jobs.Leavers.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        leavers: [
+                            {
+                                jobId : 12,
+                                total : 32,
+                            },
+                            {
+                                title : 'Nursing Assistant',
+                                total : 0,
+                            },
+                            {
+                                jobId : 29,
+                                total : 73
+                            }
+                        ]
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.jobs.Leavers.currentValue.find(thisJob => thisJob.jobId === 29).total).toEqual(73);
+            expect(changeHistory.body.jobs.Leavers.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.jobs.Leavers.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+                        
+            // allow empty set of jobs
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        vacancies: []
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+                .set('Authorization', authToken)
+                .send({
+                    jobs: {
+                        starters: []
+                    }
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(jobsResponse.body.id).toEqual(establishmentId);
+            expect(jobsResponse.body.name).toEqual(site.locationName);
+            expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
                 .send({
