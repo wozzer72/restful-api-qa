@@ -59,7 +59,6 @@ describe("Password Resets", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(loginResponse.body.role).toEqual('Edit');
-    
     });
 
     it("should lookup a known username via usernameOrPasswword with success", async () => {
@@ -187,7 +186,6 @@ describe("Password Resets", async () => {
         successfullToken = validateResponse.headers.authorization;
     });
     it("should not fail on completed token when re-validating password reset", async () => {
-        expect(successfulUuid).not.toBeNull();
 
         await apiEndpoint.post('/registration/validateResetPassword')
             .send({
@@ -241,7 +239,6 @@ describe("Password Resets", async () => {
 
     let successfulLoginToken = null;
     it("should success on reset password if using a valid token and valid password", async () => {
-        expect(successfulUuid).not.toBeNull();
 
         await apiEndpoint.post('/user/resetPassword')
             .set('Authorization', successfullToken)
@@ -287,7 +284,6 @@ describe("Password Resets", async () => {
             .expect(401);
     });
     it("should fail for change password with 403 if no authorisation header is not a valid logged in JWT", async () => {
-        expect(successfulUuid).not.toBeNull();
 
         await apiEndpoint.post('/user/changePassword')
             .set('Authorization', successfullToken)
@@ -300,7 +296,6 @@ describe("Password Resets", async () => {
     });
 
     it("should fail for change password with 400 current/new password is not given", async () => {
-        expect(successfulLoginToken).not.toBeNull();
 
         await apiEndpoint.post('/user/changePassword')
             .set('Authorization', successfulLoginToken)
@@ -322,7 +317,6 @@ describe("Password Resets", async () => {
     });
 
     it("should fail for change password with 400 new password is not of required complexity", async () => {
-        expect(successfulLoginToken).not.toBeNull();
 
         // NOTE - there is no checking on history of password used
         // Intentionally not validating complexity of current password
@@ -338,7 +332,6 @@ describe("Password Resets", async () => {
 
 
     it("should fail for change password with 403 if header is good, but current password is incorrect", async () => {
-        expect(successfulLoginToken).not.toBeNull();
 
         await apiEndpoint.post('/user/changePassword')
             .set('Authorization', successfulLoginToken)
@@ -453,9 +446,6 @@ describe ("Change User Details", async () => {
     });
 
     it('should return a User by uid no history', async () => {
-        expect(knownUserUid).not.toBeNull();
-        expect(loginAuthToken).not.toBeNull();
-        expect(establishmentId).not.toBeNull();
         
         const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=none`)
             .set('Authorization', loginAuthToken)
@@ -495,10 +485,7 @@ describe ("Change User Details", async () => {
     });
 
     it('should return a User by username no history', async () => {
-        expect(knownUserUid).not.toBeNull();
-        expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
-        expect(establishmentId).not.toBeNull();
 
         const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=none`)
             .set('Authorization', loginAuthToken)
@@ -534,10 +521,7 @@ describe ("Change User Details", async () => {
     });
 
     it('should get user with property history', async () => {
-        expect(knownUserUid).not.toBeNull();
-        expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
-        expect(establishmentId).not.toBeNull();
 
         const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=property`)
             .set('Authorization', loginAuthToken)
@@ -641,7 +625,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.fullname.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -742,7 +727,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.jobTitle.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -843,7 +829,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.email.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -957,7 +944,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.phone.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -1057,7 +1045,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.securityQuestion.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -1158,7 +1147,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.securityQuestionAnswer.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -1213,13 +1203,10 @@ describe ("Change User Details", async () => {
 
     // update all properties before checking the timeline history
     it('should get user with timeline history', async () => {
-        expect(knownUserUid).not.toBeNull();
-        expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
-        expect(establishmentId).not.toBeNull();
 
         // force a login failure (to expect on event)
-        await apiEndpoint.post('/login')
+        const loginResponse = await apiEndpoint.post('/login')
             .send({
                 username: nonCQCSite.user.username,
                 password: 'bob'
@@ -1247,8 +1234,6 @@ describe ("Change User Details", async () => {
         // expect(userCreated.username).toEqual(nonCQCSite.user.username);
         // expect(userCreated.event).toEqual('created');
         // expect(userCreated.when).toEqual(new Date().userCreated.whentoISOString());
-        // expect(userCreated.change).toBeNull();
-        // expect(userCreated.property).toBeNull();
         const loginSuccess = getUserResponse.body.history.find(thisEvent => {
             return thisEvent.event === 'loginSuccess';
         });
@@ -1274,8 +1259,6 @@ describe ("Change User Details", async () => {
         expect(allUpdatedEvents.length).toEqual(18); // six properties to have been updated (three times)
         allUpdatedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
-            expect(thisEvent.change).toBeNull();
-            expect(thisEvent.property).toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
 
@@ -1287,10 +1270,8 @@ describe ("Change User Details", async () => {
         expect(allChangedEvents.length).toEqual(12); // six properties to have been updated twice
         allChangedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
-            expect(thisEvent.change).not.toBeNull();
             expect(thisEvent.change).toHaveProperty('new');
             expect(thisEvent.change).toHaveProperty('current');
-            expect(thisEvent.property).not.toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
 
@@ -1302,17 +1283,12 @@ describe ("Change User Details", async () => {
         expect(allSavedEvents.length).toEqual(18); // six properties to have been saved three times (twice with change and once without change)
         allSavedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
-            expect(thisEvent.change).toBeNull();
-            expect(thisEvent.property).not.toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
     });
 
     it('should get user with full history', async () => {
-        expect(knownUserUid).not.toBeNull();
-        expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
-        expect(establishmentId).not.toBeNull();
 
         // force a login failure (to expect on event)
         await apiEndpoint.post('/login')
@@ -1343,8 +1319,6 @@ describe ("Change User Details", async () => {
         // expect(userCreated.username).toEqual(nonCQCSite.user.username);
         // expect(userCreated.event).toEqual('created');
         // expect(userCreated.when).toEqual(new Date().userCreated.whentoISOString());
-        // expect(userCreated.change).toBeNull();
-        // expect(userCreated.property).toBeNull();
         const loginSuccess = getUserResponse.body.history.find(thisEvent => {
             return thisEvent.event === 'loginSuccess';
         });

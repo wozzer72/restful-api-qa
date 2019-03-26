@@ -1,7 +1,7 @@
 let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
 let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 
-exports.validatePropertyChangeHistory = (name, PropertiesResponses, property, currentValue, previousValue, username, requestEpoch, compareFunction) => {
+exports.validatePropertyChangeHistory = (name, PropertiesResponses, property, currentValue, previousValue, username, requestEpoch, compareFunction, numChangeHistoryEvent=4) => {
     /* eg.
     { currentValue: [ { jobId: 7, title: 'Assessment Officer' } ],
       lastSavedBy: 'Federico.Lebsack',
@@ -38,8 +38,9 @@ exports.validatePropertyChangeHistory = (name, PropertiesResponses, property, cu
     expect(property.lastChangedBy).toEqual(username);
 
     const changeHistory = property.changeHistory;
+    //console.log("WA DEBUG change history: ", changeHistory)
     expect(Array.isArray(changeHistory)).toEqual(true);
-    expect(changeHistory.length).toEqual(4);
+    expect(changeHistory.length).toEqual(numChangeHistoryEvent);
     expect(changeHistory[0].username).toEqual(username);
     expect(changeHistory[1].username).toEqual(username);
     expect(changeHistory[2].username).toEqual(username);
