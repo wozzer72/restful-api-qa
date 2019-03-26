@@ -40,6 +40,8 @@ let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
 let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 const PropertiesResponses = {};
 
+const randomString = require('../utils/random').randomString;
+
 describe ("worker", async () => {
     let nonCqcServices = null;
     let establishment1 = null;
@@ -4043,6 +4045,16 @@ describe ("worker", async () => {
                     }
                 })
                 .expect(400);
+            const randomOtherness = randomString(501);
+            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            .set('Authorization', establishment1Token)
+            .send({
+                reason: {
+                    reason: 'Other',
+                    other: randomOtherness
+                }
+            })
+            .expect(400);
         });
 
         it("Should report on response times", () => {
