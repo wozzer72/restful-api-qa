@@ -100,4 +100,11 @@ describe ("Expected reference services", async () => {
             .expect(200);
         expect(workerLeaverReasons.body).toMatchSnapshot();
     });
+
+    it("should fetch service users", async () => {
+        const serviceUsers = await apiEndpoint.get('/serviceUsers')
+            .expect('Content-Type', /json/)
+            .expect(200);
+        expect(serviceUsers.body).toMatchSnapshot();
+    });
 });
