@@ -1203,6 +1203,8 @@ describe ("Change User Details", async () => {
 
     // update all properties before checking the timeline history
     it('should get user with timeline history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
 
         // force a login failure (to expect on event)
@@ -1259,6 +1261,8 @@ describe ("Change User Details", async () => {
         expect(allUpdatedEvents.length).toEqual(18); // six properties to have been updated (three times)
         allUpdatedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.change).toBeNull();
+            expect(thisEvent.property).toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
 
@@ -1270,8 +1274,10 @@ describe ("Change User Details", async () => {
         expect(allChangedEvents.length).toEqual(12); // six properties to have been updated twice
         allChangedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.change).not.toBeNull();
             expect(thisEvent.change).toHaveProperty('new');
             expect(thisEvent.change).toHaveProperty('current');
+            expect(thisEvent.property).not.toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
 
@@ -1283,12 +1289,17 @@ describe ("Change User Details", async () => {
         expect(allSavedEvents.length).toEqual(18); // six properties to have been saved three times (twice with change and once without change)
         allSavedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.change).toBeNull();
+            expect(thisEvent.property).not.toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
     });
 
     it('should get user with full history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
+        expect(establishmentId).not.toBeNull();
 
         // force a login failure (to expect on event)
         await apiEndpoint.post('/login')
