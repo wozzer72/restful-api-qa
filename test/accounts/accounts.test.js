@@ -186,6 +186,7 @@ describe("Password Resets", async () => {
         successfullToken = validateResponse.headers.authorization;
     });
     it("should not fail on completed token when re-validating password reset", async () => {
+        expect(successfulUuid).not.toBeNull();
 
         await apiEndpoint.post('/registration/validateResetPassword')
             .send({
@@ -239,6 +240,7 @@ describe("Password Resets", async () => {
 
     let successfulLoginToken = null;
     it("should success on reset password if using a valid token and valid password", async () => {
+        expect(successfulUuid).not.toBeNull();
 
         await apiEndpoint.post('/user/resetPassword')
             .set('Authorization', successfullToken)
@@ -284,6 +286,7 @@ describe("Password Resets", async () => {
             .expect(401);
     });
     it("should fail for change password with 403 if no authorisation header is not a valid logged in JWT", async () => {
+        expect(successfulUuid).not.toBeNull();
 
         await apiEndpoint.post('/user/changePassword')
             .set('Authorization', successfullToken)
@@ -296,6 +299,7 @@ describe("Password Resets", async () => {
     });
 
     it("should fail for change password with 400 current/new password is not given", async () => {
+        expect(successfulLoginToken).not.toBeNull();
 
         await apiEndpoint.post('/user/changePassword')
             .set('Authorization', successfulLoginToken)
@@ -317,6 +321,7 @@ describe("Password Resets", async () => {
     });
 
     it("should fail for change password with 400 new password is not of required complexity", async () => {
+        expect(successfulLoginToken).not.toBeNull(); 
 
         // NOTE - there is no checking on history of password used
         // Intentionally not validating complexity of current password
@@ -332,6 +337,7 @@ describe("Password Resets", async () => {
 
 
     it("should fail for change password with 403 if header is good, but current password is incorrect", async () => {
+        expect(successfulLoginToken).not.toBeNull();
 
         await apiEndpoint.post('/user/changePassword')
             .set('Authorization', successfulLoginToken)
@@ -446,6 +452,9 @@ describe ("Change User Details", async () => {
     });
 
     it('should return a User by uid no history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
+        expect(establishmentId).not.toBeNull();
         
         const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=none`)
             .set('Authorization', loginAuthToken)
@@ -485,7 +494,10 @@ describe ("Change User Details", async () => {
     });
 
     it('should return a User by username no history', async () => {
+        xpect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
+        expect(establishmentId).not.toBeNull();
 
         const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=none`)
             .set('Authorization', loginAuthToken)
@@ -521,7 +533,10 @@ describe ("Change User Details", async () => {
     });
 
     it('should get user with property history', async () => {
+        expect(knownUserUid).not.toBeNull();
+        expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
+        expect(establishmentId).not.toBeNull();
 
         const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=property`)
             .set('Authorization', loginAuthToken)
