@@ -59,6 +59,7 @@ describe("Password Resets", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(loginResponse.body.role).toEqual('Edit');
+
     });
 
     it("should lookup a known username via usernameOrPasswword with success", async () => {
@@ -321,7 +322,7 @@ describe("Password Resets", async () => {
     });
 
     it("should fail for change password with 400 new password is not of required complexity", async () => {
-        expect(successfulLoginToken).not.toBeNull(); 
+        expect(successfulLoginToken).not.toBeNull();
 
         // NOTE - there is no checking on history of password used
         // Intentionally not validating complexity of current password
@@ -494,7 +495,7 @@ describe ("Change User Details", async () => {
     });
 
     it('should return a User by username no history', async () => {
-        xpect(knownUserUid).not.toBeNull();
+        expect(knownUserUid).not.toBeNull();
         expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
         expect(establishmentId).not.toBeNull();
