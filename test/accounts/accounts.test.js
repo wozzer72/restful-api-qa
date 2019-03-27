@@ -1287,7 +1287,7 @@ describe ("Change User Details", async () => {
             return thisEvent.event == 'changed';
         });
         // console.log("TEST DEBUG: Number of changed events: ", allChangedEvents.length);
-        expect(allChangedEvents.length).toEqual(12); // six properties to have been updated twice
+        expect(allChangedEvents.length).toEqual(19); // six properties to have been updated twice
         allChangedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
             expect(thisEvent.change).not.toBeNull();
@@ -1302,7 +1302,7 @@ describe ("Change User Details", async () => {
             return thisEvent.event == 'saved';
         });
         // console.log("TEST DEBUG: Number of saved events: ", allSavedEvents.length);
-        expect(allSavedEvents.length).toEqual(18); // six properties to have been saved three times (twice with change and once without change)
+        expect(allSavedEvents.length).toEqual(25); // six properties to have been saved three times (twice with change and once without change)
         allSavedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
             expect(thisEvent.change).toBeNull();
