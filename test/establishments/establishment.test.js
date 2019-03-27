@@ -138,6 +138,99 @@ describe ("establishment", async () => {
             //console.log("TEST DEBUG - auth token: ", authToken)
         });
 
+        it("should update the name", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            // name is mandatory - so even on the first get, there should be a name!
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/employerType`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/name`)
+                .set('Authorization', authToken)
+                .send({
+                    name: site.locationName + ' Updated'
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName + ' Updated');
+
+            // and now check change history
+            let requestEpoch = new Date().getTime();
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/name?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.name).toHaveProperty('lastSaved');
+            expect(changeHistory.body.name.currentValue).toEqual(site.locationName + ' Updated');
+            expect(changeHistory.body.name.lastSaved).toEqual(changeHistory.body.name.lastChanged);
+            expect(changeHistory.body.name.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.name.lastChangedBy).toEqual(site.user.username);
+            let updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Name',
+                PropertiesResponses,
+                changeHistory.body.name,
+                site.locationName + ' Updated',
+                site.locationName,
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref == given
+                });
+            let lastSavedDate = changeHistory.body.name.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/name`)
+                .set('Authorization', authToken)
+                .send({
+                    name: site.locationName + ' Updated'
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/name?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.name.currentValue).toEqual(site.locationName + ' Updated');
+            expect(changeHistory.body.name.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.name.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+            // now test for an unexpected name (greater than 120 characters)
+            apiEndpoint.post(`/establishment/${establishmentId}/name`)
+                .set('Authorization', authToken)
+                .send({
+                    name : Random.randomString(121)
+                })
+                .expect('Content-Type', /text/)
+                .expect(400)
+                .end((err,res) => {
+                    expect(res.text).toEqual('Unexpected Input.');
+                    expect(res.error.status).toEqual(400);
+                });
+
+            // ensure name is back to the original name - as expected upon in all tests below
+            await apiEndpoint.post(`/establishment/${establishmentId}/name`)
+                .set('Authorization', authToken)
+                .send({
+                    name: site.locationName
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+        });
+
         it.skip("should update the employer type", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
