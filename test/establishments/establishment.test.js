@@ -138,7 +138,7 @@ describe ("establishment", async () => {
             //console.log("TEST DEBUG - auth token: ", authToken)
         });
 
-        it("should update the employer type", async () => {
+        it.skip("should update the employer type", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -267,7 +267,7 @@ describe ("establishment", async () => {
             
         });
 
-        it("should update the number of staff", async () => {
+        it.skip("should update the number of staff", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -395,7 +395,7 @@ describe ("establishment", async () => {
         });
         */
 
-        it("should update 'other' services", async () => {
+        it.skip("should update 'other' services", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -500,8 +500,8 @@ describe ("establishment", async () => {
                 .send({
                     services: modifiedSetOfServices
                 })
-                // .expect('Content-Type', /json/)
-                // .expect(200);
+                .expect('Content-Type', /json/)
+                .expect(200);
             const secondSetOfOtherServices = secondPostResponse.body.otherServices;
 
             let requestEpoch = new Date().getTime();
@@ -593,11 +593,171 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
+        it("should update service users", async () => {
+            expect(authToken).not.toBeNull();
+            expect(establishmentId).not.toBeNull();
+
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(firstResponse.body.id).toEqual(establishmentId);
+            expect(firstResponse.body.uid).toEqual(establishmentUid);
+            expect(firstResponse.body.name).toEqual(site.locationName);
+            expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
+            expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+
+            // before adding any services
+            expect(Array.isArray(firstResponse.body.serviceUsers)).toEqual(true);
+            expect(firstResponse.body.serviceUsers.length).toEqual(0);
+
+            // add new other services
+            const randomServiceUser = Random.randomInt(1,23);
+           
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: [
+                        {
+                            id: randomServiceUser
+                        }
+                    ]
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(updateResponse.body.id).toEqual(establishmentId);
+            expect(updateResponse.body.name).toEqual(site.locationName);
+
+            // confirm the services
+            expect(Array.isArray(updateResponse.body.serviceUsers)).toEqual(true);
+            expect(updateResponse.body.serviceUsers.length).toEqual(1);
+
+            // and now check change history
+            
+            // to force a change on service users
+            const secondServiceUser = randomServiceUser == 23 ? 1 : randomServiceUser + 1;
+
+            const secondPostResponse = await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: [
+                        {
+                            id: randomServiceUser
+                        },
+                        {
+                            id: secondServiceUser
+                        }
+                    ]
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            let requestEpoch = new Date().getTime();
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/serviceUsers?history=full`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(changeHistory.body.serviceUsers).toHaveProperty('lastSaved');
+
+            expect(Array.isArray(changeHistory.body.serviceUsers.currentValue)).toEqual(true);
+            expect(changeHistory.body.serviceUsers.lastSaved).toEqual(changeHistory.body.serviceUsers.lastChanged);
+            expect(changeHistory.body.serviceUsers.lastSavedBy).toEqual(site.user.username);
+            expect(changeHistory.body.serviceUsers.lastChangedBy).toEqual(site.user.username);
+            let updatedEpoch = new Date(changeHistory.body.updated).getTime();
+            expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
+
+            // test change history for both the rate and the value
+            validatePropertyChangeHistory(
+                'Service Users',
+                PropertiesResponses,
+                changeHistory.body.serviceUsers,
+                [{id: randomServiceUser},{id: secondServiceUser}],
+                [{id: randomServiceUser}],
+                site.user.username,
+                requestEpoch,
+                (ref, given) => {
+                    return ref.length === given.length && ref.every(thisService => given.find(thatService => thatService.id === thisService.id));
+                });
+            let lastSavedDate = changeHistory.body.serviceUsers.lastSaved;
+            
+            // now update the property but with same value - expect no change
+            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: [
+                        {
+                            id: randomServiceUser
+                        },
+                        {
+                            id: secondServiceUser
+                        }
+                    ]
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/serviceUsers?history=property`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(Array.isArray(changeHistory.body.serviceUsers.currentValue)).toEqual(true);
+            expect(changeHistory.body.serviceUsers.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
+            expect(new Date(changeHistory.body.serviceUsers.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
+
+            // confirm can update using a named service
+            const namedServicePostResponse = await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: [
+                        {
+                            service: 'Carers of adults'
+                        }
+                    ]
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(namedServicePostResponse.body.serviceUsers[0].id).toEqual(21);
+        
+            // and now test for expected validation failures
+            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: {
+                        id: "1"     // must be an integer
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: {
+                        id: 100     // must be in range
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: {
+                        sservice: "Any children and young people"     // must have "service" attribute
+                    }
+                })
+                .expect(400);
+            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: {
+                        service: "Unknown"     // "service" must exist
+                    }
+                })
+                .expect(400);
+        });
+
        /*  it.skip("should validate the list of all service capacities returned on GET all=true", async () => {
         });
         it.skip("should validate the list of all service capacities returned on GET all=true having updated capacities and confirming the answer", async () => {
         }); */
-        it("should update 'service capacities", async () => {
+        it.skip("should update 'service capacities", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -833,7 +993,7 @@ describe ("establishment", async () => {
             }
         });
 
-        it("should update the sharing options", async () => {
+        it.skip("should update the sharing options", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1056,7 +1216,7 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        it("should update the Local Authorities Share Options", async () => {
+        it.skip("should update the Local Authorities Share Options", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1254,7 +1414,7 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        it("should update the number of vacancies, starters and leavers", async () => {
+        it.skip("should update the number of vacancies, starters and leavers", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
@@ -1854,7 +2014,7 @@ describe ("establishment", async () => {
                 .expect(400);
         });
 
-        it("should get the Establishment", async () => {
+        it.skip("should get the Establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
