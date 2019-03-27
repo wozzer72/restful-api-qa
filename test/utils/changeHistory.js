@@ -1,5 +1,5 @@
 let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
-let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
+let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1300;
 
 exports.validatePropertyChangeHistory = (name, PropertiesResponses, property, currentValue, previousValue, username, requestEpoch, compareFunction, numChangeHistoryEvent=4) => {
     /* eg.
