@@ -59,7 +59,7 @@ describe("Password Resets", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(loginResponse.body.role).toEqual('Edit');
-    
+
     });
 
     it("should lookup a known username via usernameOrPasswword with success", async () => {
@@ -641,7 +641,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.fullname.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -742,7 +743,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.jobTitle.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -843,7 +845,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.email.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -957,7 +960,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.phone.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -1057,7 +1061,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.securityQuestion.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -1158,7 +1163,8 @@ describe ("Change User Details", async () => {
             requestEpoch,
             (ref, given) => {
                 return ref == given
-            });
+            },
+            6);
         let lastSavedDate = userChangeHistory.body.securityQuestionAnswer.lastSaved;
         
         // now update the property but with same value - expect no change
@@ -1216,10 +1222,9 @@ describe ("Change User Details", async () => {
         expect(knownUserUid).not.toBeNull();
         expect(loginAuthToken).not.toBeNull();
         const fetchUsername = nonCQCSite.user.username;
-        expect(establishmentId).not.toBeNull();
 
         // force a login failure (to expect on event)
-        await apiEndpoint.post('/login')
+        const loginResponse = await apiEndpoint.post('/login')
             .send({
                 username: nonCQCSite.user.username,
                 password: 'bob'
@@ -1247,8 +1252,6 @@ describe ("Change User Details", async () => {
         // expect(userCreated.username).toEqual(nonCQCSite.user.username);
         // expect(userCreated.event).toEqual('created');
         // expect(userCreated.when).toEqual(new Date().userCreated.whentoISOString());
-        // expect(userCreated.change).toBeNull();
-        // expect(userCreated.property).toBeNull();
         const loginSuccess = getUserResponse.body.history.find(thisEvent => {
             return thisEvent.event === 'loginSuccess';
         });
@@ -1284,7 +1287,7 @@ describe ("Change User Details", async () => {
             return thisEvent.event == 'changed';
         });
         // console.log("TEST DEBUG: Number of changed events: ", allChangedEvents.length);
-        expect(allChangedEvents.length).toEqual(12); // six properties to have been updated twice
+        expect(allChangedEvents.length).toEqual(19); // six properties to have been updated twice
         allChangedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
             expect(thisEvent.change).not.toBeNull();
@@ -1299,7 +1302,7 @@ describe ("Change User Details", async () => {
             return thisEvent.event == 'saved';
         });
         // console.log("TEST DEBUG: Number of saved events: ", allSavedEvents.length);
-        expect(allSavedEvents.length).toEqual(18); // six properties to have been saved three times (twice with change and once without change)
+        expect(allSavedEvents.length).toEqual(25); // six properties to have been saved three times (twice with change and once without change)
         allSavedEvents.forEach(thisEvent => {
             expect(thisEvent.username).toEqual(nonCQCSite.user.username);
             expect(thisEvent.change).toBeNull();
@@ -1343,8 +1346,6 @@ describe ("Change User Details", async () => {
         // expect(userCreated.username).toEqual(nonCQCSite.user.username);
         // expect(userCreated.event).toEqual('created');
         // expect(userCreated.when).toEqual(new Date().userCreated.whentoISOString());
-        // expect(userCreated.change).toBeNull();
-        // expect(userCreated.property).toBeNull();
         const loginSuccess = getUserResponse.body.history.find(thisEvent => {
             return thisEvent.event === 'loginSuccess';
         });
