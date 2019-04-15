@@ -678,9 +678,8 @@ describe ("establishment", async () => {
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
             expect(firstResponse.body.mainService.name).toEqual(site.mainService);
 
-            // before adding any services
-            expect(Array.isArray(firstResponse.body.otherServices)).toEqual(true);
-            expect(firstResponse.body.otherServices.length).toEqual(0);
+            // before adding any services - "otherServices" should be missing
+            expect(firstResponse.body).not.toHaveProperty('otherServices');
 
             // we also called the get with all=true, so test 'allOtherServices'
             expect(Array.isArray(firstResponse.body.allOtherServices)).toEqual(true);
@@ -873,9 +872,8 @@ describe ("establishment", async () => {
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username);
 
-            // before adding any services
-            expect(Array.isArray(firstResponse.body.serviceUsers)).toEqual(true);
-            expect(firstResponse.body.serviceUsers.length).toEqual(0);
+            // before adding any services - serviceUsers property is missing
+            expect(firstResponse.body).not.toHaveProperty('serviceUsers');
 
             // add new other services
             const randomServiceUser = Random.randomInt(1,23);
@@ -1040,9 +1038,8 @@ describe ("establishment", async () => {
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
             expect(firstResponse.body.mainService.name).toEqual(site.mainService);
 
-            // before adding any service capacities
-            expect(Array.isArray(firstResponse.body.capacities)).toEqual(true);
-            expect(firstResponse.body.capacities.length).toEqual(0);
+            // before adding any service capacities - capacities property will be missing
+            expect(firstResponse.body).not.toHaveProperty('capacities');
 
             // we also called the get with all=true, so test 'allOtherServices'
             expect(Array.isArray(firstResponse.body.allServiceCapacities)).toEqual(true);
@@ -1507,9 +1504,8 @@ describe ("establishment", async () => {
                 expect(firstResponse.body.primaryAuthority).toHaveProperty('name');     // we cannot validate the name of the Local Authority - this is not known in reference data
             }
 
-            // before update expect the "localAuthorities" attribute as an array but it will be empty
-            expect(Array.isArray(firstResponse.body.localAuthorities)).toEqual(true);
-            expect(firstResponse.body.localAuthorities.length).toEqual(0);
+            // before update expect the "localAuthorities" attribute to be missing
+            expect(firstResponse.body).not.toHaveProperty('localAuthorities');
 
             // assume the main and just one other (random) authority to set, along with some dodgy data to ignore
             const randomAuthorityCustodianCode = await laUtils.lookupRandomAuthority(apiEndpoint);
