@@ -181,7 +181,7 @@ describe("Password Resets", async () => {
 
         const JWTbearerRegex = /^Bearer/;
         expect(JWTbearerRegex.test(validateResponse.headers.authorization)).toEqual(true);
-        expect(validateResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(validateResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(validateResponse.body.fullname).toEqual(nonCQCSite.user.fullname);
 
         successfullToken = validateResponse.headers.authorization;
@@ -464,16 +464,16 @@ describe ("Change User Details", async () => {
             .expect(200);
 
         expect(getUserResponse.body.uid).toEqual(knownUserUid);
-        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
         expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
         expect(getUserResponse.body.fullname).toEqual(nonCQCSite.user.fullname);
         expect(getUserResponse.body.jobTitle).toEqual(nonCQCSite.user.jobTitle);
-        expect(getUserResponse.body.email).toEqual(nonCQCSite.user.emailAddress);
+        expect(getUserResponse.body.email).toEqual(nonCQCSite.user.emailAddress.toLowerCase());
         expect(getUserResponse.body.phone).toEqual(nonCQCSite.user.contactNumber);
         expect(getUserResponse.body.securityQuestion).toEqual(nonCQCSite.user.securityQuestion);
         expect(getUserResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer);
-        expect(getUserResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.updatedBy).toEqual(nonCQCSite.user.username.toLowerCase());
 
 
         // and now expected errors
@@ -506,12 +506,12 @@ describe ("Change User Details", async () => {
             })
             .expect(200);
         expect(getUserResponse.body.uid).toEqual(knownUserUid);
-        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
         expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
         expect(getUserResponse.body.fullname).toEqual(nonCQCSite.user.fullname);
         expect(getUserResponse.body.jobTitle).toEqual(nonCQCSite.user.jobTitle);
-        expect(getUserResponse.body.email).toEqual(nonCQCSite.user.emailAddress);
+        expect(getUserResponse.body.email).toEqual(nonCQCSite.user.emailAddress.toLowerCase());
         expect(getUserResponse.body.phone).toEqual(nonCQCSite.user.contactNumber);
         expect(getUserResponse.body.securityQuestion).toEqual(nonCQCSite.user.securityQuestion);
         expect(getUserResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer);
@@ -545,49 +545,49 @@ describe ("Change User Details", async () => {
             })
             .expect(200);
         expect(getUserResponse.body.uid).toEqual(knownUserUid);
-        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
         expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
 
         expect(getUserResponse.body.fullname).toEqual({
             currentValue: nonCQCSite.user.fullname,
-            lastSavedBy: nonCQCSite.user.username,
-            lastChangedBy: nonCQCSite.user.username,
+            lastSavedBy: nonCQCSite.user.username.toLowerCase(),
+            lastChangedBy: nonCQCSite.user.username.toLowerCase(),
             lastSaved: new Date(getUserResponse.body.fullname.lastSaved).toISOString(),
             lastChanged: new Date(getUserResponse.body.fullname.lastChanged).toISOString()
         });
         expect(getUserResponse.body.jobTitle).toEqual({
             currentValue: nonCQCSite.user.jobTitle,
-            lastSavedBy: nonCQCSite.user.username,
-            lastChangedBy: nonCQCSite.user.username,
+            lastSavedBy: nonCQCSite.user.username.toLowerCase(),
+            lastChangedBy: nonCQCSite.user.username.toLowerCase(),
             lastSaved: new Date(getUserResponse.body.jobTitle.lastSaved).toISOString(),
             lastChanged: new Date(getUserResponse.body.jobTitle.lastChanged).toISOString()
         });
         expect(getUserResponse.body.email).toEqual({
-            currentValue: nonCQCSite.user.emailAddress,
-            lastSavedBy: nonCQCSite.user.username,
-            lastChangedBy: nonCQCSite.user.username,
+            currentValue: nonCQCSite.user.emailAddress.toLowerCase(),
+            lastSavedBy: nonCQCSite.user.username.toLowerCase(),
+            lastChangedBy: nonCQCSite.user.username.toLowerCase(),
             lastSaved: new Date(getUserResponse.body.email.lastSaved).toISOString(),
             lastChanged: new Date(getUserResponse.body.email.lastChanged).toISOString()
         });
         expect(getUserResponse.body.phone).toEqual({
             currentValue: nonCQCSite.user.contactNumber,
-            lastSavedBy: nonCQCSite.user.username,
-            lastChangedBy: nonCQCSite.user.username,
+            lastSavedBy: nonCQCSite.user.username.toLowerCase(),
+            lastChangedBy: nonCQCSite.user.username.toLowerCase(),
             lastSaved: new Date(getUserResponse.body.phone.lastSaved).toISOString(),
             lastChanged: new Date(getUserResponse.body.phone.lastChanged).toISOString()
         });
         expect(getUserResponse.body.securityQuestion).toEqual({
             currentValue: nonCQCSite.user.securityQuestion,
-            lastSavedBy: nonCQCSite.user.username,
-            lastChangedBy: nonCQCSite.user.username,
+            lastSavedBy: nonCQCSite.user.username.toLowerCase(),
+            lastChangedBy: nonCQCSite.user.username.toLowerCase(),
             lastSaved: new Date(getUserResponse.body.securityQuestion.lastSaved).toISOString(),
             lastChanged: new Date(getUserResponse.body.securityQuestion.lastChanged).toISOString()
         });
         expect(getUserResponse.body.securityQuestionAnswer).toEqual({
             currentValue: nonCQCSite.user.securityAnswer,
-            lastSavedBy: nonCQCSite.user.username,
-            lastChangedBy: nonCQCSite.user.username,
+            lastSavedBy: nonCQCSite.user.username.toLowerCase(),
+            lastChangedBy: nonCQCSite.user.username.toLowerCase(),
             lastSaved: new Date(getUserResponse.body.securityQuestionAnswer.lastSaved).toISOString(),
             lastChanged: new Date(getUserResponse.body.securityQuestionAnswer.lastChanged).toISOString()
         });
@@ -602,10 +602,10 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(uuidV4Regex.test(updatedFullnameResponse.body.uid)).toEqual(true);
-        expect(updatedFullnameResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedFullnameResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedFullnameResponse.body.created).toEqual(new Date(updatedFullnameResponse.body.created).toISOString());
         expect(updatedFullnameResponse.body.updated).toEqual(new Date(updatedFullnameResponse.body.updated).toISOString());
-        expect(updatedFullnameResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(updatedFullnameResponse.body.updatedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedFullnameResponse.body.fullname).toEqual(nonCQCSite.user.fullname + ' Updated');
 
         //validatePropertyChangeHistory
@@ -625,8 +625,8 @@ describe ("Change User Details", async () => {
             .expect(200);
         expect(userChangeHistory.body.fullname).toHaveProperty('lastSaved');
         expect(userChangeHistory.body.fullname.lastSaved).toEqual(userChangeHistory.body.fullname.lastChanged);
-        expect(userChangeHistory.body.fullname.lastSavedBy).toEqual(nonCQCSite.user.username);
-        expect(userChangeHistory.body.fullname.lastChangedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.fullname.lastSavedBy).toEqual(nonCQCSite.user.username.toLowerCase());
+        expect(userChangeHistory.body.fullname.lastChangedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
         expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -704,10 +704,10 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(uuidV4Regex.test(updatedJobTitleResponse.body.uid)).toEqual(true);
-        expect(updatedJobTitleResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedJobTitleResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedJobTitleResponse.body.created).toEqual(new Date(updatedJobTitleResponse.body.created).toISOString());
         expect(updatedJobTitleResponse.body.updated).toEqual(new Date(updatedJobTitleResponse.body.updated).toISOString());
-        expect(updatedJobTitleResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(updatedJobTitleResponse.body.updatedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedJobTitleResponse.body.jobTitle).toEqual(nonCQCSite.user.jobTitle + ' Updated');
 
         //validatePropertyChangeHistory
@@ -727,8 +727,8 @@ describe ("Change User Details", async () => {
             .expect(200);
         expect(userChangeHistory.body.jobTitle).toHaveProperty('lastSaved');
         expect(userChangeHistory.body.jobTitle.lastSaved).toEqual(userChangeHistory.body.jobTitle.lastChanged);
-        expect(userChangeHistory.body.jobTitle.lastSavedBy).toEqual(nonCQCSite.user.username);
-        expect(userChangeHistory.body.jobTitle.lastChangedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.jobTitle.lastSavedBy).toEqual(nonCQCSite.user.username.toLowerCase());
+        expect(userChangeHistory.body.jobTitle.lastChangedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
         expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -806,11 +806,11 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(uuidV4Regex.test(updatedEmailResponse.body.uid)).toEqual(true);
-        expect(updatedEmailResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedEmailResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedEmailResponse.body.created).toEqual(new Date(updatedEmailResponse.body.created).toISOString());
         expect(updatedEmailResponse.body.updated).toEqual(new Date(updatedEmailResponse.body.updated).toISOString());
-        expect(updatedEmailResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
-        expect(updatedEmailResponse.body.email).toEqual('updated.' + nonCQCSite.user.emailAddress);
+        expect(updatedEmailResponse.body.updatedBy).toEqual(nonCQCSite.user.username.toLowerCase());
+        expect(updatedEmailResponse.body.email).toEqual('updated.' + nonCQCSite.user.emailAddress.toLowerCase());
 
         //validatePropertyChangeHistory
         // and now check change history
@@ -829,8 +829,8 @@ describe ("Change User Details", async () => {
             .expect(200);
         expect(userChangeHistory.body.email).toHaveProperty('lastSaved');
         expect(userChangeHistory.body.email.lastSaved).toEqual(userChangeHistory.body.email.lastChanged);
-        expect(userChangeHistory.body.email.lastSavedBy).toEqual(nonCQCSite.user.username);
-        expect(userChangeHistory.body.email.lastChangedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.email.lastSavedBy).toEqual(nonCQCSite.user.username.toLowerCase());
+        expect(userChangeHistory.body.email.lastChangedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
         expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -839,8 +839,8 @@ describe ("Change User Details", async () => {
             'email',
             PropertiesResponses,
             userChangeHistory.body.email,
-            'updated.again.' + nonCQCSite.user.emailAddress,
-            'updated.' + nonCQCSite.user.emailAddress,
+            'updated.again.' + nonCQCSite.user.emailAddress.toLowerCase(),
+            'updated.' + nonCQCSite.user.emailAddress.toLowerCase(),
             nonCQCSite.user.username,
             requestEpoch,
             (ref, given) => {
@@ -861,7 +861,7 @@ describe ("Change User Details", async () => {
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
-        expect(userChangeHistory.body.email.currentValue).toEqual('updated.again.' + nonCQCSite.user.emailAddress);
+        expect(userChangeHistory.body.email.currentValue).toEqual('updated.again.' + nonCQCSite.user.emailAddress.toLowerCase());
         expect(userChangeHistory.body.email.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
         expect(new Date(userChangeHistory.body.email.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
@@ -921,10 +921,10 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(uuidV4Regex.test(updatedPhoneResponse.body.uid)).toEqual(true);
-        expect(updatedPhoneResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedPhoneResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedPhoneResponse.body.created).toEqual(new Date(updatedPhoneResponse.body.created).toISOString());
         expect(updatedPhoneResponse.body.updated).toEqual(new Date(updatedPhoneResponse.body.updated).toISOString());
-        expect(updatedPhoneResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(updatedPhoneResponse.body.updatedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedPhoneResponse.body.phone).toEqual('01234 123123');
 
         //validatePropertyChangeHistory
@@ -944,8 +944,8 @@ describe ("Change User Details", async () => {
             .expect(200);
         expect(userChangeHistory.body.phone).toHaveProperty('lastSaved');
         expect(userChangeHistory.body.phone.lastSaved).toEqual(userChangeHistory.body.phone.lastChanged);
-        expect(userChangeHistory.body.phone.lastSavedBy).toEqual(nonCQCSite.user.username);
-        expect(userChangeHistory.body.phone.lastChangedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.phone.lastSavedBy).toEqual(nonCQCSite.user.username.toLowerCase());
+        expect(userChangeHistory.body.phone.lastChangedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
         expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -1022,10 +1022,10 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(uuidV4Regex.test(updatedSecurityQuestionResponse.body.uid)).toEqual(true);
-        expect(updatedSecurityQuestionResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedSecurityQuestionResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedSecurityQuestionResponse.body.created).toEqual(new Date(updatedSecurityQuestionResponse.body.created).toISOString());
         expect(updatedSecurityQuestionResponse.body.updated).toEqual(new Date(updatedSecurityQuestionResponse.body.updated).toISOString());
-        expect(updatedSecurityQuestionResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(updatedSecurityQuestionResponse.body.updatedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedSecurityQuestionResponse.body.securityQuestion).toEqual(nonCQCSite.user.securityQuestion + ' updated');
 
         //validatePropertyChangeHistory
@@ -1045,8 +1045,8 @@ describe ("Change User Details", async () => {
             .expect(200);
         expect(userChangeHistory.body.securityQuestion).toHaveProperty('lastSaved');
         expect(userChangeHistory.body.securityQuestion.lastSaved).toEqual(userChangeHistory.body.securityQuestion.lastChanged);
-        expect(userChangeHistory.body.securityQuestion.lastSavedBy).toEqual(nonCQCSite.user.username);
-        expect(userChangeHistory.body.securityQuestion.lastChangedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.securityQuestion.lastSavedBy).toEqual(nonCQCSite.user.username.toLowerCase());
+        expect(userChangeHistory.body.securityQuestion.lastChangedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
         expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -1124,10 +1124,10 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         expect(uuidV4Regex.test(updatedSecurityQuestionAnswerResponse.body.uid)).toEqual(true);
-        expect(updatedSecurityQuestionAnswerResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(updatedSecurityQuestionAnswerResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedSecurityQuestionAnswerResponse.body.created).toEqual(new Date(updatedSecurityQuestionAnswerResponse.body.created).toISOString());
         expect(updatedSecurityQuestionAnswerResponse.body.updated).toEqual(new Date(updatedSecurityQuestionAnswerResponse.body.updated).toISOString());
-        expect(updatedSecurityQuestionAnswerResponse.body.updatedBy).toEqual(nonCQCSite.user.username);
+        expect(updatedSecurityQuestionAnswerResponse.body.updatedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(updatedSecurityQuestionAnswerResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer + ' updated');
 
         //validatePropertyChangeHistory
@@ -1147,8 +1147,8 @@ describe ("Change User Details", async () => {
             .expect(200);
         expect(userChangeHistory.body.securityQuestionAnswer).toHaveProperty('lastSaved');
         expect(userChangeHistory.body.securityQuestionAnswer.lastSaved).toEqual(userChangeHistory.body.securityQuestionAnswer.lastChanged);
-        expect(userChangeHistory.body.securityQuestionAnswer.lastSavedBy).toEqual(nonCQCSite.user.username);
-        expect(userChangeHistory.body.securityQuestionAnswer.lastChangedBy).toEqual(nonCQCSite.user.username);
+        expect(userChangeHistory.body.securityQuestionAnswer.lastSavedBy).toEqual(nonCQCSite.user.username.toLowerCase());
+        expect(userChangeHistory.body.securityQuestionAnswer.lastChangedBy).toEqual(nonCQCSite.user.username.toLowerCase());
         let updatedEpoch = new Date(userChangeHistory.body.updated).getTime();
         expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -1238,7 +1238,7 @@ describe ("Change User Details", async () => {
             })
             .expect(200);
         expect(getUserResponse.body.uid).toEqual(knownUserUid);
-        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
         expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
 
@@ -1256,7 +1256,7 @@ describe ("Change User Details", async () => {
             return thisEvent.event === 'loginSuccess';
         });
         // console.log("TEST DEBUG: login success event: ", loginSuccess);
-        expect(loginSuccess.username).toEqual(nonCQCSite.user.username);
+        expect(loginSuccess.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(loginSuccess.change).toEqual({});
         expect(loginSuccess.property).toEqual('password');
         expect(loginSuccess.when).toEqual(new Date(loginSuccess.when).toISOString());
@@ -1264,7 +1264,7 @@ describe ("Change User Details", async () => {
             return thisEvent.event === 'loginFailed';
         });
         // console.log("TEST DEBUG: login failed event: ", loginFailed);
-        expect(loginFailed.username).toEqual(nonCQCSite.user.username);
+        expect(loginFailed.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(loginFailed.change).toEqual({});
         expect(loginFailed.property).toEqual('password');
         expect(loginFailed.when).toEqual(new Date(loginFailed.when).toISOString());
@@ -1276,7 +1276,7 @@ describe ("Change User Details", async () => {
         // console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
         expect(allUpdatedEvents.length).toEqual(18); // six properties to have been updated (three times)
         allUpdatedEvents.forEach(thisEvent => {
-            expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.username).toEqual(nonCQCSite.user.username.toLowerCase());
             expect(thisEvent.change).toBeNull();
             expect(thisEvent.property).toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
@@ -1289,7 +1289,7 @@ describe ("Change User Details", async () => {
         // console.log("TEST DEBUG: Number of changed events: ", allChangedEvents.length);
         expect(allChangedEvents.length).toEqual(19); // six properties to have been updated twice
         allChangedEvents.forEach(thisEvent => {
-            expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.username).toEqual(nonCQCSite.user.username.toLowerCase());
             expect(thisEvent.change).not.toBeNull();
             expect(thisEvent.change).toHaveProperty('new');
             expect(thisEvent.change).toHaveProperty('current');
@@ -1304,7 +1304,7 @@ describe ("Change User Details", async () => {
         // console.log("TEST DEBUG: Number of saved events: ", allSavedEvents.length);
         expect(allSavedEvents.length).toEqual(25); // six properties to have been saved three times (twice with change and once without change)
         allSavedEvents.forEach(thisEvent => {
-            expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.username).toEqual(nonCQCSite.user.username.toLowerCase());
             expect(thisEvent.change).toBeNull();
             expect(thisEvent.property).not.toBeNull();
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
@@ -1332,7 +1332,7 @@ describe ("Change User Details", async () => {
             })
             .expect(200);
         expect(getUserResponse.body.uid).toEqual(knownUserUid);
-        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username);
+        expect(getUserResponse.body.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(getUserResponse.body.created).toEqual(new Date(getUserResponse.body.created).toISOString());
         expect(getUserResponse.body.updated).toEqual(new Date(getUserResponse.body.updated).toISOString());
 
@@ -1350,13 +1350,13 @@ describe ("Change User Details", async () => {
             return thisEvent.event === 'loginSuccess';
         });
         // console.log("TEST DEBUG: login success event: ", loginSuccess);
-        expect(loginSuccess.username).toEqual(nonCQCSite.user.username);
+        expect(loginSuccess.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(loginSuccess.when).toEqual(new Date(loginSuccess.when).toISOString());
         const loginFailed = getUserResponse.body.history.find(thisEvent => {
             return thisEvent.event === 'loginFailed';
         });
         // console.log("TEST DEBUG: login failed event: ", loginFailed);
-        expect(loginFailed.username).toEqual(nonCQCSite.user.username);
+        expect(loginFailed.username).toEqual(nonCQCSite.user.username.toLowerCase());
         expect(loginFailed.when).toEqual(new Date(loginFailed.when).toISOString());
 
         // in full history mode, there should be updated events
@@ -1366,7 +1366,7 @@ describe ("Change User Details", async () => {
         // console.log("TEST DEBUG: Number of updated events: ", allUpdatedEvents.length);
         expect(allUpdatedEvents.length).toEqual(18); // six properties to have been updated three times (twice with change and once without change)
         allUpdatedEvents.forEach(thisEvent => {
-            expect(thisEvent.username).toEqual(nonCQCSite.user.username);
+            expect(thisEvent.username).toEqual(nonCQCSite.user.username.toLowerCase());
             expect(thisEvent.when).toEqual(new Date(thisEvent.when).toISOString());
         });
 

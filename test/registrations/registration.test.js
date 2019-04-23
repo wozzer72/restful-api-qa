@@ -115,6 +115,7 @@ describe ("Registrations", async () => {
         expect(Number.isInteger(registeredEstablishment.body.establishmentId)).toEqual(true);
     });
 
+    
     it("should create a CQC registation of known location id", async () => {
         cqcSite = registrationUtils.newCqcSite(locations[0], cqcServices);
         const registeredEstablishment = await apiEndpoint.post('/registration')
@@ -192,23 +193,23 @@ describe ("Registrations", async () => {
         expect(registeredEstablishment.body.message).toEqual('Service name \'unKNown serViCE\' not found');
     });
 
-
     it("should lookup a known username with success", async () => {
         const knownUsername = nonCQCSite.user.username;
         const registeredEstablishment = await apiEndpoint.get('/registration/username/' + encodeURIComponent(knownUsername))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("1");
-        expect(registeredEstablishment.body.message).toEqual(`Username '${knownUsername}' found`);
+        expect(registeredEstablishment.body.message).toEqual(`Username '${knownUsername.toLowerCase()}' found`);
     });
     it("should lookup an unknown username with success", async () => {
         const registeredEstablishment = await apiEndpoint.get('/registration/username/' + encodeURIComponent('unKNown UsEr'))
             .expect('Content-Type', /json/)
             .expect(200);
         expect(registeredEstablishment.body.status).toEqual("0");
-        expect(registeredEstablishment.body.message).toEqual('Username \'unKNown UsEr\' not found');
+        expect(registeredEstablishment.body.message).toEqual(`Username '${'unKNown UsEr'.toLowerCase()}' not found`);
     });
 
+    
     it("should lookup a known username via usernameOrPasswword with success", async () => {
         const knownUsername = nonCQCSite.user.username;
         await apiEndpoint.get('/registration/usernameOrEmail/' + encodeURIComponent(knownUsername))

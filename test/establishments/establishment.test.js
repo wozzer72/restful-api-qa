@@ -152,7 +152,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/name`)
                 .set('Authorization', authToken)
@@ -173,8 +173,8 @@ describe ("establishment", async () => {
             expect(changeHistory.body.name).toHaveProperty('lastSaved');
             expect(changeHistory.body.name.currentValue).toEqual(site.locationName + ' Updated');
             expect(changeHistory.body.name.lastSaved).toEqual(changeHistory.body.name.lastChanged);
-            expect(changeHistory.body.name.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.name.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.name.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.name.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -249,7 +249,7 @@ describe ("establishment", async () => {
 
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             let secondmainService = null;
             if (site.mainService.id === 4) {
@@ -286,8 +286,8 @@ describe ("establishment", async () => {
             expect(changeHistory.body.mainService).toHaveProperty('lastSaved');
             expect(changeHistory.body.mainService.currentValue.id).toEqual(secondmainService.id);
             expect(changeHistory.body.mainService.lastSaved).toEqual(changeHistory.body.mainService.lastChanged);
-            expect(changeHistory.body.mainService.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.mainService.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.mainService.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.mainService.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -416,7 +416,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(firstResponse.body).not.toHaveProperty('employerType');
 
@@ -456,8 +456,8 @@ describe ("establishment", async () => {
             expect(changeHistory.body.employerType).toHaveProperty('lastSaved');
             expect(changeHistory.body.employerType.currentValue).toEqual('Voluntary / Charity');
             expect(changeHistory.body.employerType.lastSaved).toEqual(changeHistory.body.employerType.lastChanged);
-            expect(changeHistory.body.employerType.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.employerType.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.employerType.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.employerType.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -545,7 +545,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(firstResponse.body).not.toHaveProperty('numberOfStaff');
 
@@ -587,8 +587,8 @@ describe ("establishment", async () => {
             expect(changeHistory.body.numberOfStaff).toHaveProperty('lastSaved');
             expect(changeHistory.body.numberOfStaff.currentValue).toEqual(secondNumberOfStaff);
             expect(changeHistory.body.numberOfStaff.lastSaved).toEqual(changeHistory.body.numberOfStaff.lastChanged);
-            expect(changeHistory.body.numberOfStaff.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.numberOfStaff.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.numberOfStaff.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.numberOfStaff.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -673,7 +673,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
             expect(firstResponse.body.mainService.name).toEqual(site.mainService);
@@ -781,8 +781,8 @@ describe ("establishment", async () => {
             // TODO: replace this excuse of a validation with a more thorough validation
             expect(Array.isArray(changeHistory.body.otherServices.currentValue)).toEqual(true);
             expect(changeHistory.body.otherServices.lastSaved).toEqual(changeHistory.body.otherServices.lastChanged);
-            expect(changeHistory.body.otherServices.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.otherServices.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.otherServices.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.otherServices.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -870,7 +870,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             // before adding any services - serviceUsers property is missing
             expect(firstResponse.body).not.toHaveProperty('serviceUsers');
@@ -925,8 +925,8 @@ describe ("establishment", async () => {
 
             expect(Array.isArray(changeHistory.body.serviceUsers.currentValue)).toEqual(true);
             expect(changeHistory.body.serviceUsers.lastSaved).toEqual(changeHistory.body.serviceUsers.lastChanged);
-            expect(changeHistory.body.serviceUsers.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.serviceUsers.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.serviceUsers.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.serviceUsers.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -1033,7 +1033,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
             expect(firstResponse.body.mainService.name).toEqual(site.mainService);
@@ -1143,8 +1143,8 @@ describe ("establishment", async () => {
                 // TODO: replace this excuse of a validation with a more thorough validation
                 expect(Array.isArray(changeHistory.body.capacities.currentValue)).toEqual(true);
                 expect(changeHistory.body.capacities.lastSaved).toEqual(changeHistory.body.capacities.lastChanged);
-                expect(changeHistory.body.capacities.lastSavedBy).toEqual(site.user.username);
-                expect(changeHistory.body.capacities.lastChangedBy).toEqual(site.user.username);
+                expect(changeHistory.body.capacities.lastSavedBy).toEqual(site.user.username.toLowerCase());
+                expect(changeHistory.body.capacities.lastChangedBy).toEqual(site.user.username.toLowerCase());
                 let updatedEpoch = new Date(changeHistory.body.updated).getTime();
                 expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew    
 
@@ -1268,7 +1268,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(firstResponse.body.share.enabled).toEqual(false);        // disabled (default) on registration
 
@@ -1338,8 +1338,8 @@ describe ("establishment", async () => {
             expect(changeHistory.body.share.currentValue.enabled).toEqual(true);
             expect(changeHistory.body.share.currentValue.with[0]).toEqual('Local Authority');
             expect(changeHistory.body.share.lastSaved).toEqual(changeHistory.body.share.lastChanged);
-            expect(changeHistory.body.share.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.share.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.share.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.share.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -1495,7 +1495,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
 
             // primary authority may not always resolve
@@ -1575,8 +1575,8 @@ describe ("establishment", async () => {
             expect(Array.isArray(changeHistory.body.localAuthorities.currentValue)).toEqual(true);
             expect(changeHistory.body.localAuthorities.currentValue.length).toEqual(1)
             expect(changeHistory.body.localAuthorities.lastSaved).toEqual(changeHistory.body.localAuthorities.lastChanged);
-            expect(changeHistory.body.localAuthorities.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.localAuthorities.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.localAuthorities.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.localAuthorities.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -1688,7 +1688,7 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.created).toEqual(new Date(jobsResponse.body.created).toISOString());
             expect(jobsResponse.body.updated).toEqual(new Date(jobsResponse.body.updated).toISOString());
-            expect(jobsResponse.body.updatedBy).toEqual(site.user.username);
+            expect(jobsResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
                 .set('Authorization', authToken)
@@ -1753,8 +1753,8 @@ describe ("establishment", async () => {
             expect(changeHistory.body.jobs.Vacancies).toHaveProperty('lastSaved');
             expect(changeHistory.body.jobs.Vacancies.currentValue.find(thisJob => thisJob.title === 'Care Worker').total).toEqual(333);
             expect(changeHistory.body.jobs.Vacancies.lastSaved).toEqual(changeHistory.body.jobs.Vacancies.lastChanged);
-            expect(changeHistory.body.jobs.Vacancies.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.jobs.Vacancies.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.jobs.Vacancies.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.jobs.Vacancies.lastChangedBy).toEqual(site.user.username.toLowerCase());
             let updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -1881,8 +1881,8 @@ describe ("establishment", async () => {
             expect(changeHistory.body.jobs.Starters).toHaveProperty('lastSaved');
             expect(changeHistory.body.jobs.Starters.currentValue.find(thisJob => thisJob.title === 'Nursing Associate').total).toEqual(43);
             expect(changeHistory.body.jobs.Starters.lastSaved).toEqual(changeHistory.body.jobs.Starters.lastChanged);
-            expect(changeHistory.body.jobs.Starters.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.jobs.Starters.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.jobs.Starters.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.jobs.Starters.lastChangedBy).toEqual(site.user.username.toLowerCase());
             updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -2005,8 +2005,8 @@ describe ("establishment", async () => {
             expect(changeHistory.body.jobs.Leavers).toHaveProperty('lastSaved');
             expect(changeHistory.body.jobs.Leavers.currentValue.find(thisJob => thisJob.title === 'Employment Support').total).toEqual(32);
             expect(changeHistory.body.jobs.Leavers.lastSaved).toEqual(changeHistory.body.jobs.Leavers.lastChanged);
-            expect(changeHistory.body.jobs.Leavers.lastSavedBy).toEqual(site.user.username);
-            expect(changeHistory.body.jobs.Leavers.lastChangedBy).toEqual(site.user.username);
+            expect(changeHistory.body.jobs.Leavers.lastSavedBy).toEqual(site.user.username.toLowerCase());
+            expect(changeHistory.body.jobs.Leavers.lastChangedBy).toEqual(site.user.username.toLowerCase());
             updatedEpoch = new Date(changeHistory.body.updated).getTime();
             expect(Math.abs(requestEpoch-updatedEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);   // allows for slight clock slew
 
@@ -2291,7 +2291,7 @@ describe ("establishment", async () => {
             // create/update tracking
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             // immutable properties
             expect(firstResponse.body.name).toEqual(site.locationName);
@@ -2390,7 +2390,7 @@ describe ("establishment", async () => {
             // create/update tracking
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(firstResponse.body).toHaveProperty('history');
             expect(Array.isArray(firstResponse.body.history)).toEqual(true);
@@ -2402,7 +2402,7 @@ describe ("establishment", async () => {
             });
             //console.log("TEST DEBUG: Created event: ", createdEvents[0].change);
             expect(createdEvents.length).toEqual(1);
-            expect(createdEvents[0].username).toEqual(site.user.username);
+            expect(createdEvents[0].username).toEqual(site.user.username.toLowerCase());
             expect(createdEvents[0].change).toBeNull();
             expect(createdEvents[0].property).toBeNull();
             expect(createdEvents[0].when).toEqual(new Date(createdEvents[0].when).toISOString());
@@ -2426,7 +2426,7 @@ describe ("establishment", async () => {
             // create/update tracking
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
-            expect(firstResponse.body.updatedBy).toEqual(site.user.username);
+            expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(firstResponse.body).toHaveProperty('history');
             expect(Array.isArray(firstResponse.body.history)).toEqual(true);
@@ -2438,7 +2438,7 @@ describe ("establishment", async () => {
             });
             //console.log("TEST DEBUG: Created event: ", createdEvents[0]);
             expect(createdEvents.length).toEqual(1);
-            expect(createdEvents[0].username).toEqual(site.user.username);
+            expect(createdEvents[0].username).toEqual(site.user.username.toLowerCase());
             expect(createdEvents[0]).not.toHaveProperty('change');
             expect(createdEvents[0]).not.toHaveProperty('property');
             expect(createdEvents[0].when).toEqual(new Date(createdEvents[0].when).toISOString());
