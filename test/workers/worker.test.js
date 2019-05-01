@@ -3832,7 +3832,7 @@ describe ("worker", async () => {
             const updatedEpoch = new Date(fetchedWorkerResponse.body.updated).getTime();
             expect(currentEpoch-updatedEpoch).toBeLessThan(MAX_TIME_TOLERANCE);   // within the last 1 second
 
-            expect(fetchedWorkerResponse.body.updatedBy).toEqual(establishment1Username);
+            expect(fetchedWorkerResponse.body.updatedBy).toEqual(establishment1Username.toLowerCase());
 
             // check for validation errors
             const unknownUuid = uuid.v4();
@@ -3889,7 +3889,7 @@ describe ("worker", async () => {
             const updatedEpoch = new Date(fetchedWorkerResponse.body.updated).getTime();
             expect(currentEpoch-updatedEpoch).toBeLessThan(MAX_TIME_TOLERANCE);   // within the last 1 second
 
-            expect(fetchedWorkerResponse.body.updatedBy).toEqual(establishment1Username);
+            expect(fetchedWorkerResponse.body.updatedBy).toEqual(establishment1Username.toLowerCase());
 
             expect(Array.isArray(fetchedWorkerResponse.body.history)).toEqual(true);
             expect(fetchedWorkerResponse.body.history.length).toEqual(1);

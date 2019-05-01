@@ -26,6 +26,8 @@ exports.validatePropertyChangeHistory = (name, PropertiesResponses, property, cu
        ]
     }
     */
+    const auditUser = username.toLowerCase();
+
     expect(compareFunction(property.currentValue, currentValue)).toEqual(true);
 
     // console.log("TEST DEBUG: Last Save time difference: ", Math.abs(new Date(property.lastSaved).getTime() - requestEpoch));
@@ -34,17 +36,17 @@ exports.validatePropertyChangeHistory = (name, PropertiesResponses, property, cu
 
     expect(Math.abs(new Date(property.lastSaved).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
     expect(Math.abs(new Date(property.lastChanged).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
-    expect(property.lastSavedBy).toEqual(username);
-    expect(property.lastChangedBy).toEqual(username);
+    expect(property.lastSavedBy).toEqual(auditUser);
+    expect(property.lastChangedBy).toEqual(auditUser);
 
     const changeHistory = property.changeHistory;
     //console.log("WA DEBUG change history: ", changeHistory)
     expect(Array.isArray(changeHistory)).toEqual(true);
     expect(changeHistory.length).toEqual(numChangeHistoryEvent);
-    expect(changeHistory[0].username).toEqual(username);
-    expect(changeHistory[1].username).toEqual(username);
-    expect(changeHistory[2].username).toEqual(username);
-    expect(changeHistory[3].username).toEqual(username);
+    expect(changeHistory[0].username).toEqual(auditUser);
+    expect(changeHistory[1].username).toEqual(auditUser);
+    expect(changeHistory[2].username).toEqual(auditUser);
+    expect(changeHistory[3].username).toEqual(auditUser);
     expect(Math.abs(new Date(changeHistory[0].when).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
     expect(Math.abs(new Date(changeHistory[1].when).getTime() - requestEpoch)).toBeLessThan(MIN_TIME_TOLERANCE);
     expect(Math.abs(new Date(changeHistory[2].when).getTime() - requestEpoch)).toBeLessThan(MAX_TIME_TOLERANCE);
