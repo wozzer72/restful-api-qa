@@ -108,6 +108,8 @@ describe ("establishment", async () => {
 
             expect(loginResponse.body.establishment.id).toEqual(establishmentId);
             expect(loginResponse.body.establishment.uid).toEqual(establishmentUid);
+            expect(loginResponse.body.establishment.isParent).toEqual(false);
+            expect(loginResponse.body.establishment).not.toHaveProperty('parentUid');
             expect(loginResponse.body.establishment.isRegulated).toEqual(false);
             expect(nmdsIdRegex.test(loginResponse.body.establishment.nmdsId)).toEqual(true);
             expect(loginResponse.body.isFirstLogin).toEqual(true);
