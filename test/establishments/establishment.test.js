@@ -141,9 +141,10 @@ describe ("establishment", async () => {
         it("should update the name", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
+            expect(establishmentUid).not.toBeNull();
 
             // name is mandatory - so even on the first get, there should be a name!
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/name`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/name`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -154,7 +155,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
-            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/name`)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/name`)
                 .set('Authorization', authToken)
                 .send({
                     name: site.locationName + ' Updated'
@@ -166,7 +167,7 @@ describe ("establishment", async () => {
 
             // and now check change history
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/name?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/name?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -193,14 +194,14 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.name.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/name`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/name`)
                 .set('Authorization', authToken)
                 .send({
                     name: site.locationName + ' Updated'
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/name?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/name?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -209,7 +210,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.name.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // now test for an unexpected name (greater than 120 characters)
-            apiEndpoint.post(`/establishment/${establishmentId}/name`)
+            apiEndpoint.post(`/establishment/${establishmentUid}/name`)
                 .set('Authorization', authToken)
                 .send({
                     name : Random.randomString(121)
@@ -222,7 +223,7 @@ describe ("establishment", async () => {
                 });
 
             // ensure name is back to the original name - as expected upon in all tests below
-            await apiEndpoint.post(`/establishment/${establishmentId}/name`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/name`)
                 .set('Authorization', authToken)
                 .send({
                     name: site.locationName
@@ -233,10 +234,10 @@ describe ("establishment", async () => {
 
         it("should update the Main Service", async () => {
             expect(authToken).not.toBeNull();
-            expect(establishmentId).not.toBeNull();
+            expect(establishmentUid).not.toBeNull();
 
             // main service is mandatory - so even on the first get, there should be a Main Service!
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/mainService`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -264,7 +265,7 @@ describe ("establishment", async () => {
                 };
             }
 
-            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/mainService`)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .send({
                     mainService : {
@@ -279,7 +280,7 @@ describe ("establishment", async () => {
 
             // and now check change history
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/mainService?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/mainService?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -306,7 +307,7 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.mainService.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/mainService`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .send({
                     mainService : {
@@ -315,7 +316,7 @@ describe ("establishment", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/mainService?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/mainService?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -324,7 +325,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.mainService.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // test for unexpected
-            apiEndpoint.post(`/establishment/${establishmentId}/mainService`)
+            apiEndpoint.post(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .send({
                     mainService : {
@@ -337,7 +338,7 @@ describe ("establishment", async () => {
                     expect(res.text).toEqual('Unexpected Input.');
                     expect(res.error.status).toEqual(400);
                 });
-            apiEndpoint.post(`/establishment/${establishmentId}/mainService`)
+            apiEndpoint.post(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .send({
                     mainService : {
@@ -350,7 +351,7 @@ describe ("establishment", async () => {
                     expect(res.text).toEqual('Unexpected Input.');
                     expect(res.error.status).toEqual(400);
                 });
-            apiEndpoint.post(`/establishment/${establishmentId}/mainService`)
+            apiEndpoint.post(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .send({
                     mainService : {
@@ -363,7 +364,7 @@ describe ("establishment", async () => {
                     expect(res.text).toEqual('Unexpected Input.');
                     expect(res.error.status).toEqual(400);
                 });
-            apiEndpoint.post(`/establishment/${establishmentId}/mainService`)
+            apiEndpoint.post(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .send({
                     mainService : {
@@ -376,7 +377,7 @@ describe ("establishment", async () => {
                     expect(res.text).toEqual('Unexpected Input.');
                     expect(res.error.status).toEqual(400);
                 });
-            apiEndpoint.post(`/establishment/${establishmentId}/mainService`)
+            apiEndpoint.post(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .send({
                     mainService : {
@@ -392,7 +393,7 @@ describe ("establishment", async () => {
 
 
             // put main service back to original value because the following tests expect upon it
-            await apiEndpoint.post(`/establishment/${establishmentId}/mainService`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/mainService`)
                 .set('Authorization', authToken)
                 .send({
                     mainService : {
@@ -407,7 +408,7 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/employerType`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -420,7 +421,7 @@ describe ("establishment", async () => {
 
             expect(firstResponse.body).not.toHaveProperty('employerType');
 
-            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .send({
                     employerType : "Private Sector"
@@ -431,7 +432,7 @@ describe ("establishment", async () => {
             expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.employerType).toEqual('Private Sector');
 
-            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/employerType`)
+            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -440,7 +441,7 @@ describe ("establishment", async () => {
             expect(secondResponse.body.employerType).toEqual('Private Sector');
 
             // and now check change history
-            await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .send({
                     employerType : 'Voluntary / Charity'
@@ -449,7 +450,7 @@ describe ("establishment", async () => {
                 .expect(200);
 
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/employerType?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/employerType?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -476,14 +477,14 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.employerType.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .send({
                     employerType : 'Voluntary / Charity'
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/employerType?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/employerType?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -492,7 +493,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.employerType.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // confirm expected values
-            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .send({
                     employerType : "Other"
@@ -500,7 +501,7 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.employerType).toEqual('Other');
-            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .send({
                     employerType : "Local Authority (generic/other)"
@@ -508,7 +509,7 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.employerType).toEqual('Local Authority (generic/other)');
-            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .send({
                     employerType : "Local Authority (adult services)"
@@ -518,7 +519,7 @@ describe ("establishment", async () => {
             expect(updateResponse.body.employerType).toEqual('Local Authority (adult services)');
 
             // now test for an unexpected employer type
-            apiEndpoint.post(`/establishment/${establishmentId}/employerType`)
+            apiEndpoint.post(`/establishment/${establishmentUid}/employerType`)
                 .set('Authorization', authToken)
                 .send({
                     employerType : "Unknown"
@@ -534,9 +535,9 @@ describe ("establishment", async () => {
 
         it("should update the number of staff", async () => {
             expect(authToken).not.toBeNull();
-            expect(establishmentId).not.toBeNull();
+            expect(establishmentUid).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/staff`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/staff`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -551,7 +552,7 @@ describe ("establishment", async () => {
 
 
             const newNumberOfStaff = Random.randomInt(1,999);
-            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/staff/${newNumberOfStaff}`)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/staff/${newNumberOfStaff}`)
                 .set('Authorization', authToken)
                 .send({})
                 .expect('Content-Type', /json/)
@@ -565,13 +566,13 @@ describe ("establishment", async () => {
             if (secondNumberOfStaff === newNumberOfStaff) {
                 secondNumberOfStaff = newNumberOfStaff+1;
             }
-            await apiEndpoint.post(`/establishment/${establishmentId}/staff/${secondNumberOfStaff}`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/staff/${secondNumberOfStaff}`)
                 .set('Authorization', authToken)
                 .send({})
                 .expect('Content-Type', /json/)
                 .expect(200);
             
-            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/staff`)
+            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/staff`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -580,7 +581,7 @@ describe ("establishment", async () => {
             expect(secondResponse.body.numberOfStaff).toEqual(secondNumberOfStaff);
 
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/staff?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/staff?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -607,12 +608,12 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.numberOfStaff.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/staff/${secondNumberOfStaff}`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/staff/${secondNumberOfStaff}`)
                 .set('Authorization', authToken)
                 .send({})
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/staff?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/staff?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -621,27 +622,27 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.numberOfStaff.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // // confirm expected values
-            await apiEndpoint.post(`/establishment/${establishmentId}/staff/0`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/staff/0`)
                 .set('Authorization', authToken)
                 .send({})
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.post(`/establishment/${establishmentId}/staff/999`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/staff/999`)
                 .set('Authorization', authToken)
                 .send({})
                 .expect('Content-Type', /json/)
                 .expect(200);
             
             // now test for an out of range number of staff
-            await apiEndpoint.post(`/establishment/${establishmentId}/staff/-1`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/staff/-1`)
                 .set('Authorization', authToken)
                 .send({})
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/staff/1000`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/staff/1000`)
                 .set('Authorization', authToken)
                 .send({})
                 .expect(400);
-            apiEndpoint.post(`/establishment/${establishmentId}/staff/1000`)
+            apiEndpoint.post(`/establishment/${establishmentUid}/staff/1000`)
                 .set('Authorization', authToken)
                 .send({
                     employerType : "Unknown"
@@ -662,9 +663,9 @@ describe ("establishment", async () => {
 
         it("should update 'other' services", async () => {
             expect(authToken).not.toBeNull();
-            expect(establishmentId).not.toBeNull();
+            expect(establishmentUid).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/services?all=true`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/services?all=true`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -732,7 +733,7 @@ describe ("establishment", async () => {
             }
             expect(nonCqcServiceIDs.length).toBeGreaterThan(0);
 
-            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/services`)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/services`)
                 .set('Authorization', authToken)
                 .send({
                     services: newNonCQCServiceIDs
@@ -759,7 +760,7 @@ describe ("establishment", async () => {
             });
             lastSetOfServices = modifiedSetOfServices;
 
-            const secondPostResponse = await apiEndpoint.post(`/establishment/${establishmentId}/services`)
+            const secondPostResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/services`)
                 .set('Authorization', authToken)
                 .send({
                     services: modifiedSetOfServices
@@ -769,7 +770,7 @@ describe ("establishment", async () => {
             const secondSetOfOtherServices = secondPostResponse.body.otherServices;
 
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/services?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/services?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -801,14 +802,14 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.otherServices.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/services`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/services`)
                 .set('Authorization', authToken)
                 .send({
                     services: modifiedSetOfServices
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/services?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/services?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -817,7 +818,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.otherServices.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
         
             // now test the get having updated 'other service'
-            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/services`)
+            const secondResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/services`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -831,7 +832,7 @@ describe ("establishment", async () => {
             });
 
             // and now test for expected validation failures
-            await apiEndpoint.post(`/establishment/${establishmentId}/services`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/services`)
                 .set('Authorization', authToken)
                 .send({
                     services: {
@@ -839,7 +840,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/services`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/services`)
                 .set('Authorization', authToken)
                 .send({
                     services: {
@@ -847,7 +848,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/services`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/services`)
                 .set('Authorization', authToken)
                 .send({
                     services: {
@@ -861,7 +862,7 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/serviceUsers`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -878,7 +879,7 @@ describe ("establishment", async () => {
             // add new other services
             const randomServiceUser = Random.randomInt(1,23);
            
-            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .send({
                     serviceUsers: [
@@ -901,7 +902,7 @@ describe ("establishment", async () => {
             // to force a change on service users
             const secondServiceUser = randomServiceUser == 23 ? 1 : randomServiceUser + 1;
 
-            const secondPostResponse = await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+            const secondPostResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .send({
                     serviceUsers: [
@@ -917,7 +918,7 @@ describe ("establishment", async () => {
                 .expect(200);
 
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/serviceUsers?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/serviceUsers?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -945,7 +946,7 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.serviceUsers.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .send({
                     serviceUsers: [
@@ -959,7 +960,7 @@ describe ("establishment", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/serviceUsers?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/serviceUsers?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -968,7 +969,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.serviceUsers.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // confirm can update using a named service
-            const namedServicePostResponse = await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+            const namedServicePostResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .send({
                     serviceUsers: [
@@ -982,7 +983,7 @@ describe ("establishment", async () => {
             expect(namedServicePostResponse.body.serviceUsers[0].id).toEqual(21);
         
             // and now test for expected validation failures
-            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .send({
                     serviceUsers: {
@@ -990,7 +991,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .send({
                     serviceUsers: {
@@ -998,7 +999,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .send({
                     serviceUsers: {
@@ -1006,7 +1007,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/serviceUsers`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
                 .send({
                     serviceUsers: {
@@ -1024,7 +1025,7 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/capacity?all=true`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/capacity?all=true`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1065,7 +1066,7 @@ describe ("establishment", async () => {
             // there could be no capacities - so ignore the test this time because backend validation prevent
             //  passing unexpected capacities
             if (availableCapacitiesToUpdate.length > 0) {
-                let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: availableCapacitiesToUpdate
@@ -1083,7 +1084,7 @@ describe ("establishment", async () => {
                 expect(updateResponse.body.capacities.length).toEqual(availableCapacitiesToUpdate.length);
 
                 // now confirm the get
-                const secondResponse = await apiEndpoint.get(`/establishment/${establishmentId}/capacity`)
+                const secondResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .expect('Content-Type', /json/)
                     .expect(200);
@@ -1117,7 +1118,7 @@ describe ("establishment", async () => {
                 });
                 lastSetOfCapacities = secondAvailableCapacitiesToUpdate;
 
-                updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: secondAvailableCapacitiesToUpdate
@@ -1131,7 +1132,7 @@ describe ("establishment", async () => {
                 expect(updateResponse.body).not.toHaveProperty('allServiceCapacities');
 
                 let requestEpoch = new Date().getTime();
-                let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/capacity?history=full`)
+                let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/capacity?history=full`)
                     .set('Authorization', authToken)
                     .expect('Content-Type', /json/)
                     .expect(200);
@@ -1163,14 +1164,14 @@ describe ("establishment", async () => {
                 let lastSavedDate = changeHistory.body.capacities.lastSaved;
                 
                 // now update the property but with same value - expect no change
-                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: secondAvailableCapacitiesToUpdate
                     })
                     .expect('Content-Type', /json/)
                     .expect(200);
-                changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/capacity?history=property`)
+                changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/capacity?history=property`)
                     .set('Authorization', authToken)
                     .expect('Content-Type', /json/)
                     .expect(200);
@@ -1183,7 +1184,7 @@ describe ("establishment", async () => {
                     questionId: "1",     // must be an integer
                     answer: 10
                 }];
-                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: validationErrorCapacity
@@ -1193,7 +1194,7 @@ describe ("establishment", async () => {
                     questionId: 100,     // must be within range
                     answer: 10
                 }];
-                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: validationErrorCapacity
@@ -1203,7 +1204,7 @@ describe ("establishment", async () => {
                     qquestionId: secondAvailableCapacitiesToUpdate[0].questionId,     // must defined questionId
                     answer: 10
                 }];
-                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: validationErrorCapacity
@@ -1214,7 +1215,7 @@ describe ("establishment", async () => {
                     questionId: secondAvailableCapacitiesToUpdate[0].questionId,
                     aanswer: 10        // must be defined
                 }];
-                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: validationErrorCapacity
@@ -1225,7 +1226,7 @@ describe ("establishment", async () => {
                     questionId: secondAvailableCapacitiesToUpdate[0].questionId,
                     answer: "10"        //must be an integer
                 }];
-                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: validationErrorCapacity
@@ -1236,7 +1237,7 @@ describe ("establishment", async () => {
                     questionId: secondAvailableCapacitiesToUpdate[0].questionId,
                     answer: -1        // must be greater than equal to 0
                 }];
-                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: validationErrorCapacity
@@ -1246,7 +1247,7 @@ describe ("establishment", async () => {
                     questionId: secondAvailableCapacitiesToUpdate[0].questionId,
                     answer: 1000      // must be less than equal to 999
                 }];
-                await apiEndpoint.post(`/establishment/${establishmentId}/capacity`)
+                await apiEndpoint.post(`/establishment/${establishmentUid}/capacity`)
                     .set('Authorization', authToken)
                     .send({
                         capacities: validationErrorCapacity
@@ -1259,7 +1260,7 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1273,7 +1274,7 @@ describe ("establishment", async () => {
             expect(firstResponse.body.share.enabled).toEqual(false);        // disabled (default) on registration
 
             // enable sharing (no options)
-            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .send({
                     share : {
@@ -1288,7 +1289,7 @@ describe ("establishment", async () => {
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(0);
 
-            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1299,7 +1300,7 @@ describe ("establishment", async () => {
             expect(updateResponse.body.share.with.length).toEqual(0);
     
             // with sharing enabled, add options
-            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .send({
                     share : {
@@ -1316,7 +1317,7 @@ describe ("establishment", async () => {
             expect(updateResponse.body.share.with.length).toEqual(1);
             expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
 
-            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1329,7 +1330,7 @@ describe ("establishment", async () => {
 
             // and now check change history
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/share?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/share?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1379,7 +1380,7 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.share.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .send({
                     share : {
@@ -1389,7 +1390,7 @@ describe ("establishment", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/share?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/share?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1399,7 +1400,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.share.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // now disable sharing - provide with options, but they will be ignored
-            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .send({
                     share : {
@@ -1413,7 +1414,7 @@ describe ("establishment", async () => {
             expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(false);
 
-            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1422,7 +1423,7 @@ describe ("establishment", async () => {
             expect(updateResponse.body.share.enabled).toEqual(false);
 
             // now re-enable sharing (no options), they should be as they were before being disabled
-            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .send({
                     share : {
@@ -1437,7 +1438,7 @@ describe ("establishment", async () => {
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
 
-            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/share`)
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1449,7 +1450,7 @@ describe ("establishment", async () => {
             expect(updateResponse.body.share.with[0]).toEqual('Local Authority');
 
             // now expect failed validation
-            await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .send({
                     share : {
@@ -1458,7 +1459,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .send({
                     share : {
@@ -1467,7 +1468,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/share`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/share`)
                 .set('Authorization', authToken)
                 .send({
                     share : {
@@ -1485,7 +1486,7 @@ describe ("establishment", async () => {
             const primaryAuthority = await apiEndpoint.get('/localAuthority/' + escape(site.postalCode));
             const primaryLocalAuthorityCustodianCode = primaryAuthority.body && primaryAuthority.body.id ? primaryAuthority.body.id : null;
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1517,7 +1518,7 @@ describe ("establishment", async () => {
                     custodianCode: randomAuthorityCustodianCode
                 }
             ];
-            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+            let updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
                     localAuthorities : updateAuthorities
@@ -1537,7 +1538,7 @@ describe ("establishment", async () => {
 
             expect(foundMainAuthority !== null && foundRandomAuthority !== null).toEqual(true);
     
-            updateResponse = await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities`)
+            updateResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1558,7 +1559,7 @@ describe ("establishment", async () => {
                     name: 'Croydon'
                 }
             ];
-            updateResponse = await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+            updateResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
                     localAuthorities : secondUpdateAuthorities
@@ -1567,7 +1568,7 @@ describe ("establishment", async () => {
                 .expect(200);
 
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/localAuthorities?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1603,14 +1604,14 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.localAuthorities.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
                     localAuthorities : secondUpdateAuthorities
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/localAuthorities?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/localAuthorities?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1620,7 +1621,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.localAuthorities.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
             
             // forced validation errors
-            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
                     localAuthorities : [
@@ -1631,7 +1632,7 @@ describe ("establishment", async () => {
                 })
                 .expect(400);
             
-            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
                     localAuthorities : [
@@ -1642,7 +1643,7 @@ describe ("establishment", async () => {
                 })
                 .expect(400);
 
-            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
                     localAuthorities : [
@@ -1653,7 +1654,7 @@ describe ("establishment", async () => {
                 })
                 .expect(400);
 
-            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
                     localAuthorities : [
@@ -1663,7 +1664,7 @@ describe ("establishment", async () => {
                     ]
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/localAuthorities`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/localAuthorities`)
                 .set('Authorization', authToken)
                 .send({
                     localAuthorities : [
@@ -1679,7 +1680,7 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
-            let jobsResponse = await apiEndpoint.get(`/establishment/${establishmentId}/jobs`)
+            let jobsResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1690,7 +1691,7 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.updated).toEqual(new Date(jobsResponse.body.updated).toISOString());
             expect(jobsResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -1720,7 +1721,7 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.jobs.Vacancies.length).toEqual(3);
 
             // now update vacancies a second time to force a change
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -1745,7 +1746,7 @@ describe ("establishment", async () => {
 
             // and now check change history
             let requestEpoch = new Date().getTime();
-            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=full`)
+            let changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/jobs?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1779,7 +1780,7 @@ describe ("establishment", async () => {
             let lastSavedDate = changeHistory.body.jobs.Vacancies.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -1801,7 +1802,7 @@ describe ("establishment", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/jobs?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1810,7 +1811,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.jobs.Vacancies.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // starters
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -1844,7 +1845,7 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.jobs.Starters.length).toEqual(4);
 
             // now update starters a second time to force a change
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
             .set('Authorization', authToken)
             .send({
                 jobs: {
@@ -1873,7 +1874,7 @@ describe ("establishment", async () => {
 
             // and now check change history
             requestEpoch = new Date().getTime();
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=full`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/jobs?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1907,7 +1908,7 @@ describe ("establishment", async () => {
             lastSavedDate = changeHistory.body.jobs.Starters.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -1933,7 +1934,7 @@ describe ("establishment", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/jobs?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1942,7 +1943,7 @@ describe ("establishment", async () => {
             expect(new Date(changeHistory.body.jobs.Starters.lastSaved).getTime()).toBeGreaterThanOrEqual(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
             
             // leavers
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -1972,7 +1973,7 @@ describe ("establishment", async () => {
 
 
             // now update starters a second time to force a change
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
             .set('Authorization', authToken)
             .send({
                 jobs: {
@@ -1997,7 +1998,7 @@ describe ("establishment", async () => {
 
             // and now check change history
             requestEpoch = new Date().getTime();
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=full`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/jobs?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2031,7 +2032,7 @@ describe ("establishment", async () => {
             lastSavedDate = changeHistory.body.jobs.Leavers.lastSaved;
             
             // now update the property but with same value - expect no change
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2053,7 +2054,7 @@ describe ("establishment", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/jobs?history=property`)
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/jobs?history=property`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2063,7 +2064,7 @@ describe ("establishment", async () => {
 
                         
             // allow empty set of jobs
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2075,7 +2076,7 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.id).toEqual(establishmentId);
             expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2087,7 +2088,7 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.id).toEqual(establishmentId);
             expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2102,7 +2103,7 @@ describe ("establishment", async () => {
 
             // in addition to providing a set of jobs for each of vacancies, starters and leavers
             //  can provide a declarative statement of "None" or "Don't know"
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2120,7 +2121,7 @@ describe ("establishment", async () => {
             expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
 
             // now set vacancies, starters and leavers to something definite to allow testing for GET below
-            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2160,7 +2161,7 @@ describe ("establishment", async () => {
                 .expect(200);
 
             // forcing validation errors
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2168,7 +2169,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2176,7 +2177,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2187,7 +2188,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2200,7 +2201,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2213,7 +2214,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2226,7 +2227,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2239,7 +2240,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2252,7 +2253,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2265,7 +2266,7 @@ describe ("establishment", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.post(`/establishment/${establishmentId}/jobs`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
                 .send({
                     jobs: {
@@ -2279,7 +2280,7 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2379,7 +2380,7 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}?history=timeline`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}?history=timeline`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2412,7 +2413,7 @@ describe ("establishment", async () => {
             expect(authToken).not.toBeNull();
             expect(establishmentId).not.toBeNull();
 
-            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentId}?history=full`)
+            const firstResponse = await apiEndpoint.get(`/establishment/${establishmentUid}?history=full`)
                 .set('Authorization', authToken)
                 .expect('Content-Type', /json/)
                 .expect(200);
