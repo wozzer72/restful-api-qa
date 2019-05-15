@@ -54,6 +54,7 @@ describe ("worker", async () => {
 
     describe("Establishment 1 against " + baseEndpoint, async () => {
         let establishmentId = null;
+        let establishmentUid = null;
         let workerUid = null;
 
         beforeAll(async () => {
@@ -105,9 +106,9 @@ describe ("worker", async () => {
             if (site1LoginResponse.body && site1LoginResponse.body.fullname) {
                 establishment1Token = site1LoginResponse.header.authorization;
                 establishment1Username = site1.user.username;
+                establishmentUid = site1LoginResponse.body.establishment.uid;
+                expect(site1LoginResponse.body.establishment.id).toEqual(establishmentId);
             } else {
-                console.log("TEST DEBUG: login response: ", site1LoginResponse.body);
-
                 // login a second time
                 site1LoginResponse = await apiEndpoint.post('/login')
                     .send({
@@ -116,12 +117,15 @@ describe ("worker", async () => {
                     });
                 establishment1Token = site1LoginResponse.header.authorization;
                 establishment1Username = site1.user.username;
+                establishmentUid = site1LoginResponse.body.establishment.uid;
+                expect(site1LoginResponse.body.establishment.id).toEqual(establishmentId);
             }
         });
 
         let newWorker = null;
         it("should create a Worker", async () => {
             expect(establishment1).not.toBeNull();
+            expect(establishmentUid).not.toBeNull();
             expect(Number.isInteger(establishmentId)).toEqual(true);
 
             // proven validation errors
@@ -212,7 +216,13 @@ describe ("worker", async () => {
 
             // incorrect establishment id and worker facts
             const unknownEstablishmentId = 1723785475876865;
+            const unknownEstablishmentUId = uuid.v4();
             await apiEndpoint.post(`/establishment/${unknownEstablishmentId}/worker`)
+                .set('Authorization', establishment1Token)
+                .send({})
+                .expect('Content-Type', /html/)
+                .expect(403);
+            await apiEndpoint.post(`/establishment/${unknownEstablishmentUId}/worker`)
                 .set('Authorization', establishment1Token)
                 .send({})
                 .expect('Content-Type', /html/)
@@ -225,7 +235,7 @@ describe ("worker", async () => {
         
             // create the Worker having tested all failures first; minimises the response time being create and update (next)
             newWorker = workerUtils.newWorker(jobs);
-            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(newWorker)
                 .expect('Content-Type', /json/)
@@ -240,12 +250,13 @@ describe ("worker", async () => {
 
         it("should update a Worker's mandatory properties", async () => {
             expect(establishment1).not.toBeNull();
+            expect(establishmentUid).not.toBeNull();
             expect(workerUid).not.toBeNull();
 
             const updatedNameId = newWorker.nameOrId + " updated";
             const updatedContract = newWorker.contract == "Agency" ? "Permanent" : "Agency";
             const updatedJobId = newWorker.mainJob.jobId == 20 ? 19 : 20;
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nameOrId" : updatedNameId,
@@ -264,7 +275,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.mainJob.jobId).toEqual(updatedJobId);
 
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -305,7 +316,7 @@ describe ("worker", async () => {
 
             // now update all properties but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.nameOrId.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nameOrId" : updatedNameId,
@@ -316,7 +327,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -332,49 +343,49 @@ describe ("worker", async () => {
         
 
             // successful updates of each property at a time
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nameOrId" : "Updated Worker Name"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "contract" : "Pool/Bank"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "contract" : "Temporary"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "contract" : "Agency"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "contract" : "Other"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "contract" : "Permanent"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJob" : {
@@ -383,28 +394,28 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({})
                 .expect('Content-Type', /json/)
                 .expect(200);
 
             // proven validation errors
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nameOrId" : "ten nine \"eight\" seven 6543210 (!'£$%^&*) \\ special"
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "contract" : "Undefined"
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJob" : {
@@ -417,23 +428,23 @@ describe ("worker", async () => {
 
             // incorrect establishment id and worker facts
             const unknownUuid = uuid.v4();
-            const unknownEstablishmentId = 1723785475876865;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${unknownUuid}`)
+            const unknownestablishmentUid = uuid.v4();
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${unknownUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({})
                 .expect('Content-Type', /html/)
                 .expect(404);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/2f8bd309-2a3e`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/2f8bd309-2a3e`)
                 .set('Authorization', establishment1Token)
                 .send({})
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${unknownEstablishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${unknownestablishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({})
                 .expect('Content-Type', /html/)
                 .expect(403);
-            await apiEndpoint.put(`/establishment/${unknownEstablishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${unknownestablishmentUid}/worker/${workerUid}`)
                 //.set('Authorization', establishment1Token)
                 .send({})
                 .expect('Content-Type', /html/)
@@ -441,8 +452,10 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Approved Mental Health Worker property", async () => {
+            expect(establishmentUid).not.toBeNull();
+
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "approvedMentalHealthWorker" : "Don't know"
@@ -451,14 +464,14 @@ describe ("worker", async () => {
                 .expect(200);
             expect(updatedWorkerResponse.body.approvedMentalHealthWorker).toEqual('Don\'t know');
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.approvedMentalHealthWorker).toEqual("Don't know");
 
             // update once with change
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "approvedMentalHealthWorker" : "Yes"
@@ -466,7 +479,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -474,7 +487,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -495,14 +508,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.approvedMentalHealthWorker.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
             .set('Authorization', establishment1Token)
                 .send({
                     "approvedMentalHealthWorker" : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -511,7 +524,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.approvedMentalHealthWorker.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // expected failures
-            apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "approvedMentalHealthWorker" : "No"
@@ -519,7 +532,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "approvedMentalHealthWorker" : "Undefined"
@@ -529,7 +542,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Main Job Start Date property", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJobStartDate" : "2019-01-15"
@@ -538,13 +551,13 @@ describe ("worker", async () => {
                 .expect(200);
             expect(updatedWorkerResponse.body.mainJobStartDate).toEqual("2019-01-15");
 
-            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.mainJobStartDate).toEqual("2019-01-15");
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJobStartDate" : "2019-01-14"
@@ -554,7 +567,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -575,14 +588,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.mainJobStartDate.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJobStartDate" : "2019-01-14"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -593,14 +606,14 @@ describe ("worker", async () => {
             // expected failures
             const tomorrow = new Date();
             tomorrow.setDate(new Date().getDate()+1);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJobStartDate" : tomorrow.toISOString().slice(0,10)
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJobStartDate" : "2018-02-29"
@@ -610,7 +623,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's NI Number property", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nationalInsuranceNumber" : "NY 21 26 12 A"
@@ -618,14 +631,14 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.nationalInsuranceNumber).toEqual("NY 21 26 12 A");
-            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.nationalInsuranceNumber).toEqual("NY 21 26 12 A");
 
             // now test change history
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nationalInsuranceNumber" : "NY 21 26 12 B"
@@ -634,7 +647,7 @@ describe ("worker", async () => {
                 .expect(200);
 
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -654,14 +667,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.nationalInsuranceNumber.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
             .set('Authorization', establishment1Token)
                 .send({
                     "nationalInsuranceNumber" : "NY 21 26 12 B"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -670,7 +683,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.nationalInsuranceNumber.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // "NI" is not a valid prefix for a NI Number.
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nationalInsuranceNumber" : "NI 21 26 12 A"
@@ -678,7 +691,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // NI is more than 13 characters
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "mainJobStartDate" : "NY   21 26  12 A"
@@ -688,7 +701,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's DOB property", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "dateOfBirth" : "1994-01-15"
@@ -696,14 +709,14 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.dateOfBirth).toEqual("1994-01-15");
-            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.dateOfBirth).toEqual("1994-01-15");
 
             // now test change history
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "dateOfBirth" : "1994-01-16"
@@ -712,7 +725,7 @@ describe ("worker", async () => {
                 .expect(200);
 
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -733,14 +746,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.dateOfBirth.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "dateOfBirth" : "1994-01-16"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -750,7 +763,7 @@ describe ("worker", async () => {
             
             // forced failures
             // 1994 is not a leap year, so there are only 28 days in Feb
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "dateOfBirth" : "1994-02-29"
@@ -760,7 +773,7 @@ describe ("worker", async () => {
             
             const tenYearsAgo = new Date();
             tenYearsAgo.setDate(new Date().getDate()-(10*366));
-            const childLabourResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const childLabourResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "dateOfBirth" : tenYearsAgo.toISOString().slice(0,10)
@@ -771,7 +784,7 @@ describe ("worker", async () => {
 
         it("should update a Worker's postcode property", async () => {
             // NOTE - the approvedMentalHealthWorker options are case sensitive (know!)
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "postcode" : "SE13 7SN"
@@ -779,14 +792,14 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.postcode).toEqual("SE13 7SN");
-            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.postcode).toEqual("SE13 7SN");
 
             // now test change history
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "postcode" : "SE13 7SS"
@@ -795,7 +808,7 @@ describe ("worker", async () => {
                 .expect(200);
 
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -816,14 +829,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.postcode.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "postcode" : "SE13 7SS"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -833,7 +846,7 @@ describe ("worker", async () => {
             
             // forced failures
             // 1994 is not a leap year, so there are only 28 days in Feb
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "postcode" : "SE13 7S"
@@ -844,7 +857,7 @@ describe ("worker", async () => {
 
         it("should update a Worker's gender", async () => {
             // NOTE - the gender options are case sensitive (know!); test all expected options
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "gender" : "Male"
@@ -852,12 +865,12 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.gender).toEqual("Male");
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.gender).toEqual("Male");
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "gender" : "Female"
@@ -867,7 +880,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -888,14 +901,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.gender.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "gender" : "Female"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -904,31 +917,31 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.gender.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // update using each expected value
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.gender).toEqual("Female");
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "gender" : "Other"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.gender).toEqual("Other");
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "gender" : "Don't know"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -936,7 +949,7 @@ describe ("worker", async () => {
 
             // forced failure
             // 1994 is not a leap year, so there are only 28 days in Feb
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "gender" : "unknown"
@@ -947,7 +960,7 @@ describe ("worker", async () => {
 
         it("should update a Worker's disability", async () => {
             // NOTE - the gender options are case sensitive (know!); test all expected options
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "disability" : "Yes"
@@ -955,12 +968,12 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.disability).toEqual("Yes");
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.disability).toEqual("Yes");
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "disability" : "No"
@@ -970,7 +983,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -991,14 +1004,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.disability.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "disability" : "No"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1006,38 +1019,38 @@ describe ("worker", async () => {
             expect(workerChangeHistory.body.disability.lastChanged).toEqual(new Date(lastSavedDate).toISOString());                             // lastChanged is equal to the previous last saved
             expect(new Date(workerChangeHistory.body.disability.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.disability).toEqual("No");
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "disability" : "Undisclosed"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.disability).toEqual("Undisclosed");
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "disability" : "Don't know"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.disability).toEqual("Don't know");
 
             // 1994 is not a leap year, so there are only 28 days in Feb
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "disability" : "Other"
@@ -1049,7 +1062,7 @@ describe ("worker", async () => {
         it("should update a Worker's ethnicity", async () => {
             const randomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
 
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     ethnicity : {
@@ -1061,7 +1074,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.ethnicity.ethnicityId).toEqual(randomEthnicity.id);
             expect(updatedWorkerResponse.body.ethnicity.ethnicity).toEqual(randomEthnicity.ethnicity);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1069,7 +1082,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.ethnicity.ethnicity).toEqual(randomEthnicity.ethnicity);
 
             const secondEthnicity = randomEthnicity.id == 11 ? 12 : 11;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     ethnicity : {
@@ -1081,7 +1094,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1102,7 +1115,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.ethnicity.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     ethnicity : {
@@ -1111,7 +1124,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1121,7 +1134,7 @@ describe ("worker", async () => {
 
             // update ethnicity by name
             const secondRandomEthnicity = ethnicityUtils.lookupRandomEthnicity(ethnicities);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     ethnicity : {
@@ -1130,7 +1143,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1138,7 +1151,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.ethnicity.ethnicity).toEqual(secondRandomEthnicity.ethnicity);
 
             // out of range ethnicity id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     ethnicity : {
@@ -1148,7 +1161,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // unknown ethnicity (by name)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     ethnicity : {
@@ -1162,7 +1175,7 @@ describe ("worker", async () => {
         it("should update a Worker's nationality", async () => {
             const randomNationality = nationalityUtils.lookupRandomNationality(nationalities);
 
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1177,7 +1190,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.nationality.other.nationalityId).toEqual(randomNationality.id);
             expect(updatedWorkerResponse.body.nationality.other.nationality).toEqual(randomNationality.nationality);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1185,7 +1198,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.nationality.other.nationality).toEqual(randomNationality.nationality);
 
             const secondNationality = randomNationality.id == 222 ? 111 : 222;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1200,7 +1213,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1221,7 +1234,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.nationality.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1233,7 +1246,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1242,7 +1255,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.nationality.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // update nationaltity by given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1251,7 +1264,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1260,7 +1273,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1272,7 +1285,7 @@ describe ("worker", async () => {
             
             // update nationaltity by name
             const secondRandomNationality = nationalityUtils.lookupRandomNationality(nationalities);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1284,7 +1297,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1292,7 +1305,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.nationality.other.nationality).toEqual(secondRandomNationality.nationality);
 
             // unknown given nationality
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1302,7 +1315,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // out of range nationality id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1315,7 +1328,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // unknown nationality (by name)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     nationality : {
@@ -1332,7 +1345,7 @@ describe ("worker", async () => {
         it("should update a Worker's country of birth", async () => {
             const randomCountry = countryUtils.lookupRandomCountry(countries);
 
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1347,7 +1360,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.countryOfBirth.other.countryId).toEqual(randomCountry.id);
             expect(updatedWorkerResponse.body.countryOfBirth.other.country).toEqual(randomCountry.country);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1355,7 +1368,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.countryOfBirth.other.country).toEqual(randomCountry.country);
 
             const secondCountry = randomCountry.id == 99 ? 33 : 32;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1370,7 +1383,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1391,7 +1404,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.countryOfBirth.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1403,7 +1416,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1412,7 +1425,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.countryOfBirth.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // update country by given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1421,7 +1434,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1430,7 +1443,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1442,7 +1455,7 @@ describe ("worker", async () => {
 
             // update country of birth by name
             const secondRandomCountry = countryUtils.lookupRandomCountry(countries);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1454,7 +1467,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1462,7 +1475,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.countryOfBirth.other.country).toEqual(secondRandomCountry.country);
 
             // unknown given country
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1472,7 +1485,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // out of range country id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1485,7 +1498,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // unknown country (by name)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     countryOfBirth : {
@@ -1502,7 +1515,7 @@ describe ("worker", async () => {
         it("should update a Worker's recruited from", async () => {
             const randomOrigin = recruitedFromUtils.lookupRandomRecruitedFrom(recruitedOrigins);
 
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     recruitedFrom : {
@@ -1517,7 +1530,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.recruitedFrom.from.recruitedFromId).toEqual(randomOrigin.id);
             expect(updatedWorkerResponse.body.recruitedFrom.from.from).toEqual(randomOrigin.from);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1525,7 +1538,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.recruitedFrom.from.from).toEqual(randomOrigin.from);
 
             const secondOrigin = randomOrigin.id == 3 ? 7 : 3;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     recruitedFrom : {
@@ -1540,7 +1553,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1561,7 +1574,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.recruitedFrom.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     recruitedFrom : {
@@ -1573,7 +1586,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1582,7 +1595,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.recruitedFrom.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // update recruited from by given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     recruitedFrom : {
@@ -1594,7 +1607,7 @@ describe ("worker", async () => {
             
              // update recruited from by name
             const secondRandomOrigin = recruitedFromUtils.lookupRandomRecruitedFrom(recruitedOrigins);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     recruitedFrom : {
@@ -1606,7 +1619,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1614,7 +1627,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.recruitedFrom.from.from).toEqual(secondRandomOrigin.from);
 
             // unknown given recruited from
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     recruitedFrom : {
@@ -1624,7 +1637,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // out of range recruited from id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     recruitedFrom : {
@@ -1637,7 +1650,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // unknown recruited from (by name)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     recruitedFrom : {
@@ -1652,7 +1665,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's British Citizenship", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     britishCitizenship : "Yes"
@@ -1660,20 +1673,20 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.britishCitizenship).toEqual('Yes');
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.britishCitizenship).toEqual('Yes');
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     britishCitizenship : "No"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1681,7 +1694,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1701,14 +1714,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.britishCitizenship.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     britishCitizenship : "No"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
             .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1717,21 +1730,21 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.britishCitizenship.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // last update with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     britishCitizenship : "Don't know"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.britishCitizenship).toEqual("Don't know");
             
             // unknown citizenship value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     britishCitizenship : "Don't Know"       // case sensitive
@@ -1741,7 +1754,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Year of Arrival", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     yearArrived: {
@@ -1754,14 +1767,14 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.yearArrived.value).toEqual('Yes');
             expect(updatedWorkerResponse.body.yearArrived.year).toEqual(2019);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.yearArrived.value).toEqual('Yes');
             expect(fetchedWorkerResponse.body.yearArrived.year).toEqual(2019);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     yearArrived: {
@@ -1771,7 +1784,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1780,7 +1793,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1801,7 +1814,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.yearArrived.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     yearArrived: {
@@ -1811,7 +1824,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1820,7 +1833,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.yearArrived.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // last update with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     yearArrived: {
@@ -1829,14 +1842,14 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.yearArrived.value).toEqual('No');
             
             // unknown given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     yearArrived: {
@@ -1847,7 +1860,7 @@ describe ("worker", async () => {
                 .expect(400);
 
             // upper and lower year boundaries
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     yearArrived: {
@@ -1857,7 +1870,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     yearArrived: {
@@ -1870,7 +1883,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Social Care Start Date", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareStartDate: {
@@ -1883,14 +1896,14 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.socialCareStartDate.value).toEqual('Yes');
             expect(updatedWorkerResponse.body.socialCareStartDate.year).toEqual(2019);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.socialCareStartDate.value).toEqual('Yes');
             expect(fetchedWorkerResponse.body.socialCareStartDate.year).toEqual(2019);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareStartDate: {
@@ -1900,7 +1913,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1909,7 +1922,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1930,7 +1943,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.socialCareStartDate.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareStartDate: {
@@ -1940,7 +1953,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -1949,7 +1962,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.socialCareStartDate.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // last update with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareStartDate: {
@@ -1958,14 +1971,14 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.socialCareStartDate.value).toEqual('No');
             
             // unknown given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareStartDate: {
@@ -1976,7 +1989,7 @@ describe ("worker", async () => {
                 .expect(400);
 
             // upper and lower year boundaries
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareStartDate: {
@@ -1986,7 +1999,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareStartDate: {
@@ -2000,7 +2013,7 @@ describe ("worker", async () => {
 
         it("should update a Worker's Other Jobs", async () => {
             const firstRandomJob = jobUtils.lookupRandomJob(jobs);
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2015,7 +2028,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.otherJobs[0].jobId).toEqual(firstRandomJob.id);
             expect(updatedWorkerResponse.body.otherJobs[0].title).toEqual(firstRandomJob.title);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2027,7 +2040,7 @@ describe ("worker", async () => {
 
             // replace the contents - with another single count set
             const secondRandomJobId = firstRandomJob.id == 7 ? 8 : 7;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2038,7 +2051,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2048,7 +2061,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2073,7 +2086,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.otherJobs.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2084,7 +2097,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2094,7 +2107,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.otherJobs.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // with two additional jobs
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2108,13 +2121,13 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
                 expect(fetchedWorkerResponse.body.otherJobs.length).toEqual(2);
             // with three additional jobs
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2131,20 +2144,20 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.otherJobs.length).toEqual(3);
             // with zero jobs
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : []
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2153,7 +2166,7 @@ describe ("worker", async () => {
 
             // now resolving on job title
             const thirdRandomJob = jobUtils.lookupRandomJob(jobs);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2164,7 +2177,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2174,7 +2187,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.otherJobs[0].title).toEqual(thirdRandomJob.title);
             
             // out of range job id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2187,7 +2200,7 @@ describe ("worker", async () => {
                 .expect(400);
             
             // unknown job title
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2200,7 +2213,7 @@ describe ("worker", async () => {
                 .expect(400);
 
             // other jobs is not an array
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : {
@@ -2211,7 +2224,7 @@ describe ("worker", async () => {
                 .expect(400);
 
             // missing job id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2225,7 +2238,7 @@ describe ("worker", async () => {
         
             
             // missing job title
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherJobs : [
@@ -2239,7 +2252,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Sick Days", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2252,14 +2265,14 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.daysSick.value).toEqual('Yes');
             expect(updatedWorkerResponse.body.daysSick.days).toEqual(1.5);  // rounds to nearest 0.5
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.daysSick.value).toEqual('Yes');
             expect(fetchedWorkerResponse.body.daysSick.days).toEqual(1.5);  // rounds to nearest 0.5
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2269,7 +2282,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2278,7 +2291,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2299,7 +2312,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.daysSick.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2309,7 +2322,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2318,7 +2331,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.daysSick.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // days sick with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick: {
@@ -2327,14 +2340,14 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.daysSick.value).toEqual('No');
             
             // unknown given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick: {
@@ -2345,7 +2358,7 @@ describe ("worker", async () => {
                 .expect(400);
 
             // upper and lower day boundaries
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2355,7 +2368,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2365,7 +2378,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2375,7 +2388,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2387,7 +2400,7 @@ describe ("worker", async () => {
                 .expect(400);
 
             // invalid input structure
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2396,7 +2409,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     daysSick : {
@@ -2409,7 +2422,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's zero hours contract", async () => {
-            const updatedWorkerResponse = await await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     zeroHoursContract : "No"
@@ -2417,20 +2430,20 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.zeroHoursContract).toEqual('No');
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.zeroHoursContract).toEqual('No');
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     zeroHoursContract : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2438,7 +2451,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2459,14 +2472,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.zeroHoursContract.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     zeroHoursContract : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2475,21 +2488,21 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.zeroHoursContract.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // zero contract with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     zeroHoursContract : "Don't know"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
                 expect(fetchedWorkerResponse.body.zeroHoursContract).toEqual("Don't know");
             
             // unexpected given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     zeroHoursContract : "Don't Know"        // case sensitive
@@ -2499,7 +2512,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Weekly Average Hours", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2512,14 +2525,14 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.weeklyHoursAverage.value).toEqual('Yes');
             expect(updatedWorkerResponse.body.weeklyHoursAverage.hours).toEqual(37.5);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.weeklyHoursAverage.value).toEqual('Yes');
             expect(fetchedWorkerResponse.body.weeklyHoursAverage.hours).toEqual(37.5);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2528,7 +2541,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2537,7 +2550,7 @@ describe ("worker", async () => {
     
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2558,7 +2571,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.weeklyHoursAverage.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2567,7 +2580,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2576,7 +2589,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.weeklyHoursAverage.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // round the the nearest 0.5
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2586,7 +2599,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2594,7 +2607,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.weeklyHoursAverage.hours).toEqual(37.5);
 
             // upper and lower boundary values
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2604,7 +2617,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2614,7 +2627,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2624,7 +2637,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2636,7 +2649,7 @@ describe ("worker", async () => {
                 .expect(400);
             
             // unexpected value and structure
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2646,7 +2659,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2655,7 +2668,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursAverage : {
@@ -2668,7 +2681,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Weekly Contracted Hours", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2681,14 +2694,14 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.weeklyHoursContracted.value).toEqual('Yes');
             expect(updatedWorkerResponse.body.weeklyHoursContracted.hours).toEqual(37.5);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.weeklyHoursContracted.value).toEqual('Yes');
             expect(fetchedWorkerResponse.body.weeklyHoursContracted.hours).toEqual(37.5);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2697,7 +2710,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2706,7 +2719,7 @@ describe ("worker", async () => {
     
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2727,7 +2740,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.weeklyHoursContracted.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2736,7 +2749,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2745,7 +2758,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.weeklyHoursContracted.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
 
             // round the the nearest 0.5
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2755,7 +2768,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2763,7 +2776,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.weeklyHoursContracted.hours).toEqual(37.5);
 
             // upper and lower boundary values
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2773,7 +2786,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2783,7 +2796,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2793,7 +2806,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2805,7 +2818,7 @@ describe ("worker", async () => {
                 .expect(400);
             
             // unexpected value and structure
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2815,7 +2828,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2824,7 +2837,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     weeklyHoursContracted : {
@@ -2837,7 +2850,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Annual/Hourly Rate", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -2850,14 +2863,14 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.annualHourlyPay.value).toEqual('Hourly');
             expect(updatedWorkerResponse.body.annualHourlyPay.rate).toEqual(50.00);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.annualHourlyPay.value).toEqual('Hourly');
             expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(50.00);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -2867,7 +2880,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2876,7 +2889,7 @@ describe ("worker", async () => {
     
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2909,7 +2922,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.annualHourlyPay.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -2919,7 +2932,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -2928,7 +2941,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.annualHourlyPay.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
     
             // round the the nearest 0.01 (for hourly)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -2938,14 +2951,14 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(11.15);
 
             // round the the nearest whole number (for annual)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -2955,14 +2968,14 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(28577);
         
             // expected and unexpected values
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -2971,14 +2984,14 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.annualHourlyPay.value).toEqual("Don't know");
             expect(fetchedWorkerResponse.body.annualHourlyPay.rate).toEqual(undefined);
             
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -2989,7 +3002,7 @@ describe ("worker", async () => {
                 .expect(400);
             
             // upper and lower boundary values for hourly rate
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -2999,7 +3012,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3009,7 +3022,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3019,7 +3032,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3031,7 +3044,7 @@ describe ("worker", async () => {
                 .expect(400);
             
             // upper and lower boundary values for annual rate
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3041,7 +3054,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3051,7 +3064,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3061,7 +3074,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3073,7 +3086,7 @@ describe ("worker", async () => {
                 .expect(400);
             
             // unexpected value and structure
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3083,7 +3096,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /html/)
                 .expect(400);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     annualHourlyPay : {
@@ -3096,7 +3109,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Care Certificate", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     careCertificate : "Yes, in progress or partially completed"
@@ -3105,20 +3118,20 @@ describe ("worker", async () => {
                 .expect(200);
             expect(updatedWorkerResponse.body.careCertificate).toEqual('Yes, in progress or partially completed');
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.careCertificate).toEqual('Yes, in progress or partially completed');
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     careCertificate : "Yes, completed"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3126,7 +3139,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3147,14 +3160,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.careCertificate.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     careCertificate : "Yes, completed"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3163,21 +3176,21 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.careCertificate.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
     
             // zero contract with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     careCertificate : "No"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
                 expect(fetchedWorkerResponse.body.careCertificate).toEqual("No");
             
             // unexpected given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     careCertificate : "no"        // case sensitive
@@ -3187,7 +3200,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Apprenticeship Training", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     apprenticeshipTraining : "Don't know"
@@ -3195,20 +3208,20 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.apprenticeshipTraining).toEqual('Don\'t know');
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.apprenticeshipTraining).toEqual('Don\'t know');
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     apprenticeshipTraining : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3216,7 +3229,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3237,14 +3250,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.apprenticeshipTraining.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     apprenticeshipTraining : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3253,21 +3266,21 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.apprenticeshipTraining.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
     
             // zero contract with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     apprenticeshipTraining : "No"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
                 expect(fetchedWorkerResponse.body.apprenticeshipTraining).toEqual("No");
             
             // unexpected given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     apprenticeshipTraining : "Don't Know"        // case sensitive
@@ -3277,7 +3290,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Qualification In Social Care", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     qualificationInSocialCare : "Don't know"
@@ -3285,20 +3298,20 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.qualificationInSocialCare).toEqual('Don\'t know');
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.qualificationInSocialCare).toEqual('Don\'t know');
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     qualificationInSocialCare : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3306,7 +3319,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3327,14 +3340,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.qualificationInSocialCare.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     qualificationInSocialCare : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3343,21 +3356,21 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.qualificationInSocialCare.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // zero contract with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     qualificationInSocialCare : "No"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
                 expect(fetchedWorkerResponse.body.qualificationInSocialCare).toEqual("No");
             
             // unexpected given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     qualificationInSocialCare : "Don't Know"        // case sensitive
@@ -3369,7 +3382,7 @@ describe ("worker", async () => {
         it("should update a Worker's Social Care qualifications", async () => {
             const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
 
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -3380,7 +3393,7 @@ describe ("worker", async () => {
                 .expect(200);
             expect(updatedWorkerResponse.body.socialCareQualification.qualificationId).toEqual(randomQualification.id);
             expect(updatedWorkerResponse.body.socialCareQualification.title).toEqual(randomQualification.level);
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3388,7 +3401,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.socialCareQualification.title).toEqual(randomQualification.level);
 
             const secondQualification = randomQualification.id == 2 ? 3 : 2;
-            const updateWorkerResponse2 = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updateWorkerResponse2 = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -3400,7 +3413,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3421,7 +3434,7 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.socialCareQualification.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -3430,7 +3443,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3440,7 +3453,7 @@ describe ("worker", async () => {
 
             // update qualification by name
             const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);
-            const updateQualificationByNameResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updateQualificationByNameResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -3449,7 +3462,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3457,7 +3470,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.socialCareQualification.title).toEqual(secondRandomQualification.level);
 
             // out of range qualification id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -3467,7 +3480,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // unknown qualification (by name)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     socialCareQualification : {
@@ -3479,7 +3492,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Other Qualification", async () => {
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherQualification : "Don't know"
@@ -3487,20 +3500,20 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.otherQualification).toEqual('Don\'t know');
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.otherQualification).toEqual('Don\'t know');
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherQualification : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3508,7 +3521,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3529,14 +3542,14 @@ describe ("worker", async () => {
             
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.otherQualification.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherQualification : "Yes"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3545,21 +3558,21 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.otherQualification.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved
 
             // zero contract with expected value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherQualification : "No"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
                 expect(fetchedWorkerResponse.body.otherQualification).toEqual("No");
             
             // unexpected given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     otherQualification : "Don't Know"        // case sensitive
@@ -3571,7 +3584,7 @@ describe ("worker", async () => {
         it("should update a Worker's Highest (other) qualifications", async () => {
             const randomQualification = qualificationUtils.lookupRandomQualification(qualifications);
 
-            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            const updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     highestQualification : {
@@ -3583,7 +3596,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.highestQualification.qualificationId).toEqual(randomQualification.id);
             expect(updatedWorkerResponse.body.highestQualification.title).toEqual(randomQualification.level);
 
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3591,7 +3604,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.highestQualification.title).toEqual(randomQualification.level);
 
             const secondQualification = randomQualification.id == 2 ? 3 : 2;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     highestQualification : {
@@ -3603,7 +3616,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3624,7 +3637,7 @@ describe ("worker", async () => {
             
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.highestQualification.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     highestQualification : {
@@ -3633,7 +3646,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3643,7 +3656,7 @@ describe ("worker", async () => {
 
             // update qualification by name
             const secondRandomQualification = qualificationUtils.lookupRandomQualification(qualifications);
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     highestQualification : {
@@ -3652,7 +3665,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3660,7 +3673,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.highestQualification.title).toEqual(secondRandomQualification.level);
 
             // out of range qualification id
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     highestQualification : {
@@ -3670,7 +3683,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /html/)
                 .expect(400);
             // unknown qualification (by name)
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     highestQualification : {
@@ -3682,7 +3695,7 @@ describe ("worker", async () => {
         });
 
         it("should update a Worker's Completed status", async () => {
-            let updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     completed : true
@@ -3690,20 +3703,20 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.completed).toEqual(true);
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(fetchedWorkerResponse.body.completed).toEqual(true);
 
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     completed : "false"
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3711,7 +3724,7 @@ describe ("worker", async () => {
 
             // now test change history
             let requestEpoch = new Date().getTime();
-            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=full`)
+            let workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3732,14 +3745,14 @@ describe ("worker", async () => {
 
             // now update the property but with same value - expect no change
             let lastSavedDate = workerChangeHistory.body.completed.lastSaved;
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     completed : false
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}?history=property`)
+            workerChangeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}?history=property`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3748,7 +3761,7 @@ describe ("worker", async () => {
             expect(new Date(workerChangeHistory.body.completed.lastSaved).getTime()).toBeGreaterThan(new Date(lastSavedDate).getTime());       // most recent last saved greater than the previous last saved            
     
             // with expected value
-            updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     completed : "true"
@@ -3756,7 +3769,7 @@ describe ("worker", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updatedWorkerResponse.body.completed).toEqual(true);
-            updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            updatedWorkerResponse = await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     completed : false
@@ -3766,7 +3779,7 @@ describe ("worker", async () => {
             expect(updatedWorkerResponse.body.completed).toEqual(false);
             
             // unexpected given value
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     completed : "tRue"      // case sensitive
@@ -3775,29 +3788,30 @@ describe ("worker", async () => {
                 .expect(400);
         });
 
+
         let allWorkers = null;
         let secondWorkerInput = null;
         let secondWorker = null;
         it("should return a list of Workers", async () => {
             expect(establishment1).not.toBeNull();
-            expect(Number.isInteger(establishmentId)).toEqual(true);
+            expect(establishmentUid).not.toBeNull();
 
             // create another two worker
             secondWorkerInput = workerUtils.newWorker(jobs);
-            const secondWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            const secondWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(secondWorkerInput)
                 .expect('Content-Type', /json/)
                 .expect(201);
             secondWorker = { ...secondWorkerInput, ...secondWorkerResponse.body };
-            await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
 
             // should now have three (one from previous test)
-            const allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
+            const allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3811,10 +3825,12 @@ describe ("worker", async () => {
 
         it("should fetch a single worker", async () => {
             expect(secondWorker).not.toBeNull();
+            expect(establishmentUid).not.toBeNull();
+
             const uuidRegex = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/;
             expect(uuidRegex.test(secondWorker.uid.toUpperCase())).toEqual(true);
 
-            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${secondWorker.uid}`)
+            const fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${secondWorker.uid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3836,14 +3852,14 @@ describe ("worker", async () => {
 
             // check for validation errors
             const unknownUuid = uuid.v4();
-            const unknownEstablishmentId = 1723785475876865;
+            const unknownEstablishmentId = uuid.v4();
             // unknown
-            await apiEndpoint.get(`/establishment/${establishmentId}/worker/${unknownUuid}`)
+            await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${unknownUuid}`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /html/)
                 .expect(404);
             // dodgy UUID input
-            await apiEndpoint.get(`/establishment/${establishmentId}/worker/2f8bd309-2a3e`)
+            await apiEndpoint.get(`/establishment/${establishmentUid}/worker/2f8bd309-2a3e`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /html/)
                 .expect(400);
@@ -3860,10 +3876,10 @@ describe ("worker", async () => {
 
         it("should have creation and update change history", async () => {
             expect(establishment1).not.toBeNull();
-            expect(Number.isInteger(establishmentId)).toEqual(true);
+            expect(establishmentUid).not.toBeNull();
 
             const newWorker = workerUtils.newWorker(jobs);
-            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            const newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(newWorker)
                 .expect('Content-Type', /json/)
@@ -3874,7 +3890,7 @@ describe ("worker", async () => {
 
 
             // fetch with change history
-            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${thisWorkerUid}?history=full`)
+            let fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${thisWorkerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3896,7 +3912,7 @@ describe ("worker", async () => {
             expect(fetchedWorkerResponse.body.history[0].event).toEqual('created');
 
             // now update the Worker
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${thisWorkerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${thisWorkerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "nameOrId" : "Updated Worker Name",
@@ -3907,7 +3923,7 @@ describe ("worker", async () => {
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
-            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker/${thisWorkerUid}?history=full`)
+            fetchedWorkerResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${thisWorkerUid}?history=full`)
                 .set('Authorization', establishment1Token)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -3920,12 +3936,12 @@ describe ("worker", async () => {
 
         it("should have delete worker", async () => {
             expect(establishment1).not.toBeNull();
-            expect(Number.isInteger(establishmentId)).toEqual(true);
+            expect(establishmentUid).not.toBeNull();
             expect(establishment1Token).not.toBeNull();
             expect(workerUid).not.toBeNull();
             
             // first get a list of all Workers for the given establishment
-            let allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
+            let allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send()
                 .expect('Content-Type', /json/)
@@ -3934,13 +3950,13 @@ describe ("worker", async () => {
             expect(allWorkersResponse.body.workers.length).toEqual(4);
 
             // now add another worker
-            let newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            let newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
             let newWorkerUuid = newWorkerResponse.body.uid;
-            allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
+            allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send()
                 .expect('Content-Type', /json/)
@@ -3948,7 +3964,7 @@ describe ("worker", async () => {
             expect(allWorkersResponse.body.workers.length).toEqual(5);
 
             // now delete the first worker
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -3958,7 +3974,7 @@ describe ("worker", async () => {
                 .expect(204);
 
             // check there is now only one worker
-            allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentId}/worker`)
+            allWorkersResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send()
                 .expect('Content-Type', /json/)
@@ -3966,29 +3982,29 @@ describe ("worker", async () => {
             expect(allWorkersResponse.body.workers.length).toEqual(4);
 
             // now try to get, update and delete again the original Worker expecting failure
-            await apiEndpoint.put(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.put(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     "completed" : true
                 })
                 .expect(404);
-            await apiEndpoint.get(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.get(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send()
                 .expect(404);
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${workerUid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${workerUid}`)
                 .set('Authorization', establishment1Token)
                 .send()
                 .expect(404);
             
             // now create another worker and give an "other" reason
-            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
             newWorkerUuid = newWorkerResponse.body.uid;
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -3999,13 +4015,13 @@ describe ("worker", async () => {
                 .expect(204);
 
             // "other" reason is optional
-            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
             newWorkerUuid = newWorkerResponse.body.uid;
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4015,13 +4031,13 @@ describe ("worker", async () => {
                 .expect(204);
 
             // and now create another worker and give a text reason
-            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
             newWorkerUuid = newWorkerResponse.body.uid;
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4031,13 +4047,13 @@ describe ("worker", async () => {
                 .expect(204);
 
             // and now create another worker and give a text reason
-            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
             newWorkerUuid = newWorkerResponse.body.uid;
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4047,13 +4063,13 @@ describe ("worker", async () => {
                 .expect(204);
 
             // now forced validation errors - the worker must exist!!!
-            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentId}/worker`)
+            newWorkerResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/worker`)
                 .set('Authorization', establishment1Token)
                 .send(workerUtils.newWorker(jobs))
                 .expect('Content-Type', /json/)
                 .expect(201);
             newWorkerUuid = newWorkerResponse.body.uid;
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4061,7 +4077,7 @@ describe ("worker", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4069,7 +4085,7 @@ describe ("worker", async () => {
                     }
                 })
                 .expect(400);
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${newWorkerUuid}`)
                 .set('Authorization', establishment1Token)
                 .send({
                     reason: {
@@ -4078,7 +4094,7 @@ describe ("worker", async () => {
                 })
                 .expect(400);
             const randomOtherness = randomString(501);
-            await apiEndpoint.delete(`/establishment/${establishmentId}/worker/${newWorkerUuid}`)
+            await apiEndpoint.delete(`/establishment/${establishmentUid}/worker/${newWorkerUuid}`)
             .set('Authorization', establishment1Token)
             .send({
                 reason: {
