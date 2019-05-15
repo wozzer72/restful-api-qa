@@ -380,7 +380,7 @@ describe("Password Resets", async () => {
 });
 
 
-describe ("Change User Details", async () => {
+describe("Change User Details", async () => {
     let nonCqcServices = null;
     beforeAll(async () => {
         const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
@@ -406,6 +406,7 @@ describe ("Change User Details", async () => {
     let knownUserUid = null;
     let loginAuthToken = null;
     let establishmentId = null;
+    let establishmentUid = null;
     it('should return a list of all establishment users', async () => {
         const loginResponse = await apiEndpoint.post('/login')
             .send({
@@ -415,9 +416,10 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(200);
         establishmentId = loginResponse.body.establishment.id;
+        establishmentUid = loginResponse.body.establishment.uid;
         
         loginAuthToken = loginResponse.header.authorization;
-        const allUsersResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}`)
+        const allUsersResponse = await apiEndpoint.get(`/user/establishment/${establishmentUid}`)
             .set('Authorization', loginAuthToken)
             .send({
             })
@@ -441,7 +443,7 @@ describe ("Change User Details", async () => {
         knownUserUid = allUsersResponse.body.users[0].uid;
 
         // now test for unexpected results
-        await apiEndpoint.get(`/user/establishment/${establishmentId}`)
+        await apiEndpoint.get(`/user/establishment/${establishmentUid}`)
             .send({
             })
             .expect(401);
@@ -457,7 +459,7 @@ describe ("Change User Details", async () => {
         expect(loginAuthToken).not.toBeNull();
         expect(establishmentId).not.toBeNull();
         
-        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=none`)
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=none`)
             .set('Authorization', loginAuthToken)
             .send({
             })
@@ -477,7 +479,7 @@ describe ("Change User Details", async () => {
 
 
         // and now expected errors
-        await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('28a401f5-99a6-41c0-b685-91950f90e8f6')}?history=none`)
+        await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent('28a401f5-99a6-41c0-b685-91950f90e8f6')}?history=none`)
             .set('Authorization', loginAuthToken)
             .send({
             })
@@ -487,7 +489,7 @@ describe ("Change User Details", async () => {
             .send({
             })
             .expect(403);
-        await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('28a401f5-99a6-41c0-b685-91950f90e8f6')}?history=none`)
+        await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent('28a401f5-99a6-41c0-b685-91950f90e8f6')}?history=none`)
             .send({
             })
             .expect(401);
@@ -500,7 +502,7 @@ describe ("Change User Details", async () => {
         const fetchUsername = nonCQCSite.user.username;
         expect(establishmentId).not.toBeNull();
 
-        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=none`)
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(fetchUsername)}?history=none`)
             .set('Authorization', loginAuthToken)
             .send({
             })
@@ -517,7 +519,7 @@ describe ("Change User Details", async () => {
         expect(getUserResponse.body.securityQuestionAnswer).toEqual(nonCQCSite.user.securityAnswer);
 
         // and now expected errors
-        await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('unknown user')}?history=none`)
+        await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent('unknown user')}?history=none`)
             .set('Authorization', loginAuthToken)
             .send({
             })
@@ -527,7 +529,7 @@ describe ("Change User Details", async () => {
             .send({
             })
             .expect(403);
-        await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent('unknown user')}?history=none`)
+        await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent('unknown user')}?history=none`)
             .send({
             })
             .expect(401);
@@ -539,7 +541,7 @@ describe ("Change User Details", async () => {
         const fetchUsername = nonCQCSite.user.username;
         expect(establishmentId).not.toBeNull();
 
-        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=property`)
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(fetchUsername)}?history=property`)
             .set('Authorization', loginAuthToken)
             .send({
             })
@@ -594,7 +596,7 @@ describe ("Change User Details", async () => {
     });
 
     it('should update fullname property', async () => {
-        const updatedFullnameResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        const updatedFullnameResponse = await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "fullname" : nonCQCSite.user.fullname + ' Updated'
@@ -610,7 +612,7 @@ describe ("Change User Details", async () => {
 
         //validatePropertyChangeHistory
         // and now check change history
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "fullname" : nonCQCSite.user.fullname + ' Updated Again'
@@ -619,7 +621,7 @@ describe ("Change User Details", async () => {
             .expect(200);
 
         let requestEpoch = new Date().getTime();
-        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=full`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -646,14 +648,14 @@ describe ("Change User Details", async () => {
         let lastSavedDate = userChangeHistory.body.fullname.lastSaved;
         
         // now update the property but with same value - expect no change
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "fullname" : nonCQCSite.user.fullname + ' Updated Again'
             })
             .expect('Content-Type', /json/)
             .expect(200);
-        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=property`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -663,7 +665,7 @@ describe ("Change User Details", async () => {
 
         // and now expect on failures on updates
         // no authorization header
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .send({
                 "fullname" : nonCQCSite.user.fullname
             })
@@ -678,7 +680,7 @@ describe ("Change User Details", async () => {
             .expect(403);
 
         // unexpected UUID/username
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "fullname" : nonCQCSite.user.fullname
@@ -687,7 +689,7 @@ describe ("Change User Details", async () => {
     
         // exceeds maximum length
         const randomFullname = randomString(121);
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "fullname" : randomFullname
@@ -696,7 +698,7 @@ describe ("Change User Details", async () => {
     });
  
     it('should update job title property', async () => {
-        const updatedJobTitleResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        const updatedJobTitleResponse = await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "jobTitle" : nonCQCSite.user.jobTitle + ' Updated'
@@ -712,7 +714,7 @@ describe ("Change User Details", async () => {
 
         //validatePropertyChangeHistory
         // and now check change history
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "jobTitle" : nonCQCSite.user.jobTitle + ' Updated Again'
@@ -721,7 +723,7 @@ describe ("Change User Details", async () => {
             .expect(200);
 
         let requestEpoch = new Date().getTime();
-        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=full`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -748,14 +750,14 @@ describe ("Change User Details", async () => {
         let lastSavedDate = userChangeHistory.body.jobTitle.lastSaved;
         
         // now update the property but with same value - expect no change
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "jobTitle" : nonCQCSite.user.jobTitle + ' Updated Again'
             })
             .expect('Content-Type', /json/)
             .expect(200);
-        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=property`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -765,7 +767,7 @@ describe ("Change User Details", async () => {
 
         // and now expect on failures on updates
         // no authorization header
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .send({
                 "jobTitle" : nonCQCSite.user.jobTitle
             })
@@ -780,7 +782,7 @@ describe ("Change User Details", async () => {
             .expect(403);
 
         // unexpected UUID/username
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "jobTitle" : nonCQCSite.user.jobTitle
@@ -789,7 +791,7 @@ describe ("Change User Details", async () => {
 
         // exceeds maximum length
         const randomJobTitle = randomString(121);
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "jobTitle" : randomJobTitle
@@ -798,7 +800,7 @@ describe ("Change User Details", async () => {
     });
 
     it('should update email property', async () => {
-        const updatedEmailResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        const updatedEmailResponse = await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "email" : 'updated.' + nonCQCSite.user.emailAddress
@@ -814,7 +816,7 @@ describe ("Change User Details", async () => {
 
         //validatePropertyChangeHistory
         // and now check change history
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "email" : 'updated.again.' + nonCQCSite.user.emailAddress
@@ -823,7 +825,7 @@ describe ("Change User Details", async () => {
             .expect(200);
 
         let requestEpoch = new Date().getTime();
-        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=full`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -850,14 +852,14 @@ describe ("Change User Details", async () => {
         let lastSavedDate = userChangeHistory.body.email.lastSaved;
         
         // now update the property but with same value - expect no change
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "email" : 'updated.again.' + nonCQCSite.user.emailAddress
             })
             .expect('Content-Type', /json/)
             .expect(200);
-        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=property`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -867,7 +869,7 @@ describe ("Change User Details", async () => {
 
         // and now expect on failures on updates
         // no authorization header
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .send({
                 "email" : nonCQCSite.user.emailAddress
             })
@@ -882,7 +884,7 @@ describe ("Change User Details", async () => {
             .expect(403);
         
         // unexpected UUID/username
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "email" : nonCQCSite.user.emailAddress
@@ -891,20 +893,20 @@ describe ("Change User Details", async () => {
 
         // exceeds maximum length
         const randomEmail = randomString(121);
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "email" : randomEmail
             })
             .expect(400);
         // fails pattern match
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "email" : 'bob'
             })
             .expect(400);
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "email" : 'bob@com'
@@ -913,7 +915,7 @@ describe ("Change User Details", async () => {
     });
 
     it('should update phone property', async () => {
-        const updatedPhoneResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        const updatedPhoneResponse = await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "phone" : '01234 123123'
@@ -929,7 +931,7 @@ describe ("Change User Details", async () => {
 
         //validatePropertyChangeHistory
         // and now check change history
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "phone" : '09876 543543'
@@ -938,7 +940,7 @@ describe ("Change User Details", async () => {
             .expect(200);
 
         let requestEpoch = new Date().getTime();
-        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=full`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -965,14 +967,14 @@ describe ("Change User Details", async () => {
         let lastSavedDate = userChangeHistory.body.phone.lastSaved;
         
         // now update the property but with same value - expect no change
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "phone" : '09876 543543'
             })
             .expect('Content-Type', /json/)
             .expect(200);
-        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=property`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -982,7 +984,7 @@ describe ("Change User Details", async () => {
 
         // and now expect on failures on updates
         // no authorization header
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .send({
                 "phone" : nonCQCSite.user.contactNumber
             })
@@ -997,7 +999,7 @@ describe ("Change User Details", async () => {
             .expect(403);
         
         // unexpected UUID/username
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "phone" : nonCQCSite.user.contactNumber
@@ -1005,7 +1007,7 @@ describe ("Change User Details", async () => {
             .expect(404);
 
         // fails pattern match
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "phone" : '0122'
@@ -1014,7 +1016,7 @@ describe ("Change User Details", async () => {
     });
 
     it('should update security question property', async () => {
-        const updatedSecurityQuestionResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        const updatedSecurityQuestionResponse = await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestion" : nonCQCSite.user.securityQuestion + ' updated'
@@ -1030,7 +1032,7 @@ describe ("Change User Details", async () => {
 
         //validatePropertyChangeHistory
         // and now check change history
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestion" : nonCQCSite.user.securityQuestion + ' updated again'
@@ -1039,7 +1041,7 @@ describe ("Change User Details", async () => {
             .expect(200);
 
         let requestEpoch = new Date().getTime();
-        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=full`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -1066,14 +1068,14 @@ describe ("Change User Details", async () => {
         let lastSavedDate = userChangeHistory.body.securityQuestion.lastSaved;
         
         // now update the property but with same value - expect no change
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestion" : nonCQCSite.user.securityQuestion + ' updated again'
             })
             .expect('Content-Type', /json/)
             .expect(200);
-        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=property`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -1083,7 +1085,7 @@ describe ("Change User Details", async () => {
 
         // and now expect on failures on updates
         // no authorization header
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .send({
                 "securityQuestion" : nonCQCSite.user.securityQuestion
             })
@@ -1098,7 +1100,7 @@ describe ("Change User Details", async () => {
             .expect(403);
         
         // unexpected UUID/username
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestion" : nonCQCSite.user.securityQuestion
@@ -1107,7 +1109,7 @@ describe ("Change User Details", async () => {
 
         // exceeds length
         const randomSecurityQuestion = randomString(256);
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestion" : randomSecurityQuestion
@@ -1116,7 +1118,7 @@ describe ("Change User Details", async () => {
     });
 
     it('should update security question answer property', async () => {
-        const updatedSecurityQuestionAnswerResponse = await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        const updatedSecurityQuestionAnswerResponse = await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestionAnswer" : nonCQCSite.user.securityAnswer + ' updated'
@@ -1132,7 +1134,7 @@ describe ("Change User Details", async () => {
 
         //validatePropertyChangeHistory
         // and now check change history
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestionAnswer" : nonCQCSite.user.securityAnswer + ' updated again'
@@ -1141,7 +1143,7 @@ describe ("Change User Details", async () => {
             .expect(200);
 
         let requestEpoch = new Date().getTime();
-        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=full`)
+        let userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=full`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -1168,14 +1170,14 @@ describe ("Change User Details", async () => {
         let lastSavedDate = userChangeHistory.body.securityQuestionAnswer.lastSaved;
         
         // now update the property but with same value - expect no change
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestionAnswer" : nonCQCSite.user.securityAnswer + ' updated again'
             })
             .expect('Content-Type', /json/)
             .expect(200);
-        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}?history=property`)
+        userChangeHistory =  await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}?history=property`)
             .set('Authorization', loginAuthToken)
             .expect('Content-Type', /json/)
             .expect(200);
@@ -1185,7 +1187,7 @@ describe ("Change User Details", async () => {
 
         // and now expect on failures on updates
         // no authorization header
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .send({
                 "securityQuestionAnswer" : nonCQCSite.user.securityAnswer
             })
@@ -1200,7 +1202,7 @@ describe ("Change User Details", async () => {
             .expect(403);
         
         // unexpected UUID/username
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent('06a3c9ca-533c-4260-9563-8b9dadd480c6')}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestionAnswer" : nonCQCSite.user.securityAnswer
@@ -1209,7 +1211,7 @@ describe ("Change User Details", async () => {
 
         // exceeds length
         const randomSecurityQuestionAnswer = randomString(256);
-        await apiEndpoint.put(`/user/establishment/${establishmentId}/${encodeURIComponent(knownUserUid)}`)
+        await apiEndpoint.put(`/user/establishment/${establishmentUid}/${encodeURIComponent(knownUserUid)}`)
             .set('Authorization', loginAuthToken)
             .send({
                 "securityQuestionAnswer" : randomSecurityQuestionAnswer
@@ -1232,7 +1234,7 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(401);
 
-        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=timeline`)
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(fetchUsername)}?history=timeline`)
             .set('Authorization', loginAuthToken)
             .send({
             })
@@ -1326,7 +1328,7 @@ describe ("Change User Details", async () => {
             .expect('Content-Type', /json/)
             .expect(401);
 
-        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentId}/${encodeURIComponent(fetchUsername)}?history=full`)
+        const getUserResponse = await apiEndpoint.get(`/user/establishment/${establishmentUid}/${encodeURIComponent(fetchUsername)}?history=full`)
             .set('Authorization', loginAuthToken)
             .send({
             })
