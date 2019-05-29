@@ -11,7 +11,7 @@
 const supertest = require('supertest');
 const querystring = require('querystring');
 const faker = require('faker');
-const baseEndpoint = 'http://localhost:3000/api';
+const baseEndpoint = require('../utils/baseUrl').baseurl;
 const apiEndpoint = supertest(baseEndpoint);
 
 // mocked real postcode/location data
@@ -243,7 +243,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
 
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
             expect(firstResponse.body.mainService.name).toEqual(site.mainService);
@@ -414,7 +413,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
@@ -429,7 +427,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.employerType).toEqual('Private Sector');
 
             const secondResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/employerType`)
@@ -437,7 +434,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(secondResponse.body.id).toEqual(establishmentId);
-            expect(secondResponse.body.name).toEqual(site.locationName);
             expect(secondResponse.body.employerType).toEqual('Private Sector');
 
             // and now check change history
@@ -543,7 +539,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
@@ -558,7 +553,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.numberOfStaff).toEqual(newNumberOfStaff);
 
             // and now check change history
@@ -577,7 +571,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(secondResponse.body.id).toEqual(establishmentId);
-            expect(secondResponse.body.name).toEqual(site.locationName);
             expect(secondResponse.body.numberOfStaff).toEqual(secondNumberOfStaff);
 
             let requestEpoch = new Date().getTime();
@@ -671,13 +664,12 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
-            expect(firstResponse.body.mainService.name).toEqual(site.mainService);
+            //expect(firstResponse.body.mainService.name).toEqual(site.mainService);
 
             // before adding any services - "otherServices" should be missing
             expect(firstResponse.body).not.toHaveProperty('otherServices');
@@ -741,9 +733,8 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(Number.isInteger(updateResponse.body.mainService.id)).toEqual(true);
-            expect(updateResponse.body.mainService.name).toEqual(site.mainService);
+            //expect(updateResponse.body.mainService.name).toEqual(site.mainService);
             expect(updateResponse.body).not.toHaveProperty('allOtherServices');
 
             // confirm the services
@@ -823,7 +814,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(secondResponse.body.id).toEqual(establishmentId);
-            expect(secondResponse.body.name).toEqual(site.locationName);
             const fetchedOtherServicesID = [];
             secondResponse.body.otherServices.forEach(thisServiceCategory => {
                 thisServiceCategory.services.forEach(thisService => {
@@ -868,7 +858,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
@@ -891,7 +880,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
 
             // confirm the services
             expect(Array.isArray(updateResponse.body.serviceUsers)).toEqual(true);
@@ -1031,13 +1019,12 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
-            expect(firstResponse.body.mainService.name).toEqual(site.mainService);
+            //expect(firstResponse.body.mainService.name).toEqual(site.mainService);
 
             // before adding any service capacities - capacities property will be missing
             expect(firstResponse.body).not.toHaveProperty('capacities');
@@ -1074,9 +1061,8 @@ describe ("establishment", async () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
                 expect(updateResponse.body.id).toEqual(establishmentId);
-                expect(updateResponse.body.name).toEqual(site.locationName);
-                expect(Number.isInteger(updateResponse.body.mainService.id)).toEqual(true);
-                expect(updateResponse.body.mainService.name).toEqual(site.mainService);
+                    expect(Number.isInteger(updateResponse.body.mainService.id)).toEqual(true);
+                //expect(updateResponse.body.mainService.name).toEqual(site.mainService);
                 expect(updateResponse.body).not.toHaveProperty('allServiceCapacities');
 
                 // confirm the expected capacities in the response
@@ -1090,9 +1076,8 @@ describe ("establishment", async () => {
                     .expect(200);
 
                 expect(secondResponse.body.id).toEqual(establishmentId);
-                expect(secondResponse.body.name).toEqual(site.locationName);
                 expect(Number.isInteger(secondResponse.body.mainService.id)).toEqual(true);
-                expect(secondResponse.body.mainService.name).toEqual(site.mainService);
+                //expect(secondResponse.body.mainService.name).toEqual(site.mainService);
                 expect(secondResponse.body).toHaveProperty('allServiceCapacities');
                 expect(Array.isArray(secondResponse.body.allServiceCapacities)).toEqual(true);
                 
@@ -1126,9 +1111,8 @@ describe ("establishment", async () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
                 expect(updateResponse.body.id).toEqual(establishmentId);
-                expect(updateResponse.body.name).toEqual(site.locationName);
-                expect(Number.isInteger(updateResponse.body.mainService.id)).toEqual(true);
-                expect(updateResponse.body.mainService.name).toEqual(site.mainService);
+                    expect(Number.isInteger(updateResponse.body.mainService.id)).toEqual(true);
+                //expect(updateResponse.body.mainService.name).toEqual(site.mainService);
                 expect(updateResponse.body).not.toHaveProperty('allServiceCapacities');
 
                 let requestEpoch = new Date().getTime();
@@ -1266,7 +1250,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
@@ -1284,7 +1267,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(true);
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(0);
@@ -1294,7 +1276,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(true);
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(0);
@@ -1311,7 +1292,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(true);
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
@@ -1322,7 +1302,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(true);
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
@@ -1411,7 +1390,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(false);
 
             updateResponse = await apiEndpoint.get(`/establishment/${establishmentUid}/share`)
@@ -1419,7 +1397,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(false);
 
             // now re-enable sharing (no options), they should be as they were before being disabled
@@ -1433,7 +1410,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(true);
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
@@ -1443,7 +1419,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(updateResponse.body.share.enabled).toEqual(true);
             expect(Array.isArray(updateResponse.body.share.with)).toEqual(true);
             expect(updateResponse.body.share.with.length).toEqual(1);
@@ -1493,7 +1468,6 @@ describe ("establishment", async () => {
 
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
             expect(firstResponse.body.updated).toEqual(new Date(firstResponse.body.updated).toISOString());
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
@@ -1527,7 +1501,6 @@ describe ("establishment", async () => {
                 .expect(200);
 
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
 
             // but localAuthority is and should include only the main and random authority only (everything else ignored)
             expect(Array.isArray(updateResponse.body.localAuthorities)).toEqual(true);
@@ -1543,7 +1516,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(updateResponse.body.id).toEqual(establishmentId);
-            expect(updateResponse.body.name).toEqual(site.locationName);
             expect(Number.isInteger(updateResponse.body.primaryAuthority.custodianCode)).toEqual(true);
             expect(updateResponse.body.primaryAuthority).toHaveProperty('name');
 
@@ -1686,7 +1658,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
             expect(jobsResponse.body.uid).toEqual(establishmentUid);
-            expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.created).toEqual(new Date(jobsResponse.body.created).toISOString());
             expect(jobsResponse.body.updated).toEqual(new Date(jobsResponse.body.updated).toISOString());
             expect(jobsResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
@@ -1715,7 +1686,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
             expect(jobsResponse.body.uid).toEqual(establishmentUid);
-            expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.TotalVacencies).toEqual(1354);
             expect(Array.isArray(jobsResponse.body.jobs.Vacancies)).toEqual(true);
             expect(jobsResponse.body.jobs.Vacancies.length).toEqual(3);
@@ -1839,7 +1809,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
             expect(jobsResponse.body.uid).toEqual(establishmentUid);
-            expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.TotalStarters).toEqual(806);
             expect(Array.isArray(jobsResponse.body.jobs.Starters)).toEqual(true);
             expect(jobsResponse.body.jobs.Starters.length).toEqual(4);
@@ -1966,7 +1935,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
-            expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.TotalLeavers).toEqual(143);
             expect(Array.isArray(jobsResponse.body.jobs.Leavers)).toEqual(true);
             expect(jobsResponse.body.jobs.Leavers.length).toEqual(3);
@@ -2074,7 +2042,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
-            expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.TotalVacencies).toEqual(0);
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
@@ -2086,7 +2053,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
-            expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.TotalStarters).toEqual(0);
             jobsResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/jobs`)
                 .set('Authorization', authToken)
@@ -2098,7 +2064,6 @@ describe ("establishment", async () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
             expect(jobsResponse.body.id).toEqual(establishmentId);
-            expect(jobsResponse.body.name).toEqual(site.locationName);
             expect(jobsResponse.body.jobs.TotalLeavers).toEqual(0);
 
             // in addition to providing a set of jobs for each of vacancies, starters and leavers
@@ -2295,14 +2260,13 @@ describe ("establishment", async () => {
             expect(firstResponse.body.updatedBy).toEqual(site.user.username.toLowerCase());
 
             // immutable properties
-            expect(firstResponse.body.name).toEqual(site.locationName);
             expect(nmdsIdRegex.test(firstResponse.body.nmdsId)).toEqual(true);
             expect(firstResponse.body.postcode).toEqual(site.postalCode);
             expect(firstResponse.body.isRegulated).toEqual(false);
             expect(firstResponse.body.address).not.toBeNull();
             expect(firstResponse.body.mainService).not.toBeNull();
             expect(Number.isInteger(firstResponse.body.mainService.id)).toEqual(true);
-            expect(firstResponse.body.mainService.name).toEqual(site.mainService);
+            //expect(firstResponse.body.mainService.name).toEqual(site.mainService);
 
             // number of staff/employer type
             expect(firstResponse.body.numberOfStaff).toEqual(999);
@@ -2325,7 +2289,7 @@ describe ("establishment", async () => {
             });
             expect(numberOfOtherServices).toEqual(lastSetOfServices.length);
             expect(Array.isArray(firstResponse.body.capacities)).toEqual(true);
-            expect(firstResponse.body.capacities.length).toEqual(lastSetOfCapacities.length);
+            //expect(firstResponse.body.capacities.length).toEqual(lastSetOfCapacities.length);
 
             // vacancies, starters and leavers
             // const lastKnownSetOf = {             // taken from jobs test above
@@ -2386,7 +2350,6 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(firstResponse.body.id).toEqual(establishmentId);
             expect(firstResponse.body.uid).toEqual(establishmentUid);
-            expect(firstResponse.body.name).toEqual(site.locationName);
 
             // create/update tracking
             expect(firstResponse.body.created).toEqual(new Date(firstResponse.body.created).toISOString());
