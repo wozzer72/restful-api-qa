@@ -3151,7 +3151,6 @@ Object {
   ],
 }
 `;
-
 exports[`Expected reference services should fetch service users 1`] = `
 Array [
   Object {
@@ -3192,6 +3191,7 @@ Array [
       Object {
         "id": 9,
         "service": "Older people not in above categories",
+        "other": true,
       },
     ],
   },
@@ -3233,6 +3233,7 @@ Array [
       Object {
         "id": 18,
         "service": "Adults not in above categories",
+        "other": true,
       },
     ],
   },
@@ -3268,6 +3269,7 @@ Array [
       Object {
         "id": 23,
         "service": "Any others not in above categories",
+        "other": true,
       },
     ],
   },
