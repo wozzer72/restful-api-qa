@@ -13,6 +13,7 @@ const querystring = require('querystring');
 const faker = require('faker');
 const baseEndpoint = require('../utils/baseUrl').baseurl;
 const apiEndpoint = supertest(baseEndpoint);
+const chai = require('chai');
 
 // mocked real postcode/location data
 const locations = require('../mockdata/locations').data;
@@ -31,6 +32,7 @@ let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
 let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 const PropertiesResponses = {};
 
+const OTHER_MAX_LENGTH=120;
 
 // owing to unexpected significant latency on the history fetches for establishment
 //  increase the timeout jest imposes on async returns
@@ -970,6 +972,89 @@ describe ("establishment", async () => {
                 .expect(200);
             expect(namedServicePostResponse.body.serviceUsers[0].id).toEqual(21);
         
+            // Block of four "other" field tests
+
+            // should update service users with other but have no consequence if other is passed to a 'non other' service
+            const otherOnNonOtherPostResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: [
+                        {
+                            service: 'Carers of adults',
+                            other: "my example other"
+                        }
+                    ]
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(otherOnNonOtherPostResponse.body.serviceUsers[0].id).toEqual(21);
+        
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/serviceUsers?history=property`)
+            .set('Authorization', authToken)
+            .expect('Content-Type', /json/)
+            .expect(200);
+
+            chai.expect(changeHistory.body.serviceUsers.currentValue).to.eql([{ id: 21,
+                group: 'Carers',
+                service: 'Carers of adults'}]);
+            
+            // Should update service users with other and should update on an 'other service'
+            const otherOnOtherPostResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: [
+                        {
+                            service: 'Older people not in above categories',
+                            other: "my example other"
+                        }
+                    ]
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(otherOnOtherPostResponse.body.serviceUsers[0].id).toEqual(9);
+        
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/serviceUsers?history=property`)
+            .set('Authorization', authToken)
+            .expect('Content-Type', /json/)
+            .expect(200);            
+
+            chai.expect(changeHistory.body.serviceUsers.currentValue).to.eql([{id :9, group :"Older people", service :"Older people not in above categories", other :"my example other"}]);
+
+            // Test with no other passed in on a 'other service'
+            const noOtherOnOtherPostResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: [
+                        {
+                            service: 'Older people not in above categories'
+                        }
+                    ]
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
+            expect(noOtherOnOtherPostResponse.body.serviceUsers[0].id).toEqual(9);
+        
+            changeHistory =  await apiEndpoint.get(`/establishment/${establishmentUid}/serviceUsers?history=property`)
+            .set('Authorization', authToken)
+            .expect('Content-Type', /json/)
+            .expect(200);            
+
+            chai.expect(changeHistory.body.serviceUsers.currentValue).to.eql([{id :9, group :"Older people", service :"Older people not in above categories"}]);
+
+            // Test with other passed in on a 'other service' bt other is greater than 120 chars
+            const tooLongOtherOnOtherPostResponse = await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
+                .set('Authorization', authToken)
+                .send({
+                    serviceUsers: [
+                        {
+                            service: 'Older people not in above categories',
+                            other: 'T'.repeat(OTHER_MAX_LENGTH + 1)
+                        }
+                    ]
+                })
+                .expect(400);
+
+
             // and now test for expected validation failures
             await apiEndpoint.post(`/establishment/${establishmentUid}/serviceUsers`)
                 .set('Authorization', authToken)
