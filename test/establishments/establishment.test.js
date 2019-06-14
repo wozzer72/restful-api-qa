@@ -77,6 +77,37 @@ describe ("establishment", async () => {
             primaryLocalAuthorityCustodianCode = parseInt(postcodes[1].localCustodianCode);
         });
 
+        it("should delete an establishment", async () => {
+            const testSiteData = registrationUtils.newNonCqcSite(postcodes[1], nonCqcServices);            
+            
+            const nonCqcEstablishment = await apiEndpoint.post('/registration')
+                .send([testSiteData])
+                .expect('Content-Type', /json/);
+
+            const secondLoginResponse = await apiEndpoint.post('/login')
+                .send({
+                    username: testSiteData.user.username,
+                    password: 'Password00'
+                })
+                .expect('Content-Type', /json/);
+                        
+            const authToken = secondLoginResponse.header.authorization;            
+
+            await apiEndpoint.get(`/establishment/${nonCqcEstablishment.body.establishmentId}`)
+                .set('Authorization', authToken)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            await apiEndpoint.delete(`/establishment/${nonCqcEstablishment.body.establishmentId}`)
+                .set('Authorization', authToken)
+                .expect(204);
+
+            await apiEndpoint.get(`/establishment/${nonCqcEstablishment.body.establishmentId}`)
+                .set('Authorization', authToken)
+                .expect(404);
+
+        });
+
         it("should create a non-CQC registation", async () => {
             expect(site).not.toBeNull();
             expect(primaryLocalAuthorityCustodianCode).not.toBeNull();
