@@ -27,7 +27,7 @@ let MIN_TIME_TOLERANCE = process.env.TEST_DEV ? 1000 : 400;
 let MAX_TIME_TOLERANCE = process.env.TEST_DEV ? 3000 : 1000;
 const PropertiesResponses = {};
 
-describe("Password Resets", async () => {
+describe("Password Resets", () => {
     let nonCqcServices = null;
     beforeAll(async () => {
         const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')
@@ -380,7 +380,7 @@ describe("Password Resets", async () => {
 });
 
 
-describe("Change User Details", async () => {
+describe("Change User Details", () => {
     let nonCqcServices = null;
     beforeAll(async () => {
         const nonCqcServicesResults = await apiEndpoint.get('/services/byCategory?cqc=false')

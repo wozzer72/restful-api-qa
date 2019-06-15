@@ -36,7 +36,7 @@ const PropertiesResponses = {};
 //  increase the timeout jest imposes on async returns
 jest.setTimeout(30000); // 30 seconds
 
-describe ("establishment", async () => {
+describe("establishment", () => {
     let cqcServices = null;
     let nonCqcServices = null;
     beforeAll(async () => {
@@ -62,7 +62,7 @@ describe ("establishment", async () => {
     beforeEach(async () => {
     });
 
-    describe("Non CQC Establishment", async ( )=> {
+    describe("Non CQC Establishment", ( )=> {
         let site = null;
         let establishmentId = null;
         let establishmentUid = null;
@@ -2371,7 +2371,7 @@ describe ("establishment", async () => {
         });
     });
 
-    describe.skip("CQC Establishment", async ( )=> {
+    describe.skip("CQC Establishment", ( )=> {
         // it("should create a CQC registation", async () => {
         //     const cqcSite = registrationUtils.newCqcSite(locations[0], cqcServices);
         //     apiEndpoint.post('/registration')
@@ -2394,15 +2394,15 @@ describe ("establishment", async () => {
         //        of establishment.isRegulated)
     });
 
-    describe.skip("Establishment forced failures", async () => {
-        describe("Employer Type", async () => {
+    describe.skip("Establishment forced failures", () => {
+        describe("Employer Type", () => {
             it("should fail (401) when attempting to update 'employer type' without passing Authorization header", async () => {});
             it("should fail (403) when attempting to update 'employer type' passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (503) when attempting to update 'employer type' with unexpected server error", async () => {});
             it("should fail (400) when attempting to update 'employer type' with unexpected employer type", async () => {});
             it("should fail (400) when attempting to update 'employer type' with unexpected request format (JSON Schema)", async () => {});
         });
-        describe("Other Services", async () => {
+        describe("Other Services", () => {
             it("should fail (401) when attempting to update 'other services' without passing Authorization header", async () => {});
             it("should fail (403) when attempting to update 'other services' passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (503) when attempting to update 'other services' with unexpected server error", async () => {});
@@ -2410,7 +2410,7 @@ describe ("establishment", async () => {
             it("should fail (400) when trying to update 'other services' using 'main service'", async () => {});
             it("should fail (400) when attempting to update 'other services' with unexpected request format (JSON Schema)", async () => {})
         });
-        describe("Service Capacities", async () => {
+        describe("Service Capacities", () => {
             it("should fail (401) when attempting to update 'services capacities' without passing Authorization header", async () => {});
             it("should fail (403) when attempting to update 'services capacities' passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (503) when attempting to update 'services capacities' with unexpected server error", async () => {});

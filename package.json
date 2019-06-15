@@ -20,7 +20,7 @@
   "devDependencies": {
     "cross-env": "^5.2.0",
     "faker": "^4.1.0",
-    "jest": "^23.6.0",
-    "supertest": "^3.3.0"
+    "jest": "^24.8.0",
+    "supertest": "^3.4.2"
   }
 }
