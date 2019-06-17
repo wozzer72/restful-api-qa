@@ -11,7 +11,7 @@ const supertest = require('supertest');
 const baseEndpoint = require('../utils/baseUrl').baseurl;
 const apiEndpoint = supertest(baseEndpoint);
 
-describe ("Expected reference services", async () => {
+describe ("Expected reference services", () => {
     beforeAll(async () => {
     });
 

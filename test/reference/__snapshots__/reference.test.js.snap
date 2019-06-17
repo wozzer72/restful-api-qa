@@ -1859,6 +1859,7 @@ Array [
         "id": 6,
         "isCQC": false,
         "name": "Other adult community care service",
+        "other": true,
       },
       Object {
         "id": 7,
@@ -1884,6 +1885,7 @@ Array [
         "id": 10,
         "isCQC": false,
         "name": "Other adult day care services",
+        "other": true,
       },
     ],
   },
@@ -1899,6 +1901,7 @@ Array [
         "id": 18,
         "isCQC": false,
         "name": "Other adult domiciliary care service",
+        "other": true,
       },
     ],
   },
@@ -1909,6 +1912,7 @@ Array [
         "id": 12,
         "isCQC": false,
         "name": "Other adult residential care services",
+        "other": true,
       },
       Object {
         "id": 13,
@@ -1924,11 +1928,13 @@ Array [
         "id": 14,
         "isCQC": false,
         "name": "Any childrens / young peoples services",
+        "other": true,
       },
       Object {
         "id": 15,
         "isCQC": false,
         "name": "Any other services",
+        "other": true,
       },
       Object {
         "id": 16,
@@ -1939,6 +1945,7 @@ Array [
         "id": 17,
         "isCQC": false,
         "name": "Other healthcare service",
+        "other": true,
       },
     ],
   },
@@ -2072,6 +2079,10 @@ Object {
       "id": 29,
     },
     Object {
+      "country": "Bonaire, Sint Eustatius and Saba",
+      "id": 262,
+    },
+    Object {
       "country": "Bouvet Island",
       "id": 30,
     },
@@ -2174,6 +2185,10 @@ Object {
     Object {
       "country": "Croatia",
       "id": 55,
+    },
+    Object {
+      "country": "Curacao",
+      "id": 265,
     },
     Object {
       "country": "Cuba",
@@ -2384,6 +2399,10 @@ Object {
       "id": 119,
     },
     Object {
+      "country": "Isle of Man",
+      "id": 260,
+    },
+    Object {
       "country": "Jamaica",
       "id": 120,
     },
@@ -2420,12 +2439,20 @@ Object {
       "id": 128,
     },
     Object {
+      "country": "Kosovo",
+      "id": 263,
+    },
+    Object {
       "country": "Kuwait",
       "id": 129,
     },
     Object {
       "country": "Kyrgyzstan",
       "id": 130,
+    },
+    Object {
+      "country": "Lao People's Democratic People",
+      "id": 261,
     },
     Object {
       "country": "Latvia",
@@ -2744,6 +2771,10 @@ Object {
       "id": 209,
     },
     Object {
+      "country": "Sint Maarten",
+      "id": 264,
+    },
+    Object {
       "country": "Slovakia",
       "id": 210,
     },
@@ -3016,10 +3047,12 @@ Object {
     },
     Object {
       "id": 20,
+      "other": true,
       "title": "Other job roles directly involved in providing care",
     },
     Object {
       "id": 21,
+      "other": true,
       "title": "Other job roles not directly involved in providing care",
     },
     Object {
@@ -3191,6 +3224,7 @@ Array [
       },
       Object {
         "id": 9,
+        "other": true,
         "service": "Older people not in above categories",
       },
     ],
@@ -3232,6 +3266,7 @@ Array [
       },
       Object {
         "id": 18,
+        "other": true,
         "service": "Adults not in above categories",
       },
     ],
@@ -3267,6 +3302,7 @@ Array [
     "services": Array [
       Object {
         "id": 23,
+        "other": true,
         "service": "Any others not in above categories",
       },
     ],
@@ -3304,6 +3340,7 @@ Array [
   Object {
     "category": "Adult community care",
     "name": "Other adult community care service",
+    "other": true,
     "serviceId": 6,
   },
   Object {
@@ -3324,6 +3361,7 @@ Array [
   Object {
     "category": "Adult day",
     "name": "Other adult day care services",
+    "other": true,
     "serviceId": 10,
   },
   Object {
@@ -3334,6 +3372,7 @@ Array [
   Object {
     "category": "Adult residential",
     "name": "Other adult residential care services",
+    "other": true,
     "serviceId": 12,
   },
   Object {
@@ -3344,11 +3383,13 @@ Array [
   Object {
     "category": "Other",
     "name": "Any childrens / young peoples services",
+    "other": true,
     "serviceId": 14,
   },
   Object {
     "category": "Other",
     "name": "Any other services",
+    "other": true,
     "serviceId": 15,
   },
   Object {
@@ -3359,11 +3400,13 @@ Array [
   Object {
     "category": "Other",
     "name": "Other healthcare service",
+    "other": true,
     "serviceId": 17,
   },
   Object {
     "category": "Adult domiciliary",
     "name": "Other adult domiciliary care service",
+    "other": true,
     "serviceId": 18,
   },
   Object {

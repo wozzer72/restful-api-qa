@@ -42,7 +42,7 @@ const PropertiesResponses = {};
 
 const randomString = require('../utils/random').randomString;
 
-describe ("worker", async () => {
+describe ("worker", () => {
     let nonCqcServices = null;
     let establishment1 = null;
     let establishment2 = null;
@@ -52,7 +52,7 @@ describe ("worker", async () => {
     let establishment2Username = null;
     let timeDifference = null;
 
-    describe("Establishment 1 against " + baseEndpoint, async () => {
+    describe("Establishment 1 against " + baseEndpoint, () => {
         let establishmentId = null;
         let establishmentUid = null;
         let workerUid = null;
@@ -4115,21 +4115,21 @@ describe ("worker", async () => {
         });
     });
 
-    describe.skip("Worker forced failures", async () => {
-        describe("GET", async () => {
+    describe.skip("Worker forced failures", () => {
+        describe("GET", () => {
             it("should fail (503) when attempting to fetch worker with unexpected server error", async () => {});
             it("should fail (404) when attempting to fetch worker with establishment id no longer exists (but JWT token still valid)", async () => {});
         });
-        describe("POST", async () => {
+        describe("POST", () => {
             it("should fail (503) when attempting to create worker with unexpected server error", async () => {});
             it("should fail (409) when attempting to create worker with duplicate name/id for the same establishment", async () => {});
             it("should fail (404) when attempting to create worker with establishment id no longer exists (but JWT token still valid)", async () => {});
         });
-        describe("PUT", async () => {
+        describe("PUT", () => {
             it("should fail (503) when attempting to update worker with unexpected server error", async () => {});
             it("should fail (404) when attempting to update worker with establishment id no longer exists (but JWT token still valid)", async () => {});
         });
-        describe("DELETE", async () => {
+        describe("DELETE", () => {
             it("should fail (401) when attempting to delete worker without passing Authorization header", async () => {});
             it("should fail (403) when attempting to delete worker passing Authorization header with mismatched establishment id", async () => {});
             it("should fail (403) when attempting to delete worker not belong to given establishment with id", async () => {});
