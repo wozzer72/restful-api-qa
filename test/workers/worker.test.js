@@ -2612,7 +2612,7 @@ describe ("worker", () => {
                 .send({
                     weeklyHoursAverage : {
                         value : "Yes",
-                        hours: 65                   // upper boundary
+                        hours: 75                   // upper boundary
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -2622,7 +2622,7 @@ describe ("worker", () => {
                 .send({
                     weeklyHoursAverage : {
                         value : "Yes",
-                        hours: 65.1
+                        hours: 75.1
                     }
                 })
                 .expect('Content-Type', /html/)
@@ -2781,7 +2781,7 @@ describe ("worker", () => {
                 .send({
                     weeklyHoursContracted : {
                         value : "Yes",
-                        hours: 65                   // upper boundary
+                        hours: 75                   // upper boundary
                     }
                 })
                 .expect('Content-Type', /json/)
@@ -2791,7 +2791,7 @@ describe ("worker", () => {
                 .send({
                     weeklyHoursContracted : {
                         value : "Yes",
-                        hours: 65.1
+                        hours: 75.1
                     }
                 })
                 .expect('Content-Type', /html/)

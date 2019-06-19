@@ -2246,7 +2246,6 @@ describe("establishment", () => {
 
             // vacancies, starters and leavers
             // const lastKnownSetOf = {             // taken from jobs test above
-            //     jobs: {
             //         leavers: [
             //             {
             //                 jobId : 1,
@@ -2277,7 +2276,6 @@ describe("establishment", () => {
             //                 total : 3,
             //             }
             //         ],
-            //     }
             // };
             expect(firstResponse.body.totalVacancies).toEqual(6);
             expect(firstResponse.body.totalStarters).toEqual(3);
